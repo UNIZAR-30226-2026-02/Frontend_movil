@@ -1,9 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
     <style name="Base.Theme.SecretPanda" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+    <style name="Theme.SecretPanda" parent="Base.Theme.SecretPanda" />
+
+    <style name="BotonSecretPanda" parent="Widget.Material3.Button">
+        <item name="android:textSize">20sp</item>
+        <item name="backgroundTint">@color/white</item>
+        <item name="strokeColor">@color/borde_negro</item>
+        <item name="strokeWidth">3dp</item>
+        <item name="cornerRadius">4dp</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingStart">24dp</item>
     </style>
 
-    <style name="Theme.SecretPanda" parent="Base.Theme.SecretPanda" />
+    <style name="BotonSecretPanda2" parent="Widget.Material3.Button">
+        <item name="android:textSize">20sp</item>
+        <item name="backgroundTint">@color/gris_boton</item>
+        <item name="strokeColor">@color/borde_negro</item>
+        <item name="strokeWidth">3dp</item>
+        <item name="cornerRadius">4dp</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingStart">24dp</item>
+    </style>
+
+    <style name="BotonSecretPandaVerde" parent="Widget.Material3.Button">
+        <item name="android:textSize">20sp</item>
+        <item name="backgroundTint">@color/verde_boton</item> <item name="strokeColor">@color/borde_negro</item>
+        <item name="strokeWidth">3dp</item>
+        <item name="cornerRadius">4dp</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingStart">24dp</item>
+    </style>
+
 </resources>

@@ -7,4 +7,9 @@
     <color name="card_gray">#D9D9D9</color>
     <color name="nav_gray">#4A4A4A</color>
     <color name="nav_selected">#555555</color>
+    <color name="fondo_oscuro">#1A1A1A</color>
+    <color name="rojo_google">#DB4437</color>
+    <color name="gris_boton">#808080</color>
+    <color name="borde_negro">#000000</color>
+    <color name="verde_boton">#49A83E</color>
 </resources>
