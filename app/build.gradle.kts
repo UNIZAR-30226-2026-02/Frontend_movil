@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace = "com.example.secretpanda"
-    compileSdk {
-        version = release(36)
-    }
+
+    // ¡AQUÍ ESTÁ EL CAMBIO CLAVE!
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.secretpanda"
         minSdk = 31
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
