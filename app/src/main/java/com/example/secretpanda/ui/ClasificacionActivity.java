@@ -61,13 +61,6 @@ public class ClasificacionActivity extends AppCompatActivity {
         // Actualizamos los datos de la lista instantáneamente
         adapter.setListaJugadores(listaMostrar);
 
-        // Cambiamos colores (Verde para la activa, Gris oscuro para la inactiva)
-        activa.setBackgroundResource(R.drawable.bg_tab_activo);
-        activa.setTextColor(Color.WHITE);
-
-        inactiva.setBackgroundResource(R.drawable.bg_tab_inactivo);
-        inactiva.setTextColor(Color.parseColor("#BBBBBB"));
-
         // ¡ANIMACIÓN! Modificamos la altura fluidamente en 200 milisegundos
         animarAltura(activa, 40, 55);
         animarAltura(inactiva, 55, 40);
