@@ -6,7 +6,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.model.Jugador; // ¡Importante importar el modelo!
+import com.example.secretpanda.ui.home.HomeActivity;
 
 public class UserSelectionActivity extends AppCompatActivity {
 
@@ -28,15 +31,17 @@ public class UserSelectionActivity extends AppCompatActivity {
             }
 
             // 2. Lógica: Usuario único (Simulación)
-            // Si pone "panda" o "admin", le da error
             if (username.equalsIgnoreCase("panda") || username.equalsIgnoreCase("admin")) {
                 Toast.makeText(this, "Ese usuario ya existe. ¡Elige otro!", Toast.LENGTH_SHORT).show();
                 return; // Cortamos aquí, no avanza
             }
 
-            // 3. Éxito: Volvemos a la pantalla de carga, pero destino HOME
-            Intent intent = new Intent(UserSelectionActivity.this, LoadingActivity.class);
-            intent.putExtra("DESTINO", "HOME");
+            // 3. CREAMOS EL JUGADOR con el "tag" que ha escrito
+            Jugador nuevoJugador = new Jugador(username);
+
+            // 4. Vamos a HomeActivity y le pasamos el objeto entero
+            Intent intent = new Intent(UserSelectionActivity.this, HomeActivity.class);
+            intent.putExtra("DATOS_JUGADOR", nuevoJugador);
             startActivity(intent);
             finish();
         });
