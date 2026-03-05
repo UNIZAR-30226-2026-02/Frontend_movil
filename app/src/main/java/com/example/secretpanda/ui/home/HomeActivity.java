@@ -19,11 +19,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.ClasificacionActivity; // Importamos la nueva pantalla
-<<<<<<< HEAD
+
 import com.example.secretpanda.ui.PerfilActivity;
 import com.example.secretpanda.ui.TiendaActivity;
-=======
->>>>>>> 31a1b58aa545bc0a4009269c318bafbebb370bc9
+
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -70,7 +69,6 @@ public class HomeActivity extends AppCompatActivity {
         // ¡NUEVO! El botón de la copa para la clasificación
         ImageView btnClasificacion = findViewById(R.id.btn_clasificacion);
 
-<<<<<<< HEAD
         // ¡NUEVO! El botón de la copa para la clasificación
         ImageView btnPerfil = findViewById(R.id.btn_perfil);
         // Configurar el escuchador ANTES de usarlo
@@ -99,8 +97,7 @@ public class HomeActivity extends AppCompatActivity {
             // Abrimos la pantalla
             perfilLauncher.launch(intent);
         });
-=======
->>>>>>> 31a1b58aa545bc0a4009269c318bafbebb370bc9
+
         // =========================================================
         // 3. DARLES ACCIÓN A LOS BOTONES
         // =========================================================
@@ -117,7 +114,7 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
-<<<<<<< HEAD
+
 
         if (btnPerfil != null) {
             btnPerfil.setOnClickListener(v -> {
@@ -140,8 +137,7 @@ public class HomeActivity extends AppCompatActivity {
             });
         }
 
-=======
->>>>>>> 31a1b58aa545bc0a4009269c318bafbebb370bc9
+
     }
 
     // =========================================================

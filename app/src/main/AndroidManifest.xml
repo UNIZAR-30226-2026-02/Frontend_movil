@@ -41,7 +41,6 @@
             android:name=".ui.ClasificacionActivity"
             android:exported="false" />
 
-<<<<<<< HEAD
         <activity
             android:name=".ui.PerfilActivity"
             android:exported="false" />
@@ -51,8 +50,7 @@
         <activity
             android:name=".ui.TiendaActivity"
             android:exported="false" />
-=======
->>>>>>> 31a1b58aa545bc0a4009269c318bafbebb370bc9
+
     </application>
 
 </manifest>
