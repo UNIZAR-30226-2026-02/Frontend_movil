@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/fondo_popup_redondeado">
+    <ImageView
+        android:id="@+id/icono_amigo"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/circle_shape"
+        android:backgroundTint="#4CAF50" /> <TextView
+    android:id="@+id/nombre_amigo"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:layout_marginStart="16dp"
+    android:text="Nombre Amigo"
+    android:textColor="#555555"
+    android:textSize="18sp"
+    android:textStyle="bold" />
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@android:drawable/ic_menu_send"
+        android:contentDescription="Invitar"
+        app:tint="#888888"
+        xmlns:app="http://schemas.android.com/apk/res-auto"/>
+
+</LinearLayout>

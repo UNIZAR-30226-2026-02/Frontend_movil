@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#A6A6A6"> <TextView
+    android:id="@+id/titulo_solicitudes"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="40dp"
+    android:text="Solicitudes\nde amistad"
+    android:textAlignment="center"
+    android:textColor="#FFFFFF"
+    android:textSize="32sp"
+    android:shadowColor="#000000"
+    android:shadowDx="3"
+    android:shadowDy="3"
+    android:shadowRadius="1"
+    android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/titulo_solicitudes"
+        android:layout_centerHorizontal="true"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/fondo_input_borde_negro"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#D9D9D9"
+            android:padding="2dp">
+
+            <TextView
+                android:id="@+id/tab_enviar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#E5F3F5"
+                android:text="Enviar"
+                android:textAlignment="center"
+                android:textColor="#333333"
+                android:paddingVertical="10dp"
+                android:layout_margin="2dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tab_recibidas"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#5C7A99"
+                android:text="Recibidas"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:paddingVertical="10dp"
+                android:layout_margin="2dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tab_pendientes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#5C7A99"
+                android:text="Pendientes"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:paddingVertical="10dp"
+                android:layout_margin="2dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btn_cerrar_solicitudes"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                android:background="#B3B3B3"
+                android:text="×"
+                android:textAlignment="center"
+                android:textColor="#333333"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_margin="2dp"/>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#000000" />
+
+        <LinearLayout
+            android:id="@+id/layout_enviar_solicitud"
+            android:layout_width="match_parent"
+            android:layout_height="350dp" android:orientation="vertical"
+            android:padding="24dp"
+            android:background="#D9D9D9"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Introduce el nombre de\nusuario del jugador:"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/input_nombre_solicitud"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/fondo_input_borde_negro"
+                android:paddingHorizontal="12dp"
+                android:textColor="#000000"
+                android:inputType="text" />
+
+            <Button
+                android:id="@+id/btn_enviar_solicitud"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="32dp"
+                android:backgroundTint="#008000"
+                android:text="Enviar"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:paddingHorizontal="40dp"
+                android:paddingVertical="12dp"
+                android:textAllCaps="false"/>
+
+            <TextView
+                android:id="@+id/texto_error_solicitud"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="El usuario introducido no existe"
+                android:gravity="bottom|center_horizontal"
+                android:textColor="#000000"
+                android:textStyle="bold|italic"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_solicitudes_recibidas"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="#D9D9D9"
+            android:visibility="gone">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_solicitudes_recibidas"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/texto_mensaje_recibidas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Mensaje de prueba"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textStyle="bold|italic"
+                android:textSize="16sp"
+                android:visibility="invisible" /> </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_solicitudes_pendientes"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="#D9D9D9"
+            android:visibility="gone">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_solicitudes_pendientes"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>

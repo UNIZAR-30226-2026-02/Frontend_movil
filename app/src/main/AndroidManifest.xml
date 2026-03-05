@@ -37,6 +37,19 @@
             android:name=".MainActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.ClasificacionActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.PerfilActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.SolicitudesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.TiendaActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
