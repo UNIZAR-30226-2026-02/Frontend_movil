@@ -34,6 +34,19 @@ public class TiendaActivity extends AppCompatActivity {
                 }
             });
         }
+        // 1. Botón "Inicio" de la barra inferior
+        LinearLayout btnNavPersolanizacion = findViewById(R.id.nav_personalizar); // Asegúrate de haber corregido el XML a nav_inicio
+        if (btnNavPersolanizacion != null) {
+            btnNavPersolanizacion.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(TiendaActivity.this, PersonalizacionActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    startActivity(intent);
+                    overridePendingTransition(0, 0);
+                }
+            });
+        }
 
         // 2. Referencia a la casilla del CAFÉ
         LinearLayout itemCafe = findViewById(R.id.item_borde_cafe);

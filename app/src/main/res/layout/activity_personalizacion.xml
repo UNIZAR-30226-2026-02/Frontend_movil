@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_raiz_personalizacion"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1716">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation_bar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="20dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_margin="16dp"
+                android:background="@drawable/fondo_gris_redondeado"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:text="Colección"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold|italic" />
+
+            <include
+                android:id="@+id/mi_barra_navegacion"
+                layout="@layout/layout_nav_cubos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:id="@+id/contenido_opcion_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:text="En posesión"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold|italic" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:columnCount="3">
+
+                    <LinearLayout
+                        android:id="@+id/item_borde_flores_1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/fondo_gris_redondeado"
+                        android:elevation="4dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="serif"
+                            android:text="Flores"
+                            android:textColor="#000000"
+                            android:textSize="16sp" />
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginBottom="16dp">
+
+                            <View
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="0dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="1dp" />
+
+                            <View
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="5dp"
+                                android:layout_marginTop="4dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="2dp" />
+
+                            <FrameLayout
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="0dp"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="3dp">
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_margin="2dp"
+                                    app:cardCornerRadius="3dp"
+                                    app:cardElevation="0dp"
+                                    app:cardBackgroundColor="@android:color/transparent">
+                                </androidx.cardview.widget.CardView>
+                            </FrameLayout>
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/fondo_gris_redondeado" android:elevation="4dp" android:gravity="center" android:orientation="vertical" android:padding="10dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="serif" android:text="Lapices" android:textColor="#000000" android:textSize="16sp" />
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginBottom="16dp">
+
+                            <View
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="0dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="1dp" />
+
+                            <View
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="5dp"
+                                android:layout_marginTop="4dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="2dp" />
+
+                            <FrameLayout
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="0dp"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="3dp">
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_margin="2dp"
+                                    app:cardCornerRadius="3dp"
+                                    app:cardElevation="0dp"
+                                    app:cardBackgroundColor="@android:color/transparent">
+                                </androidx.cardview.widget.CardView>
+                            </FrameLayout>
+                        </FrameLayout>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/fondo_gris_redondeado" android:elevation="4dp" android:gravity="center" android:orientation="vertical" android:padding="10dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="serif" android:text="Lapices" android:textColor="#000000" android:textSize="16sp" />
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginBottom="16dp">
+
+                            <View
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="0dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="1dp" />
+
+                            <View
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="5dp"
+                                android:layout_marginTop="4dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="2dp" />
+
+                            <FrameLayout
+                                android:layout_width="35dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="0dp"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/fondo_carta_gruesa"
+                                android:elevation="3dp">
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_margin="2dp"
+                                    app:cardCornerRadius="3dp"
+                                    app:cardElevation="0dp"
+                                    app:cardBackgroundColor="@android:color/transparent">
+                                </androidx.cardview.widget.CardView>
+                            </FrameLayout>
+                        </FrameLayout>
+                    </LinearLayout>
+                </GridLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:text="No desbloqueadas"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold|italic" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:columnCount="3">
+
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/fondo_carta_bloqueado"
+                        android:elevation="4dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="serif"
+                            android:text="Flores"
+                            android:textColor="#B71C1C"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginVertical="8dp">
+
+                            <FrameLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="16dp"
+                                android:layout_marginBottom="16dp">
+
+                                <View
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_marginTop="0dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="1dp" />
+
+                                <View
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="5dp"
+                                    android:layout_marginTop="4dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="2dp" />
+
+                                <FrameLayout
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="0dp"
+                                    android:layout_marginTop="8dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="3dp">
+
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:layout_margin="2dp"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardBackgroundColor="@android:color/transparent">
+                                    </androidx.cardview.widget.CardView>
+                                </FrameLayout>
+                            </FrameLayout>
+
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:elevation="4dp"
+                                android:src="@drawable/ic_candado" />
+
+                        </FrameLayout>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/fondo_carta_bloqueado"
+                        android:elevation="4dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="serif"
+                            android:text="Flores"
+                            android:textColor="#B71C1C"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginVertical="8dp">
+
+                            <FrameLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="16dp"
+                                android:layout_marginBottom="16dp">
+
+                                <View
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_marginTop="0dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="1dp" />
+
+                                <View
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="5dp"
+                                    android:layout_marginTop="4dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="2dp" />
+
+                                <FrameLayout
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="0dp"
+                                    android:layout_marginTop="8dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="3dp">
+
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:layout_margin="2dp"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardBackgroundColor="@android:color/transparent">
+                                    </androidx.cardview.widget.CardView>
+                                </FrameLayout>
+                            </FrameLayout>
+
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:elevation="4dp"
+                                android:src="@drawable/ic_candado" />
+
+                        </FrameLayout>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/fondo_carta_bloqueado"
+                        android:elevation="4dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="serif"
+                            android:text="Flores"
+                            android:textColor="#B71C1C"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginVertical="8dp">
+
+                            <FrameLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="16dp"
+                                android:layout_marginBottom="16dp">
+
+                                <View
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_marginTop="0dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="1dp" />
+
+                                <View
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="5dp"
+                                    android:layout_marginTop="4dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="2dp" />
+
+                                <FrameLayout
+                                    android:layout_width="35dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="0dp"
+                                    android:layout_marginTop="8dp"
+                                    android:background="@drawable/fondo_carta_gruesa"
+                                    android:elevation="3dp">
+
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:layout_margin="2dp"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardBackgroundColor="@android:color/transparent">
+                                    </androidx.cardview.widget.CardView>
+                                </FrameLayout>
+                            </FrameLayout>
+
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:elevation="4dp"
+                                android:src="@drawable/ic_candado" />
+
+                        </FrameLayout>
+                    </LinearLayout>
+
+                </GridLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/contenido_opcion_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="Tematica Seleccionada : Flores"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold|italic" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:columnCount="3">
+
+                    <LinearLayout
+
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/borde_verde_seleccion_personalizacion"
+                        android:elevation="4dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="serif"
+                            android:text="Flores"
+                            android:textColor="#000000"
+                            android:textSize="16sp" />
+                        <ImageView
+                            android:layout_width="65dp"
+                            android:layout_height="80dp"
+                            android:layout_marginVertical="8dp"
+                            android:background="@drawable/fondo_blanco_redondeado"
+                            android:elevation="2dp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/fondo_gris_redondeado" android:elevation="4dp" android:gravity="center" android:orientation="vertical" android:padding="10dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="serif" android:text="Lapices" android:textColor="#000000" android:textSize="16sp" />
+                        <ImageView android:layout_width="65dp" android:layout_height="80dp" android:layout_marginVertical="8dp" android:background="@drawable/fondo_blanco_redondeado" android:elevation="2dp" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/fondo_gris_redondeado" android:elevation="4dp" android:gravity="center" android:orientation="vertical" android:padding="10dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="serif" android:text="Lapices" android:textColor="#000000" android:textSize="16sp" />
+                        <ImageView android:layout_width="65dp" android:layout_height="80dp" android:layout_marginVertical="8dp" android:background="@drawable/fondo_blanco_redondeado" android:elevation="2dp" />
+                    </LinearLayout>
+                </GridLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/contenido_opcion_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="Tematica Seleccionada : Música"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold|italic" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:columnCount="3">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:background="@drawable/borde_verde_seleccion_personalizacion"
+                        android:elevation="4dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="serif"
+                            android:text="Música"
+                            android:textColor="#000000"
+                            android:textSize="16sp" />
+                        <ImageView
+                            android:layout_width="65dp"
+                            android:layout_height="80dp"
+                            android:layout_marginVertical="8dp"
+                            android:background="@drawable/fondo_blanco_redondeado"
+                            android:elevation="2dp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/fondo_gris_redondeado" android:elevation="4dp" android:gravity="center" android:orientation="vertical" android:padding="10dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="serif" android:text="Lapices" android:textColor="#000000" android:textSize="16sp" />
+                        <ImageView android:layout_width="65dp" android:layout_height="80dp" android:layout_marginVertical="8dp" android:background="@drawable/fondo_blanco_redondeado" android:elevation="2dp" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:layout_margin="6dp" android:background="@drawable/fondo_gris_redondeado" android:elevation="4dp" android:gravity="center" android:orientation="vertical" android:padding="10dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="serif" android:text="Lapices" android:textColor="#000000" android:textSize="16sp" />
+                        <ImageView android:layout_width="65dp" android:layout_height="80dp" android:layout_marginVertical="8dp" android:background="@drawable/fondo_blanco_redondeado" android:elevation="2dp" />
+                    </LinearLayout>
+                </GridLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <include
+        android:id="@+id/bottom_navigation_bar"
+        layout="@layout/layout_bottom_navigation_personalizacion"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>

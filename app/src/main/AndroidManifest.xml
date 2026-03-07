@@ -50,7 +50,9 @@
         <activity
             android:name=".ui.TiendaActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".ui.PersonalizacionActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

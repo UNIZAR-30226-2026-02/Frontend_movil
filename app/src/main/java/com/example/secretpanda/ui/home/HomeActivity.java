@@ -21,6 +21,7 @@ import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.ClasificacionActivity; // Importamos la nueva pantalla
 
 import com.example.secretpanda.ui.PerfilActivity;
+import com.example.secretpanda.ui.PersonalizacionActivity;
 import com.example.secretpanda.ui.TiendaActivity;
 
 
@@ -129,6 +130,18 @@ public class HomeActivity extends AppCompatActivity {
             btnNavTienda.setOnClickListener(v -> {
                 // Abrir la pantalla de Tienda
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, TiendaActivity.class);
+                startActivity(intent);
+
+                // Opcional: Anula la animación por defecto de Android para que parezca
+                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
+                overridePendingTransition(0, 0);
+            });
+        }
+        View btnNavPersonalizacion = findViewById(R.id.nav_personalizar);
+        if (btnNavPersonalizacion != null) {
+            btnNavPersonalizacion.setOnClickListener(v -> {
+                // Abrir la pantalla de Tienda
+                android.content.Intent intent = new android.content.Intent(HomeActivity.this, PersonalizacionActivity.class);
                 startActivity(intent);
 
                 // Opcional: Anula la animación por defecto de Android para que parezca
