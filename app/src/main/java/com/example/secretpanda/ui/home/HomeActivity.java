@@ -20,9 +20,11 @@ import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.ClasificacionActivity; // Importamos la nueva pantalla
 
+import com.example.secretpanda.ui.PartidaActivity;
 import com.example.secretpanda.ui.PerfilActivity;
 import com.example.secretpanda.ui.PersonalizacionActivity;
 import com.example.secretpanda.ui.TiendaActivity;
+import com.example.secretpanda.ui.UnirseMisionActivity;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -103,7 +105,18 @@ public class HomeActivity extends AppCompatActivity {
         // 3. DARLES ACCIÓN A LOS BOTONES
         // =========================================================
         btnNuevaMision.setOnClickListener(v -> Toast.makeText(HomeActivity.this, "Iniciando Nueva Misión...", Toast.LENGTH_SHORT).show());
-        btnUneteMision.setOnClickListener(v -> Toast.makeText(HomeActivity.this, "Buscando Misiones disponibles...", Toast.LENGTH_SHORT).show());
+
+        if (btnUneteMision != null) {
+            btnUneteMision.setOnClickListener(v -> {
+                // Abrir la pantalla de Tienda
+                android.content.Intent intent = new android.content.Intent(HomeActivity.this, UnirseMisionActivity.class);
+                startActivity(intent);
+
+                // Opcional: Anula la animación por defecto de Android para que parezca
+                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
+                overridePendingTransition(0, 0);
+            });
+        }
 
         // Al pulsar las rayitas, abrimos tu menú personalizado
         btnMenuOpciones.setOnClickListener(v -> mostrarMenuPersonalizado(v));
@@ -142,6 +155,18 @@ public class HomeActivity extends AppCompatActivity {
             btnNavPersonalizacion.setOnClickListener(v -> {
                 // Abrir la pantalla de Tienda
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, PersonalizacionActivity.class);
+                startActivity(intent);
+
+                // Opcional: Anula la animación por defecto de Android para que parezca
+                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
+                overridePendingTransition(0, 0);
+            });
+        }
+        View btnNavPartidaPrueba = findViewById(R.id.btn_logros);
+        if (btnNavPartidaPrueba != null) {
+            btnNavPartidaPrueba.setOnClickListener(v -> {
+                // Abrir la pantalla de Tienda
+                android.content.Intent intent = new android.content.Intent(HomeActivity.this, PartidaActivity.class);
                 startActivity(intent);
 
                 // Opcional: Anula la animación por defecto de Android para que parezca
