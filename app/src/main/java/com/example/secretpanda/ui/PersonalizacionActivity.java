@@ -1,114 +1,202 @@
 package com.example.secretpanda.ui;
 
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.ui.home.HomeActivity;
+import com.example.secretpanda.data.model.ItemPersonalizacion;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PersonalizacionActivity extends AppCompatActivity {
 
-    // Variables para las pantallas
-    private View  pantallaTemaCartas, pantallaBordeCartas, pantallaTablero;
+    private LinearLayout tabBarajas, tabBordes, tabFondos;
+    private TextView txtTabBarajas, txtTabBordes, txtTabFondos;
 
-    // Variables para los botones de la barra
-    private View caja1, caja2, caja3;
+    private TextView txtSeccionActual, txtTematicaSeleccionada, txtVacioPosesion;
+    private LinearLayout layoutTematicaSeleccionada;
+
+    private RecyclerView recyclerPosesion, recyclerBloqueados;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Solo llamamos a setContentView UNA vez al principio
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_personalizacion);
 
-        // Ocultar la barra superior por defecto
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
+        configurarNavegacionInferior();
 
-        // 1. Botón "Inicio" de la barra inferior
-        LinearLayout btnNavInicio = findViewById(R.id.nav_inicio); // Asegúrate de haber corregido el XML a nav_inicio
-        if (btnNavInicio != null) {
-            btnNavInicio.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(PersonalizacionActivity.this, HomeActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    startActivity(intent);
-                    overridePendingTransition(0, 0);
-                }
-            });
-        }
-        LinearLayout btnNavTienda = findViewById(R.id.nav_tienda); // Asegúrate de haber corregido el XML a nav_inicio
-        if (btnNavTienda != null) {
-            btnNavTienda.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(PersonalizacionActivity.this, TiendaActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    startActivity(intent);
-                    overridePendingTransition(0, 0);
-                }
-            });
-        }
+        // 1. ENLAZAR COMPONENTES
+        tabBarajas = findViewById(R.id.tab_barajas);
+        tabBordes = findViewById(R.id.tab_bordes);
+        tabFondos = findViewById(R.id.tab_fondos);
+        txtTabBarajas = findViewById(R.id.txt_tab_barajas);
+        txtTabBordes = findViewById(R.id.txt_tab_bordes);
+        txtTabFondos = findViewById(R.id.txt_tab_fondos);
 
-        // Enlazamos las pantallas
-        pantallaTemaCartas = findViewById(R.id.contenido_opcion_1);
-        pantallaBordeCartas = findViewById(R.id.contenido_opcion_2);
-        pantallaTablero = findViewById(R.id.contenido_opcion_3);
+        txtSeccionActual = findViewById(R.id.txt_seccion_actual);
+        txtTematicaSeleccionada = findViewById(R.id.txt_tematica_seleccionada);
+        txtVacioPosesion = findViewById(R.id.txt_vacio_posesion);
+        layoutTematicaSeleccionada = findViewById(R.id.layout_tematica_seleccionada);
 
-        // Enlazamos las cajas de la barra
-        caja1 = findViewById(R.id.caja_1);
-        caja2 = findViewById(R.id.caja_2);
-        caja3 = findViewById(R.id.caja_3);
-        caja2.setSelected(true);
-        pantallaTemaCartas.setVisibility(View.GONE);
-        pantallaBordeCartas.setVisibility(View.VISIBLE);
-        // ACCIÓN: Botón 1 (Tienda)
-        caja1.setOnClickListener(v -> {
-            // Mostrar la tienda, ocultar el resto
-            pantallaTemaCartas.setVisibility(View.VISIBLE);
-            pantallaBordeCartas.setVisibility(View.GONE);
-            pantallaTablero.setVisibility(View.GONE);
-            // Animar los botones
-            seleccionarCaja(caja1);
-        });
+        recyclerPosesion = findViewById(R.id.recycler_posesion);
+        recyclerBloqueados = findViewById(R.id.recycler_bloqueados);
 
-        // ACCIÓN: Botón 2 (Personalización)
-        caja2.setOnClickListener(v -> {
-            // Mostrar personalización, ocultar tienda
-            pantallaTemaCartas.setVisibility(View.GONE);
-            pantallaBordeCartas.setVisibility(View.VISIBLE);
-            pantallaTablero.setVisibility(View.GONE);
+        recyclerPosesion.setLayoutManager(new GridLayoutManager(this, 3));
+        recyclerBloqueados.setLayoutManager(new GridLayoutManager(this, 3));
 
-            // Animar los botones
-            seleccionarCaja(caja2);
-        });
-        // ACCIÓN: Botón 2 (Personalización)
-        caja3.setOnClickListener(v -> {
-            // Mostrar personalización, ocultar tienda
-            pantallaTemaCartas.setVisibility(View.GONE);
-            pantallaBordeCartas.setVisibility(View.GONE);
-            pantallaTablero.setVisibility(View.VISIBLE);
+        // 2. ACCIONES DE LAS PESTAÑAS
+        tabBarajas.setOnClickListener(v -> seleccionarPestana(
+                tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, tabFondos, txtTabFondos, "Temática barajas"));
 
-            // Animar los botones
-            seleccionarCaja(caja3);
-        });
+        tabBordes.setOnClickListener(v -> seleccionarPestana(
+                tabBordes, txtTabBordes, tabBarajas, txtTabBarajas, tabFondos, txtTabFondos, "Temática borde"));
+
+        tabFondos.setOnClickListener(v -> seleccionarPestana(
+                tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo"));
+
+        // Empezamos en Barajas
+        cargarDatos("barajas");
     }
-    // Método de ayuda para hacer grande la caja seleccionada
-    private void seleccionarCaja(View cajaActiva) {
-        View[] todasLasCajas = {caja1, caja2, caja3};
 
-        for (View caja : todasLasCajas) {
-            if (caja == cajaActiva) {
-                caja.setSelected(true);
-                caja.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
-                caja.setElevation(4f);
-            } else {
-                caja.setSelected(false);
-                caja.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
-                caja.setElevation(1f);
+    private void seleccionarPestana(LinearLayout activa, TextView txtActivo,
+                                    LinearLayout inactiva1, TextView txtInactivo1,
+                                    LinearLayout inactiva2, TextView txtInactivo2,
+                                    String titulo) {
+
+        txtSeccionActual.setText(titulo);
+        txtActivo.setVisibility(View.VISIBLE);
+        txtInactivo1.setVisibility(View.GONE);
+        txtInactivo2.setVisibility(View.GONE);
+
+        activa.setBackgroundResource(R.drawable.bg_tab_activo);
+        inactiva1.setBackgroundResource(R.drawable.bg_tab_inactivo);
+        inactiva2.setBackgroundResource(R.drawable.bg_tab_inactivo);
+
+        animarAltura(activa, 80);
+        animarAltura(inactiva1, 50);
+        animarAltura(inactiva2, 50);
+
+        if (titulo.contains("barajas")) cargarDatos("barajas");
+        else if (titulo.contains("borde")) cargarDatos("bordes");
+        else cargarDatos("fondos");
+    }
+
+    private void animarAltura(View vista, int altoFinalDp) {
+        float density = getResources().getDisplayMetrics().density;
+        int finalPx = (int) (altoFinalDp * density);
+
+        if (vista.getHeight() == finalPx) return;
+
+        ValueAnimator animator = ValueAnimator.ofInt(vista.getHeight(), finalPx);
+        animator.setDuration(200);
+        animator.addUpdateListener(animation -> {
+            ViewGroup.LayoutParams params = vista.getLayoutParams();
+            params.height = (int) animation.getAnimatedValue();
+            vista.setLayoutParams(params);
+        });
+        animator.start();
+    }
+
+    // ==========================================
+    // CEREBRO: DATOS SEGÚN PESTAÑA
+    // ==========================================
+    private void cargarDatos(String categoria) {
+        List<ItemPersonalizacion> posesion = new ArrayList<>();
+        List<ItemPersonalizacion> bloqueados = new ArrayList<>();
+        boolean permiteSeleccion = false;
+
+        if (categoria.equals("barajas")) {
+            // Barajas NO se seleccionan. El texto de arriba desaparece.
+            permiteSeleccion = false;
+            layoutTematicaSeleccionada.setVisibility(View.GONE);
+
+            posesion.add(new ItemPersonalizacion("Clásica", false));
+            posesion.add(new ItemPersonalizacion("Lápices", false));
+            posesion.add(new ItemPersonalizacion("Neón", false));
+
+            bloqueados.add(new ItemPersonalizacion("Flores", true));
+            bloqueados.add(new ItemPersonalizacion("Fuego", true));
+        }
+        else if (categoria.equals("bordes")) {
+            // Bordes SÍ se seleccionan.
+            permiteSeleccion = true;
+            layoutTematicaSeleccionada.setVisibility(View.VISIBLE);
+
+            posesion.add(new ItemPersonalizacion("Madera", false));
+            posesion.add(new ItemPersonalizacion("Metal", false));
+
+            bloqueados.add(new ItemPersonalizacion("Oro", true));
+            bloqueados.add(new ItemPersonalizacion("Diamante", true));
+        }
+        else if (categoria.equals("fondos")) {
+            // Fondos SÍ se seleccionan, pero vamos a SIMULAR QUE NO TIENES NINGUNO COMPRADO
+            permiteSeleccion = true;
+            layoutTematicaSeleccionada.setVisibility(View.VISIBLE);
+
+            // "posesion" lo dejamos completamente vacío
+
+            bloqueados.add(new ItemPersonalizacion("Océano", true));
+            bloqueados.add(new ItemPersonalizacion("Selva", true));
+            bloqueados.add(new ItemPersonalizacion("Volcán", true));
+        }
+
+        // --- Lógica del Estado Vacío ("No tienes adquiridos...") ---
+        if (posesion.isEmpty()) {
+            txtVacioPosesion.setVisibility(View.VISIBLE);
+            recyclerPosesion.setVisibility(View.GONE);
+            txtTematicaSeleccionada.setText("Ninguna"); // Como no tienes, pones Ninguna
+        } else {
+            txtVacioPosesion.setVisibility(View.GONE);
+            recyclerPosesion.setVisibility(View.VISIBLE);
+
+            // Automáticamente actualizamos el texto al primer elemento que tengas
+            if (permiteSeleccion) {
+                txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
             }
+        }
+
+        // Creamos los adaptadores pasándole la orden "permiteSeleccion"
+        PersonalizacionAdapter adapterPosesion = new PersonalizacionAdapter(posesion, false, permiteSeleccion, item -> {
+            // Esto se ejecuta cuando haces click en un cuadrado de Posesión (y solo si permiteSelección es true)
+            txtTematicaSeleccionada.setText(item.getNombre());
+        });
+
+        PersonalizacionAdapter adapterBloqueados = new PersonalizacionAdapter(bloqueados, true, false, null);
+
+        // Los inyectamos en la pantalla
+        recyclerPosesion.setAdapter(adapterPosesion);
+        recyclerBloqueados.setAdapter(adapterBloqueados);
+    }
+
+    private void configurarNavegacionInferior() {
+        LinearLayout btnNavInicio = findViewById(R.id.nav_inicio);
+        if (btnNavInicio != null) {
+            btnNavInicio.setOnClickListener(v -> {
+                Intent intent = new Intent(PersonalizacionActivity.this, HomeActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+            });
+        }
+        LinearLayout btnNavTienda = findViewById(R.id.nav_tienda);
+        if (btnNavTienda != null) {
+            btnNavTienda.setOnClickListener(v -> {
+                Intent intent = new Intent(PersonalizacionActivity.this, TiendaActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+            });
         }
     }
 }
