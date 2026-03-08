@@ -53,6 +53,17 @@
         <activity
             android:name=".ui.PersonalizacionActivity"
             android:exported="false" />
+
+        <activity android:name=".ui.PartidaActivity"
+            android:exported="false"/>
+
+        <activity android:name=".ui.UnirseMisionActivity"
+            android:exported="false"/>
+        <activity android:name=".ui.UnirsePrivadaActivity"
+            android:exported="false"/>
+        <activity android:name=".ui.MisionPublicaActivity"
+            android:exported="false"/>
+
     </application>
 
 </manifest>
