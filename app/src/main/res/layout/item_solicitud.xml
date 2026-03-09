@@ -2,48 +2,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:layout_margin="6dp"
     android:background="@drawable/fondo_item_solicitud"
-    android:layout_marginBottom="12dp"
-    android:padding="8dp"
-    android:gravity="center_vertical">
-
-    <ImageView
-        android:id="@+id/icono_solicitud"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="#000000" android:layout_marginEnd="12dp"/>
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
 
     <TextView
-        android:id="@+id/texto_nombre_solicitud"
+        android:id="@+id/txt_nombre_recibida"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="RocioTryhard"
+        android:text="Usuario"
         android:textColor="#FFFFFF"
-        android:textSize="18sp" />
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/btn_aceptar"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+    <ImageView
+        android:id="@+id/btn_aceptar_recibida"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="12dp"
         android:background="@drawable/fondo_boton_aceptar"
-        android:text="✓"
-        android:textColor="#00E600"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginEnd="8dp"/>
+        android:padding="6dp" />
 
-    <TextView
-        android:id="@+id/btn_rechazar"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+    <ImageView
+        android:id="@+id/btn_rechazar_recibida"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:background="@drawable/fondo_boton_rechazar"
-        android:text="✗"
-        android:textColor="#FF0000"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:gravity="center"/>
-
+        android:src="@drawable/ic_cerrar_x"
+        android:padding="6dp" />
 </LinearLayout>

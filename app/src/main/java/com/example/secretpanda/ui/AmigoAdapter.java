@@ -47,6 +47,9 @@ public class AmigoAdapter extends RecyclerView.Adapter<AmigoAdapter.AmigoViewHol
             }
         });
     }
+    public void setListaAmigos(java.util.List<Jugador> nuevaLista) {
+        this.listaAmigos = nuevaLista;
+    }
 
     @Override
     public int getItemCount() {

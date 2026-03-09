@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.auth.LoginActivity;
+import java.util.List;
 
 public class PerfilActivity extends AppCompatActivity {
 
@@ -31,6 +32,7 @@ public class PerfilActivity extends AppCompatActivity {
     private TextView textoNombreDatos; // Añade esta
     private LinearLayout layoutListaAmigosContenedor;
     private TextView btnGestionarSolicitudes;
+    private AmigoAdapter adaptador;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,8 +78,8 @@ public class PerfilActivity extends AppCompatActivity {
 
 
         // ¡ATENCIÓN A ESTA PARTE! Pasamos el listener al adaptador
-        AmigoAdapter adaptador = new AmigoAdapter(misAmigos, amigoClickado -> {
-            // Cuando hacen clic en un amigo, mostramos su detalle
+        // ¡ATENCIÓN A ESTA PARTE! Ahora lo guardamos en la variable global
+        adaptador = new AmigoAdapter(misAmigos, amigoClickado -> {
             mostrarDetalleDe(amigoClickado);
         });
         recyclerAmigos.setAdapter(adaptador);
@@ -270,6 +272,24 @@ public class PerfilActivity extends AppCompatActivity {
         if (layoutListaAmigosContenedor != null && layoutDetalleAmigo != null) {
             layoutListaAmigosContenedor.setVisibility(View.GONE);
             layoutDetalleAmigo.setVisibility(View.VISIBLE);
+        }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Pedimos la lista fresca a la "Base de Datos" (ahora devuelve Strings)
+        List<String> nombresNuevos = com.example.secretpanda.data.model.SocialGlobal.getInstance().getMisAmigos();
+
+        // Convertimos esos Strings en objetos Jugador para que tu adaptador no se queje
+        java.util.List<Jugador> amigosConvertidos = new java.util.ArrayList<>();
+        for(String nombre : nombresNuevos) {
+            amigosConvertidos.add(new Jugador(nombre));
+        }
+
+        if (adaptador != null) {
+            adaptador.setListaAmigos(amigosConvertidos);
+            adaptador.notifyDataSetChanged();
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.secretpanda.ui; // Asegúrate de que tu package está bien
 
 import android.animation.ValueAnimator;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -12,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ClasificacionActivity extends AppCompatActivity {
@@ -122,5 +120,8 @@ public class ClasificacionActivity extends AppCompatActivity {
         // ¡Ojo! Si no tienes setVictorias en Jugador.java, lo añadiremos luego. Por ahora asumo que tienes un método así:
         for(int i=0; i<victorias; i++) j.sumarVictoria();
         return j;
+    }
+
+    public static class SolicitudAdapter {
     }
 }

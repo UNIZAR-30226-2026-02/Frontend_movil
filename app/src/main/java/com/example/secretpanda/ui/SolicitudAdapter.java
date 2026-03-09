@@ -3,64 +3,71 @@ package com.example.secretpanda.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.secretpanda.R;
+
 import java.util.List;
 
-public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.SolicitudViewHolder> {
+public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.ViewHolder> {
 
-    private List<String> nombres;
-    private OnAccionSolicitudListener listener; // <-- Nuestro puente
+    private List<String> listaSolicitudes;
+    private OnAccionSolicitudListener listener;
 
-    // 1. Creamos la interfaz para comunicarnos con la Activity
     public interface OnAccionSolicitudListener {
-        void onAceptar(String nombre);
-        void onRechazar(String nombre);
+        void onAceptar(int position, String nombre);
+        void onRechazar(int position, String nombre);
     }
 
-    // 2. Modificamos el constructor para recibir el listener
-    public SolicitudAdapter(List<String> nombres, OnAccionSolicitudListener listener) {
-        this.nombres = nombres;
+    public SolicitudAdapter(List<String> listaSolicitudes, OnAccionSolicitudListener listener) {
+        this.listaSolicitudes = listaSolicitudes;
         this.listener = listener;
+    }
+
+    public void removeItem(int position) {
+        listaSolicitudes.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, listaSolicitudes.size());
     }
 
     @NonNull
     @Override
-    public SolicitudViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_solicitud, parent, false);
-        return new SolicitudViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SolicitudViewHolder holder, int position) {
-        String nombre = nombres.get(position);
-        holder.textoNombre.setText(nombre);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        String nombre = listaSolicitudes.get(position);
+        holder.txtNombre.setText(nombre);
 
-        // 3. En vez de Toasts, usamos el listener
         holder.btnAceptar.setOnClickListener(v -> {
-            if (listener != null) listener.onAceptar(nombre);
+            if (listener != null) listener.onAceptar(holder.getAdapterPosition(), nombre);
         });
 
         holder.btnRechazar.setOnClickListener(v -> {
-            if (listener != null) listener.onRechazar(nombre);
+            if (listener != null) listener.onRechazar(holder.getAdapterPosition(), nombre);
         });
     }
 
     @Override
     public int getItemCount() {
-        return nombres.size();
+        return listaSolicitudes.size();
     }
 
-    static class SolicitudViewHolder extends RecyclerView.ViewHolder {
-        TextView textoNombre, btnAceptar, btnRechazar;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView txtNombre;
+        ImageView btnAceptar, btnRechazar;
 
-        public SolicitudViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            textoNombre = itemView.findViewById(R.id.texto_nombre_solicitud);
-            btnAceptar = itemView.findViewById(R.id.btn_aceptar);
-            btnRechazar = itemView.findViewById(R.id.btn_rechazar);
+            txtNombre = itemView.findViewById(R.id.txt_nombre_recibida);
+            btnAceptar = itemView.findViewById(R.id.btn_aceptar_recibida);
+            btnRechazar = itemView.findViewById(R.id.btn_rechazar_recibida);
         }
     }
 }
