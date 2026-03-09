@@ -47,6 +47,43 @@ public class PartidaAdapter extends RecyclerView.Adapter<PartidaAdapter.PartidaV
             holder.contenedor.setBackgroundResource(R.drawable.fondo_item_mision_publica);
             holder.tvNombre.setTextColor(0xFF000000);
         }
+        holder.itemView.setOnClickListener(v -> {
+
+            // 1. Comprobamos si la partida está llena
+            boolean estaLlena = false;
+            if (partida.getJugadores() != null) {
+                String[] cantidadJugadores = partida.getJugadores().split("/");
+                if (cantidadJugadores.length == 2 && cantidadJugadores[0].equals(cantidadJugadores[1])) {
+                    estaLlena = true;
+                }
+            }
+
+            // 2. Si está bloqueada o llena, mostramos el diálogo
+            if (partida.isBloqueada() || estaLlena) {
+                android.app.Dialog dialogError = new android.app.Dialog(v.getContext());
+                dialogError.setContentView(R.layout.dialog_error_mision);
+
+                if (dialogError.getWindow() != null) {
+                    dialogError.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+                }
+
+                dialogError.findViewById(R.id.btn_cerrar_dialogo).setOnClickListener(viewCerrar -> {
+                    dialogError.dismiss();
+                });
+
+                dialogError.show();
+
+            } else {
+                // 3. ¡LA MAGIA AQUÍ! Si está libre, viajamos a la Sala de Espera
+                android.content.Intent intent = new android.content.Intent(v.getContext(), SalaEsperaActivity.class);
+
+                // (Opcional) Podemos enviarle datos a la nueva pantalla, por ejemplo, el nombre de la temática
+                intent.putExtra("TEMATICA_PARTIDA", partida.getTematica());
+
+                // Arrancamos la nueva Activity
+                v.getContext().startActivity(intent);
+            }
+        });
     }
 
     @Override

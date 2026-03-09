@@ -22,9 +22,16 @@ public class Jugador implements Serializable {
     // ==========================================
     // CAMPOS TEMPORALES DE PARTIDA (No van a la BD)
     // ==========================================
+    private transient boolean esEquipoAzul; // <--- AÑADE ESTO
+
+    // ==========================================
+    // CAMPOS TEMPORALES DE PARTIDA (No van a la BD)
+    // ==========================================
     // "transient" significa: "ignora esto cuando guardes el jugador en la base de datos de internet"
     private transient boolean esEspia;
     private transient int puntosPartidaActual;
+
+    private transient int idEquipo;
 
     // Constructor inicial (Cuando solo sabemos su Tag / Nombre)
     public Jugador(String tag) {
@@ -76,4 +83,6 @@ public class Jugador implements Serializable {
 
     public int getPuntosPartidaActual() { return puntosPartidaActual; }
     public void sumarPuntosPartida(int puntos) { this.puntosPartidaActual += puntos; }
+    public boolean isEsEquipoAzul() { return esEquipoAzul; }
+    public void setEsEquipoAzul(boolean esEquipoAzul) { this.esEquipoAzul = esEquipoAzul; }
 }

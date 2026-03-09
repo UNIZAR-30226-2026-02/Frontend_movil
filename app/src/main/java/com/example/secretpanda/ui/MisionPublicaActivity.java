@@ -40,11 +40,11 @@ public class MisionPublicaActivity extends AppCompatActivity implements Tematica
 
         btnHome.setOnClickListener(v -> finish());
 
-        // 2. Configurar el click para abrir el Diálogo de Temáticas
+        // AL PULSAR EL BOTÓN, ABRIMOS TU DIALOGFRAGMENT
         btnSelectorTematica.setOnClickListener(v -> {
             TematicasDialogFragment dialog = new TematicasDialogFragment();
-            dialog.setTematicaListener(this); // Escuchamos la selección aquí
-            dialog.show(getSupportFragmentManager(), "TematicasDialog");
+            dialog.setTematicaListener(this); // Escuchamos la respuesta
+            dialog.show(getSupportFragmentManager(), "DialogoTematicas");
         });
 
         // 3. Cargar datos iniciales

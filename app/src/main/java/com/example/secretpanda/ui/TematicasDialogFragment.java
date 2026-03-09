@@ -31,18 +31,52 @@ public class TematicasDialogFragment extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_tematicas, container, false);
 
-        // Configuramos los textos de la rejilla
-        setupCard(view.findViewById(R.id.card_coches), "Coches");
-        setupCard(view.findViewById(R.id.card_motos), "Motos");
-        setupCard(view.findViewById(R.id.card_perros), "Perros");
-        setupCard(view.findViewById(R.id.card_gatos), "Gatos");
-
+        // 1. Configurar botón de "Todas las temáticas"
         view.findViewById(R.id.opcion_todas).setOnClickListener(v -> {
             if (listener != null) listener.onTematicaSelected("Todas las temáticas");
             dismiss();
         });
 
+        // 2. HARDCODEAMOS LAS TEMÁTICAS PARA EL FUTURO
+        java.util.List<String> misTematicas = java.util.Arrays.asList(
+                "Coches",
+                "Motos",
+                "Perros",
+                "Gatos",
+                "Cine",      // <--- Puedes añadir todas las que quieras
+                "Deportes"   // <--- Se irán colocando solas en la cuadrícula
+        );
+
+        // 3. Configuramos el RecyclerView en modo Cuadrícula (Grid) de 2 columnas
+        androidx.recyclerview.widget.RecyclerView rvTematicas = view.findViewById(R.id.rv_tematicas_grid);
+        rvTematicas.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(getContext(), 2));
+
+        // 4. Asignamos el adaptador
+        TematicaAdapter adapter = new TematicaAdapter(misTematicas, listener, this);
+        rvTematicas.setAdapter(adapter);
+
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Dialog dialog = getDialog();
+        if (dialog != null && dialog.getWindow() != null) {
+
+            // 1. Calculamos 340dp y los convertimos a píxeles exactos para tu pantalla
+            int anchoEnPixeles = (int) (340 * getResources().getDisplayMetrics().density);
+
+            // 2. Le forzamos el ANCHO FIJO y el alto que envuelva el contenido
+            dialog.getWindow().setLayout(
+                    anchoEnPixeles,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+
+            // 3. Fondo transparente para los bordes redondeados
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
     }
 
     private void setupCard(View view, String nombre) {
