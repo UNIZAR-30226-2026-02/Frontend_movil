@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:layout_margin="16dp"
+
+    android:background="@drawable/fondo_boton_mision"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <include layout="@layout/item_grupo_cartas" />
+
+    <TextView
+        android:id="@+id/tv_nombre_tematica"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="serif"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:textStyle="bold|italic" />
+</LinearLayout>

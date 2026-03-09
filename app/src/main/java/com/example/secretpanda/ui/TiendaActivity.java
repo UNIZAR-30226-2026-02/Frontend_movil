@@ -1,153 +1,135 @@
 package com.example.secretpanda.ui;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.model.InventarioGlobal;
+import com.example.secretpanda.data.model.ItemPersonalizacion;
 import com.example.secretpanda.ui.home.HomeActivity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TiendaActivity extends AppCompatActivity {
+
+    private RecyclerView recyclerBarajas, recyclerBordes, recyclerFondos;
+    private TiendaAdapter adapterBarajas, adapterBordes, adapterFondos;
+    private TextView txtSaldo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Solo llamamos a setContentView UNA vez al principio
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_tienda);
 
-        // Ocultar la barra superior por defecto
-        if (getSupportActionBar() != null) getSupportActionBar().hide();
+        txtSaldo = findViewById(R.id.txt_saldo_balas);
+        configurarNavegacionInferior();
 
-        // 1. Botón "Inicio" de la barra inferior
-        LinearLayout btnNavInicio = findViewById(R.id.nav_inicio); // Asegúrate de haber corregido el XML a nav_inicio
-        if (btnNavInicio != null) {
-            btnNavInicio.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(TiendaActivity.this, HomeActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    startActivity(intent);
-                    overridePendingTransition(0, 0);
-                }
-            });
-        }
-        // 1. Botón "Inicio" de la barra inferior
-        LinearLayout btnNavPersolanizacion = findViewById(R.id.nav_personalizar); // Asegúrate de haber corregido el XML a nav_inicio
-        if (btnNavPersolanizacion != null) {
-            btnNavPersolanizacion.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(TiendaActivity.this, PersonalizacionActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    startActivity(intent);
-                    overridePendingTransition(0, 0);
-                }
-            });
-        }
-
-        // 2. Referencia a la casilla del CAFÉ
-        LinearLayout itemCafe = findViewById(R.id.item_borde_cafe);
-        if (itemCafe != null) {
-            itemCafe.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mostrarDialogoCompra("Comprar borde", "Cafe", R.drawable.ic_launcher_background, 10000);
-                }
-            });
-        }
-
-        // 3. Referencia a la casilla del TABLERO DE MÚSICA
-        LinearLayout itemTableroMusica = findViewById(R.id.item_tablero_musica);
-        if (itemTableroMusica != null) {
-            itemTableroMusica.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mostrarDialogoCompra("Comprar temática tablero", "Música", R.drawable.img, 10000);
-                }
-            });
-        }
-        LinearLayout itemBarajaAnimales = findViewById(R.id.item_baraja_animales);
-        if (itemBarajaAnimales != null) {
-            itemBarajaAnimales.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    // La palabra "baraja" activará la estructura de cartas apiladas en el popup
-                    mostrarDialogoCompra("Comprar temática barajas", "Animales", R.drawable.img_1, 10000);
-                }
-            });
-        }
+        recyclerBarajas = findViewById(R.id.recycler_tienda_barajas);
+        recyclerBordes = findViewById(R.id.recycler_tienda_bordes);
+        recyclerFondos = findViewById(R.id.recycler_tienda_fondos);
     }
 
-    // Método genérico para mostrar el diálogo
-    private void mostrarDialogoCompra(String tituloCabecera, String nombreItem, int imagenResId, int precioItem) {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_comprar_item);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Cargamos los datos cada vez que abrimos la pantalla
+        actualizarTextoSaldo();
+        cargarDatosTienda();
+    }
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+    private void actualizarTextoSaldo() {
+        txtSaldo.setText(String.valueOf(InventarioGlobal.getInstance().getMisBalas()));
+    }
+
+    private void cargarDatosTienda() {
+        List<ItemPersonalizacion> todos = InventarioGlobal.getInstance().getTodosLosItems();
+
+        List<ItemPersonalizacion> barajasTienda = new ArrayList<>();
+        List<ItemPersonalizacion> bordesTienda = new ArrayList<>();
+        List<ItemPersonalizacion> fondosTienda = new ArrayList<>();
+
+        // Filtramos para la tienda (solo los que tienen precio > 0)
+        for (ItemPersonalizacion item : todos) {
+            if (item.getPrecio() > 0) {
+                if (item.getTipo().equals("baraja")) barajasTienda.add(item);
+                else if (item.getTipo().equals("borde")) bordesTienda.add(item);
+                else if (item.getTipo().equals("fondo")) fondosTienda.add(item);
+            }
         }
 
-        // 1. Enlazamos los elementos visuales
-        android.widget.TextView tvCabecera = dialog.findViewById(R.id.tv_dialogo_cabecera);
-        android.widget.TextView tvTitulo = dialog.findViewById(R.id.tv_dialogo_titulo);
-        android.widget.TextView tvPrecio = dialog.findViewById(R.id.tv_dialogo_precio);
-        android.widget.TextView tvMensaje = dialog.findViewById(R.id.tv_dialogo_mensaje);
-        android.widget.LinearLayout btnComprar = dialog.findViewById(R.id.btn_dialogo_comprar);
-        android.widget.ImageView btnCerrar = dialog.findViewById(R.id.btn_cerrar_dialogo);
+        adapterBarajas = new TiendaAdapter(barajasTienda, (item, position) -> mostrarPreviewCompra(item, position, adapterBarajas));
+        adapterBordes = new TiendaAdapter(bordesTienda, (item, position) -> mostrarPreviewCompra(item, position, adapterBordes));
+        adapterFondos = new TiendaAdapter(fondosTienda, (item, position) -> mostrarPreviewCompra(item, position, adapterFondos));
 
-        // 🌟 NUEVO: Enlazamos las imágenes normales y las de la baraja
-        android.widget.ImageView ivImagenNormal = dialog.findViewById(R.id.iv_dialogo_imagen);
-        android.widget.FrameLayout layoutBaraja = dialog.findViewById(R.id.layout_dialogo_baraja);
-        android.widget.ImageView ivImagenBaraja = dialog.findViewById(R.id.iv_dialogo_imagen_baraja);
+        recyclerBarajas.setAdapter(adapterBarajas);
+        recyclerBordes.setAdapter(adapterBordes);
+        recyclerFondos.setAdapter(adapterFondos);
+    }
 
-        // 2. Rellenamos textos
-        tvCabecera.setText(tituloCabecera);
-        tvTitulo.setText(nombreItem);
-        tvPrecio.setText(String.valueOf(precioItem));
-        tvMensaje.setVisibility(View.INVISIBLE);
+    private void mostrarPreviewCompra(ItemPersonalizacion item, int position, TiendaAdapter adaptadorOrigen) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_preview_tienda, null);
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        android.app.AlertDialog dialog = builder.create();
 
-        // 3. LÓGICA DE IMÁGENES: ¿Es una baraja?
-        if (tituloCabecera.toLowerCase().contains("baraja")) {
-            // Es una baraja: ocultamos la imagen normal y mostramos las cartas apiladas
-            ivImagenNormal.setVisibility(View.GONE);
-            layoutBaraja.setVisibility(View.VISIBLE);
-            ivImagenBaraja.setImageResource(imagenResId);
-        } else {
-            // Es un tablero o borde: mostramos la imagen normal y ocultamos las cartas apiladas
-            layoutBaraja.setVisibility(View.GONE);
-            ivImagenNormal.setVisibility(View.VISIBLE);
-            ivImagenNormal.setImageResource(imagenResId);
-        }
-        btnCerrar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo_tienda);
+        ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview_tienda);
+        ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item_tienda);
+        LinearLayout btnComprar = dialogView.findViewById(R.id.btn_comprar_preview);
+        TextView txtPrecioBoton = dialogView.findViewById(R.id.txt_precio_boton_compra);
+
+        txtTitulo.setText(item.getNombre());
+        txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
+
+        if (item.getIconoResId() != 0) imgPreview.setImageResource(item.getIconoResId());
+        else imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+
+        btnComprar.setOnClickListener(v -> {
+            if (InventarioGlobal.getInstance().getMisBalas() >= item.getPrecio()) {
+                // 1. Restamos balas y actualizamos marcador
+                InventarioGlobal.getInstance().restarBalas(item.getPrecio());
+                actualizarTextoSaldo();
+
+                // 2. ¡Desbloqueamos el ítem! (Magia para la Base de Datos)
+                item.setBloqueado(false);
+
+                // 3. Avisamos al adaptador para que dibuje el Tick verde
+                adaptadorOrigen.notifyItemChanged(position);
+
+                Toast.makeText(this, "¡Has adquirido " + item.getNombre() + "!", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
+            } else {
+                Toast.makeText(this, "No tienes suficientes balas.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        btnComprar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int misMonedas = 15000; // Simulación de saldo
-
-                if (misMonedas >= precioItem) {
-                    tvMensaje.setText("¡Compra realizada!");
-                    tvMensaje.setTextColor(android.graphics.Color.parseColor("#36D34B"));
-                    tvMensaje.setVisibility(View.VISIBLE);
-
-                    btnComprar.setVisibility(View.GONE);
-                } else {
-                    tvMensaje.setText("No tienes saldo suficiente");
-                    tvMensaje.setTextColor(android.graphics.Color.BLACK);
-                    tvMensaje.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
+    }
+
+    private void configurarNavegacionInferior() {
+        LinearLayout btnNavInicio = findViewById(R.id.nav_inicio);
+        if (btnNavInicio != null) btnNavInicio.setOnClickListener(v -> {
+            startActivity(new Intent(TiendaActivity.this, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+            overridePendingTransition(0, 0);
+        });
+
+        // ¡REVISA QUE EL ID AQUÍ SEA EL CORRECTO PARA TU BOTON COLECCIÓN!
+        LinearLayout btnNavPersonalizacion = findViewById(R.id.nav_personalizar);
+        if (btnNavPersonalizacion != null) btnNavPersonalizacion.setOnClickListener(v -> {
+            startActivity(new Intent(TiendaActivity.this, PersonalizacionActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+            overridePendingTransition(0, 0);
+        });
     }
 }

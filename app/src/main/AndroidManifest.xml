@@ -63,6 +63,8 @@
             android:exported="false"/>
         <activity android:name=".ui.MisionPublicaActivity"
             android:exported="false"/>
+        <activity android:name=".ui.SalaEsperaActivity"
+            android:exported="false"/>
 
     </application>
 

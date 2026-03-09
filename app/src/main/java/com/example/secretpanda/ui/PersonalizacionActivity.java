@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.ui.home.HomeActivity;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
+import com.example.secretpanda.data.model.InventarioGlobal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,9 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
     private RecyclerView recyclerPosesion, recyclerBloqueados;
 
+    private PersonalizacionAdapter adapterPosesion;
+    private PersonalizacionAdapter adapterBloqueados;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,7 +41,6 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
         configurarNavegacionInferior();
 
-        // 1. ENLAZAR COMPONENTES
         tabBarajas = findViewById(R.id.tab_barajas);
         tabBordes = findViewById(R.id.tab_bordes);
         tabFondos = findViewById(R.id.tab_fondos);
@@ -55,7 +59,6 @@ public class PersonalizacionActivity extends AppCompatActivity {
         recyclerPosesion.setLayoutManager(new GridLayoutManager(this, 3));
         recyclerBloqueados.setLayoutManager(new GridLayoutManager(this, 3));
 
-        // 2. ACCIONES DE LAS PESTAÑAS
         tabBarajas.setOnClickListener(v -> seleccionarPestana(
                 tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, tabFondos, txtTabFondos, "Temática barajas"));
 
@@ -65,8 +68,20 @@ public class PersonalizacionActivity extends AppCompatActivity {
         tabFondos.setOnClickListener(v -> seleccionarPestana(
                 tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo"));
 
-        // Empezamos en Barajas
-        cargarDatos("barajas");
+        // EMPEZAMOS EN BARAJAS (¡Ahora en singular!)
+        cargarDatos("baraja");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (txtSeccionActual != null) {
+            String tituloActual = txtSeccionActual.getText().toString().toLowerCase();
+            // ¡AQUÍ ESTABA EL FALLO! Ahora lo pasamos en singular
+            if (tituloActual.contains("barajas")) cargarDatos("baraja");
+            else if (tituloActual.contains("borde")) cargarDatos("borde");
+            else cargarDatos("fondo");
+        }
     }
 
     private void seleccionarPestana(LinearLayout activa, TextView txtActivo,
@@ -87,9 +102,10 @@ public class PersonalizacionActivity extends AppCompatActivity {
         animarAltura(inactiva1, 50);
         animarAltura(inactiva2, 50);
 
-        if (titulo.contains("barajas")) cargarDatos("barajas");
-        else if (titulo.contains("borde")) cargarDatos("bordes");
-        else cargarDatos("fondos");
+        String tituloMin = titulo.toLowerCase();
+        if (tituloMin.contains("barajas")) cargarDatos("baraja");
+        else if (tituloMin.contains("borde")) cargarDatos("borde");
+        else cargarDatos("fondo");
     }
 
     private void animarAltura(View vista, int altoFinalDp) {
@@ -108,75 +124,93 @@ public class PersonalizacionActivity extends AppCompatActivity {
         animator.start();
     }
 
-    // ==========================================
-    // CEREBRO: DATOS SEGÚN PESTAÑA
-    // ==========================================
     private void cargarDatos(String categoria) {
+        List<ItemPersonalizacion> todos = InventarioGlobal.getInstance().getTodosLosItems();
+
         List<ItemPersonalizacion> posesion = new ArrayList<>();
         List<ItemPersonalizacion> bloqueados = new ArrayList<>();
-        boolean permiteSeleccion = false;
 
-        if (categoria.equals("barajas")) {
-            // Barajas NO se seleccionan. El texto de arriba desaparece.
-            permiteSeleccion = false;
+        // CUIDADO: La comprobación también debe ir en singular
+        boolean permiteSeleccion = !categoria.equals("baraja");
+
+        if (categoria.equals("baraja")) {
             layoutTematicaSeleccionada.setVisibility(View.GONE);
-
-            posesion.add(new ItemPersonalizacion("Clásica", false));
-            posesion.add(new ItemPersonalizacion("Lápices", false));
-            posesion.add(new ItemPersonalizacion("Neón", false));
-
-            bloqueados.add(new ItemPersonalizacion("Flores", true));
-            bloqueados.add(new ItemPersonalizacion("Fuego", true));
-        }
-        else if (categoria.equals("bordes")) {
-            // Bordes SÍ se seleccionan.
-            permiteSeleccion = true;
-            layoutTematicaSeleccionada.setVisibility(View.VISIBLE);
-
-            posesion.add(new ItemPersonalizacion("Madera", false));
-            posesion.add(new ItemPersonalizacion("Metal", false));
-
-            bloqueados.add(new ItemPersonalizacion("Oro", true));
-            bloqueados.add(new ItemPersonalizacion("Diamante", true));
-        }
-        else if (categoria.equals("fondos")) {
-            // Fondos SÍ se seleccionan, pero vamos a SIMULAR QUE NO TIENES NINGUNO COMPRADO
-            permiteSeleccion = true;
-            layoutTematicaSeleccionada.setVisibility(View.VISIBLE);
-
-            // "posesion" lo dejamos completamente vacío
-
-            bloqueados.add(new ItemPersonalizacion("Océano", true));
-            bloqueados.add(new ItemPersonalizacion("Selva", true));
-            bloqueados.add(new ItemPersonalizacion("Volcán", true));
-        }
-
-        // --- Lógica del Estado Vacío ("No tienes adquiridos...") ---
-        if (posesion.isEmpty()) {
-            txtVacioPosesion.setVisibility(View.VISIBLE);
-            recyclerPosesion.setVisibility(View.GONE);
-            txtTematicaSeleccionada.setText("Ninguna"); // Como no tienes, pones Ninguna
         } else {
-            txtVacioPosesion.setVisibility(View.GONE);
-            recyclerPosesion.setVisibility(View.VISIBLE);
+            layoutTematicaSeleccionada.setVisibility(View.VISIBLE);
+        }
 
-            // Automáticamente actualizamos el texto al primer elemento que tengas
-            if (permiteSeleccion) {
-                txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
+        // Buscar en la Base de Datos
+        for (ItemPersonalizacion item : todos) {
+            if (item.getTipo().equals(categoria)) {
+                if (item.isBloqueado()) {
+                    bloqueados.add(item);
+                } else {
+                    posesion.add(item);
+                }
             }
         }
 
-        // Creamos los adaptadores pasándole la orden "permiteSeleccion"
-        PersonalizacionAdapter adapterPosesion = new PersonalizacionAdapter(posesion, false, permiteSeleccion, item -> {
-            // Esto se ejecuta cuando haces click en un cuadrado de Posesión (y solo si permiteSelección es true)
-            txtTematicaSeleccionada.setText(item.getNombre());
+        if (posesion.isEmpty()) {
+            txtVacioPosesion.setVisibility(View.VISIBLE);
+            recyclerPosesion.setVisibility(View.GONE);
+            txtTematicaSeleccionada.setText("Ninguna");
+        } else {
+            txtVacioPosesion.setVisibility(View.GONE);
+            recyclerPosesion.setVisibility(View.VISIBLE);
+            if (permiteSeleccion) txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
+        }
+
+        boolean finalPermiteSeleccion = permiteSeleccion;
+
+        this.adapterPosesion = new PersonalizacionAdapter(posesion, false, permiteSeleccion, (item, position) -> {
+            mostrarPreview(item, position, finalPermiteSeleccion);
         });
 
-        PersonalizacionAdapter adapterBloqueados = new PersonalizacionAdapter(bloqueados, true, false, null);
+        this.adapterBloqueados = new PersonalizacionAdapter(bloqueados, true, false, null);
 
-        // Los inyectamos en la pantalla
         recyclerPosesion.setAdapter(adapterPosesion);
         recyclerBloqueados.setAdapter(adapterBloqueados);
+    }
+
+    private void mostrarPreview(ItemPersonalizacion item, int position, boolean permiteSeleccion) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_preview_personalizacion, null);
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        android.app.AlertDialog dialog = builder.create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo);
+        ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview);
+        ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item);
+        android.widget.Button btnSeleccionar = dialogView.findViewById(R.id.btn_seleccionar_preview);
+
+        txtTitulo.setText(item.getNombre());
+
+        if (item.getIconoResId() != 0) {
+            imgPreview.setImageResource(item.getIconoResId());
+        } else {
+            imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+        }
+
+        if (!permiteSeleccion || item.getTipo().equals("baraja")) {
+            btnSeleccionar.setVisibility(View.GONE);
+        } else {
+            btnSeleccionar.setVisibility(View.VISIBLE);
+            btnSeleccionar.setOnClickListener(v -> {
+                if(adapterPosesion != null){
+                    adapterPosesion.setPosicionSeleccionada(position);
+                }
+                txtTematicaSeleccionada.setText(item.getNombre());
+                dialog.dismiss();
+            });
+        }
+
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void configurarNavegacionInferior() {

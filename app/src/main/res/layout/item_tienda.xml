@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/fondo_item_personalizacion"
+    android:id="@+id/fondo_item_tienda"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="6dp"
@@ -12,7 +12,7 @@
     android:padding="10dp">
 
     <TextView
-        android:id="@+id/txt_nombre_item"
+        android:id="@+id/txt_nombre_item_tienda"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="serif"
@@ -27,14 +27,13 @@
         android:layout_marginVertical="8dp">
 
         <FrameLayout
-            android:id="@+id/vista_cartas"
+            android:id="@+id/vista_cartas_tienda"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:visibility="visible">
-
             <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="10dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="1dp" />
             <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="5dp" android:layout_marginTop="4dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="2dp" />
             <FrameLayout android:layout_width="35dp" android:layout_height="50dp" android:layout_marginTop="8dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="3dp">
@@ -43,22 +42,63 @@
         </FrameLayout>
 
         <ImageView
-            android:id="@+id/vista_imagen"
+            android:id="@+id/vista_imagen_tienda"
             android:layout_width="65dp"
             android:layout_height="80dp"
             android:layout_gravity="center"
             android:background="@drawable/fondo_blanco_redondeado"
             android:elevation="2dp"
             android:visibility="gone" />
+    </FrameLayout>
 
-        <ImageView
-            android:id="@+id/icono_candado"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp">
+
+        <LinearLayout
+            android:id="@+id/layout_precio_tienda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_gravity="center"
-            android:elevation="4dp"
-            android:src="@drawable/ic_candado"
-            android:visibility="gone" />
+            android:background="@drawable/icon_square_bg"
+            android:backgroundTint="#FFFFFF"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp">
 
+            <TextView
+                android:id="@+id/txt_precio_item_tienda"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="500"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:textSize="12sp"/>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/ic_bullet"
+                app:tint="@color/black" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_comprado_tienda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✓ ¡En posesión!"
+                android:textColor="#4CAF50"
+                android:textStyle="bold"
+                android:textSize="12sp"/>
+        </LinearLayout>
     </FrameLayout>
 </LinearLayout>
