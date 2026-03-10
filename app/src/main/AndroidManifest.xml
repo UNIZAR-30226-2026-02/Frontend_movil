@@ -66,6 +66,8 @@
         <activity android:name=".ui.SalaEsperaActivity"
             android:exported="false"/>
 
+        <activity android:name=".ui.LogrosActivity" android:exported="false" />
+
     </application>
 
 </manifest>

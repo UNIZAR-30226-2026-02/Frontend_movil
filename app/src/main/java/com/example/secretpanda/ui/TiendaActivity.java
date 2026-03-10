@@ -11,8 +11,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.model.GestorEstadisticas;
 import com.example.secretpanda.data.model.InventarioGlobal;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
+import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.home.HomeActivity;
 
 import java.util.ArrayList;
@@ -41,13 +43,16 @@ public class TiendaActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Cargamos los datos cada vez que abrimos la pantalla
         actualizarTextoSaldo();
         cargarDatosTienda();
     }
 
     private void actualizarTextoSaldo() {
-        txtSaldo.setText(String.valueOf(InventarioGlobal.getInstance().getMisBalas()));
+        // LEEMOS LAS BALAS DEL JUGADOR REAL
+        Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
+        if (txtSaldo != null && jugador != null) {
+            txtSaldo.setText(String.valueOf(jugador.getBalas()));
+        }
     }
 
     private void cargarDatosTienda() {
@@ -57,7 +62,6 @@ public class TiendaActivity extends AppCompatActivity {
         List<ItemPersonalizacion> bordesTienda = new ArrayList<>();
         List<ItemPersonalizacion> fondosTienda = new ArrayList<>();
 
-        // Filtramos para la tienda (solo los que tienen precio > 0)
         for (ItemPersonalizacion item : todos) {
             if (item.getPrecio() > 0) {
                 if (item.getTipo().equals("baraja")) barajasTienda.add(item);
@@ -96,15 +100,17 @@ public class TiendaActivity extends AppCompatActivity {
         else imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
 
         btnComprar.setOnClickListener(v -> {
-            if (InventarioGlobal.getInstance().getMisBalas() >= item.getPrecio()) {
-                // 1. Restamos balas y actualizamos marcador
-                InventarioGlobal.getInstance().restarBalas(item.getPrecio());
+            Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
+
+            if (jugador.getBalas() >= item.getPrecio()) {
+                // 1. Restamos balas al Jugador y actualizamos marcador
+                jugador.setBalas(jugador.getBalas() - item.getPrecio());
                 actualizarTextoSaldo();
 
-                // 2. ¡Desbloqueamos el ítem! (Magia para la Base de Datos)
+                // 2. Desbloqueamos el ítem
                 item.setBloqueado(false);
 
-                // 3. Avisamos al adaptador para que dibuje el Tick verde
+                // 3. Avisamos al adaptador
                 adaptadorOrigen.notifyItemChanged(position);
 
                 Toast.makeText(this, "¡Has adquirido " + item.getNombre() + "!", Toast.LENGTH_SHORT).show();
@@ -125,7 +131,6 @@ public class TiendaActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
-        // ¡REVISA QUE EL ID AQUÍ SEA EL CORRECTO PARA TU BOTON COLECCIÓN!
         LinearLayout btnNavPersonalizacion = findViewById(R.id.nav_personalizar);
         if (btnNavPersonalizacion != null) btnNavPersonalizacion.setOnClickListener(v -> {
             startActivity(new Intent(TiendaActivity.this, PersonalizacionActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));

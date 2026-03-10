@@ -42,6 +42,7 @@
                 android:paddingHorizontal="8dp">
 
                 <TextView
+                    android:id="@+id/txt_balas_home"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="10000"

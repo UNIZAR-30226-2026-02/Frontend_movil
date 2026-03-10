@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <LinearLayout
+        android:id="@+id/top_bar_logros"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:background="@drawable/bg_top_bar_clasificacion"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintWidth_percent="0.95"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/baseline_emoji_events_24"
+            app:tint="@color/white" /> <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Logros y Medallas"
+        android:textColor="@color/white"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/btn_cerrar_logros"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/fondo_boton_cerrar"
+        android:elevation="5dp"
+        android:padding="8dp"
+        android:src="@drawable/ic_cerrar_x"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_botones_filtro_logros"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/top_bar_logros">
+
+        <TextView
+            android:id="@+id/tab_logros"
+            android:layout_width="130dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_tab_inactivo"
+            android:gravity="center"
+            android:text="Logros"
+            android:textColor="#BBBBBB"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tab_medallas"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tab_medallas"
+            android:layout_width="130dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_tab_inactivo"
+            android:gravity="center"
+            android:text="Medallas"
+            android:textColor="#BBBBBB"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/tab_logros"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_lista_logros"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:scrollbars="vertical"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_botones_filtro_logros" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_lista_medallas"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:scrollbars="vertical"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_botones_filtro_logros" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

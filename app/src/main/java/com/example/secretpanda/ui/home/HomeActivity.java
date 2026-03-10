@@ -20,6 +20,7 @@ import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.ClasificacionActivity; // Importamos la nueva pantalla
 
+import com.example.secretpanda.ui.LogrosActivity;
 import com.example.secretpanda.ui.PartidaActivity;
 import com.example.secretpanda.ui.PerfilActivity;
 import com.example.secretpanda.ui.PersonalizacionActivity;
@@ -162,11 +163,11 @@ public class HomeActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
             });
         }
-        View btnNavPartidaPrueba = findViewById(R.id.btn_logros);
-        if (btnNavPartidaPrueba != null) {
-            btnNavPartidaPrueba.setOnClickListener(v -> {
+        View btnLogros = findViewById(R.id.btn_logros);
+        if (btnLogros != null) {
+            btnLogros.setOnClickListener(v -> {
                 // Abrir la pantalla de Tienda
-                android.content.Intent intent = new android.content.Intent(HomeActivity.this, PartidaActivity.class);
+                android.content.Intent intent = new android.content.Intent(HomeActivity.this, LogrosActivity.class);
                 startActivity(intent);
 
                 // Opcional: Anula la animación por defecto de Android para que parezca
@@ -258,5 +259,18 @@ public class HomeActivity extends AppCompatActivity {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
         return dialog;
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Sincronizar el dinero en el Home al volver de otras pantallas
+        // Asegúrate de que el R.id coincide con el ID de las balas en tu home.xml
+        TextView txtBalasHome = findViewById(R.id.txt_balas_home); // O el ID que tengas
+
+        if (txtBalasHome != null) {
+            int misBalas = com.example.secretpanda.data.model.GestorEstadisticas.getInstance().getJugadorActual().getBalas();
+            txtBalasHome.setText(String.valueOf(misBalas));
+        }
     }
 }

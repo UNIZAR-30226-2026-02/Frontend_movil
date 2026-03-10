@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@drawable/fondo_gris_redondeado"
+    android:elevation="4dp"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:id="@+id/caja_recompensa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/fondo_blanco_redondeado"
+        android:backgroundTint="#4CAF50"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp">
+
+        <TextView
+            android:id="@+id/txt_recompensa_logro"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+50"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginStart="4dp"
+            android:src="@drawable/ic_bullet"
+            app:tint="@color/white" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txt_titulo_logro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/caja_recompensa"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="8dp"
+        android:text="Añade a 5 amigos"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txt_progreso_logro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/caja_recompensa"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="8dp"
+        android:text="1/5"
+        android:textColor="#AAAAAA"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <ProgressBar
+        android:id="@+id/barra_progreso_logro"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="12dp"
+        android:layout_below="@id/txt_titulo_logro"
+        android:layout_marginTop="12dp"
+        android:max="100"
+        android:progress="20"
+        android:progressDrawable="@drawable/barra_gorda"
+        android:progressTint="#4CAF50" />
+
+</RelativeLayout>
