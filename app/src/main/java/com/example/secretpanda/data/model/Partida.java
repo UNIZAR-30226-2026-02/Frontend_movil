@@ -4,15 +4,19 @@ public class Partida {
     private String nombre;
     private String creador;
     private String tiempo;
-    private String jugadores;
-    private boolean bloqueada;
-    private String tematica; // NUEVO CAMPO
 
-    public Partida(String nombre, String creador, String tiempo, String jugadores, boolean bloqueada, String tematica) {
+    private int jugadoresActuales;
+    private int maxJugadores;
+
+    private boolean bloqueada;
+    private String tematica;
+
+    public Partida(String nombre, String creador, String tiempo, int jugadoresActuales, int maxJugadores, boolean bloqueada, String tematica) {
         this.nombre = nombre;
         this.creador = creador;
         this.tiempo = tiempo;
-        this.jugadores = jugadores;
+        this.jugadoresActuales = jugadoresActuales;
+        this.maxJugadores = maxJugadores;
         this.bloqueada = bloqueada;
         this.tematica = tematica;
     }
@@ -20,7 +24,18 @@ public class Partida {
     public String getNombre() { return nombre; }
     public String getCreador() { return creador; }
     public String getTiempo() { return tiempo; }
-    public String getJugadores() { return jugadores; }
     public boolean isBloqueada() { return bloqueada; }
     public String getTematica() { return tematica; }
+
+    public int getJugadoresActuales() { return jugadoresActuales; }
+    public int getMaxJugadores() { return maxJugadores; }
+
+
+    public String getJugadoresTexto() {
+        return jugadoresActuales + "/" + maxJugadores;
+    }
+
+    public boolean isLlena() {
+        return jugadoresActuales >= maxJugadores;
+    }
 }

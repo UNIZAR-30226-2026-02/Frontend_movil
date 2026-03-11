@@ -13,10 +13,21 @@ public class GestorEstadisticas {
 
     private List<Logro> todosLosLogros;
     private Jugador jugadorActual;
-
+    private List<String> todasLasTematicas;
+    private List<String> tematicasDesbloqueadas;
     private GestorEstadisticas() {
         jugadorActual = new Jugador("MiUsuarioOculto");
         jugadorActual.setBalas(5000);
+        todasLasTematicas = new ArrayList<>();
+        todasLasTematicas.add("Español - Básico");
+        todasLasTematicas.add("Inglés - Básico");
+        todasLasTematicas.add("Deportes");
+        todasLasTematicas.add("Cine y Series");
+        todasLasTematicas.add("Videojuegos");
+
+        tematicasDesbloqueadas = new ArrayList<>();
+        tematicasDesbloqueadas.add("Español - Básico"); // Tienes esta
+        tematicasDesbloqueadas.add("Videojuegos");      // Y esta
 
         todosLosLogros = new ArrayList<>();
         todosLosLogros.add(new Logro(1, "Primera Sangre", "Gana tu primera partida", "medalla", "victorias", 1, 100));
@@ -60,4 +71,9 @@ public class GestorEstadisticas {
     public int getVictorias() { return victorias; }
     public int getNumAciertos() { return numAciertos; }
     public int getNumFallos() { return numFallos; }
+    public List<String> getTodasLasTematicas() { return todasLasTematicas; }
+
+        public boolean isTematicaDesbloqueada(String tema) {
+        return tematicasDesbloqueadas.contains(tema);
+    }
 }
