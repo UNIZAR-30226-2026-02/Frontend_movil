@@ -35,13 +35,13 @@
         android:textColor="#B71C1C"
         android:textSize="22sp"
         android:textStyle="bold" />
+
     <TextView
         android:id="@+id/txt_mensaje_error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/btn_cerrar_dialogo"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="37dp"
         android:layout_marginBottom="24dp"
         android:fontFamily="serif"
         android:gravity="center"
