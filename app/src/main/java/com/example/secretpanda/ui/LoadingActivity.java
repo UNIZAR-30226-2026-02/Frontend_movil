@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.auth.UserSelectionActivity;
 import com.example.secretpanda.ui.home.HomeActivity;
 
 public class LoadingActivity extends AppCompatActivity {

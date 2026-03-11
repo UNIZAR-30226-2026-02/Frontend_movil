@@ -26,7 +26,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".ui.UserSelectionActivity"
+            android:name=".ui.auth.UserSelectionActivity"
             android:exported="false" />
 
         <activity
@@ -38,33 +38,38 @@
             android:exported="false" />
 
         <activity
-            android:name=".ui.ClasificacionActivity"
+            android:name=".ui.home.classification.ClasificacionActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ui.PerfilActivity"
+            android:name=".ui.home.profile.PerfilActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.SolicitudesActivity"
+            android:name=".ui.home.profile.SolicitudesActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.TiendaActivity"
+            android:name=".ui.shop.TiendaActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.PersonalizacionActivity"
+            android:name=".ui.customization.PersonalizacionActivity"
             android:exported="false" />
 
-        <activity android:name=".ui.PartidaActivity"
+        <activity android:name=".ui.game.match.PartidaActivity"
             android:exported="false"/>
 
-        <activity android:name=".ui.UnirseMisionActivity"
+        <activity android:name=".ui.game.join.UnirseMisionActivity"
             android:exported="false"/>
-        <activity android:name=".ui.UnirsePrivadaActivity"
+        <activity android:name=".ui.game.join.UnirsePrivadaActivity"
             android:exported="false"/>
-        <activity android:name=".ui.MisionPublicaActivity"
+        <activity android:name=".ui.game.join.MisionPublicaActivity"
             android:exported="false"/>
-        <activity android:name=".ui.SalaEsperaActivity"
+        <activity android:name=".ui.game.waitingRoom.SalaEsperaActivity"
             android:exported="false"/>
+
+        <activity android:name=".ui.home.achivements.LogrosActivity" android:exported="false" />
+
+        <activity android:name=".ui.game.createMatch.CrearMisionOpcionesActivity" android:exported="false" />
+        <activity android:name=".ui.game.waitingRoom.ConfiguracionMisionActivity" android:exported="false" />
 
     </application>
 

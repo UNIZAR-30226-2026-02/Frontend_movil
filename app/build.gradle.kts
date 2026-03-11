@@ -27,6 +27,25 @@ android {
             )
         }
     }
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/xml_panda/home/achievements",
+                          "src/main/xml_panda/home/classification",
+                          "src/main/xml_panda/home/profile",
+                          "src/main/xml_panda/shop",
+                          "src/main/xml_panda/auth",
+                          "src/main/xml_panda/customization",
+                          "src/main/xml_panda/game/createMatch",
+                          "src/main/xml_panda/game/join",
+                          "src/main/xml_panda/game/match",
+                          "src/main/xml_panda/game/waitingRoom",
+                          "src/main/xml_panda/home/options"
+
+            )
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

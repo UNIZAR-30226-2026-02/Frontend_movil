@@ -10,7 +10,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -18,13 +17,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador;
-import com.example.secretpanda.ui.ClasificacionActivity; // Importamos la nueva pantalla
+import com.example.secretpanda.ui.home.classification.ClasificacionActivity; // Importamos la nueva pantalla
 
-import com.example.secretpanda.ui.PartidaActivity;
-import com.example.secretpanda.ui.PerfilActivity;
-import com.example.secretpanda.ui.PersonalizacionActivity;
-import com.example.secretpanda.ui.TiendaActivity;
-import com.example.secretpanda.ui.UnirseMisionActivity;
+import com.example.secretpanda.ui.home.achivements.LogrosActivity;
+import com.example.secretpanda.ui.home.profile.PerfilActivity;
+import com.example.secretpanda.ui.customization.PersonalizacionActivity;
+import com.example.secretpanda.ui.shop.TiendaActivity;
+import com.example.secretpanda.ui.game.join.UnirseMisionActivity;
+import com.example.secretpanda.ui.game.createMatch.CrearMisionOpcionesActivity;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -36,7 +36,6 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Quitar la barra de título superior por defecto de Android
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
@@ -44,9 +43,7 @@ public class HomeActivity extends AppCompatActivity {
 
         setContentView(R.layout.home);
 
-        // =========================================================
-        // 1. RECIBIR EL JUGADOR Y CAMBIAR EL SALUDO
-        // =========================================================
+        // RECIBIR EL JUGADOR Y CAMBIAR EL SALUDO
         TextView textoSaludo = findViewById(R.id.texto_saludo_home);
 
         jugadorActual = (Jugador) getIntent().getSerializableExtra("DATOS_JUGADOR");
@@ -60,21 +57,16 @@ public class HomeActivity extends AppCompatActivity {
             textoSaludo.setText("Hola, " + nombreMostrar);
         }
 
-        // =========================================================
-        // 2. CAPTURAR BOTONES PRINCIPALES
-        // =========================================================
+        // CAPTURAR BOTONES PRINCIPALES
         Button btnNuevaMision = findViewById(R.id.btn_nueva_mision);
         Button btnUneteMision = findViewById(R.id.btn_unete_mision);
 
         // El botón de las 3 rayitas
         ImageView btnMenuOpciones = findViewById(R.id.btn_menu_opciones);
 
-        // ¡NUEVO! El botón de la copa para la clasificación
         ImageView btnClasificacion = findViewById(R.id.btn_clasificacion);
 
-        // ¡NUEVO! El botón de la copa para la clasificación
         ImageView btnPerfil = findViewById(R.id.btn_perfil);
-        // Configurar el escuchador ANTES de usarlo
         perfilLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -101,27 +93,23 @@ public class HomeActivity extends AppCompatActivity {
             perfilLauncher.launch(intent);
         });
 
-        // =========================================================
-        // 3. DARLES ACCIÓN A LOS BOTONES
-        // =========================================================
-        btnNuevaMision.setOnClickListener(v -> Toast.makeText(HomeActivity.this, "Iniciando Nueva Misión...", Toast.LENGTH_SHORT).show());
-
+        btnNuevaMision.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, CrearMisionOpcionesActivity.class);
+            startActivity(intent);
+            overridePendingTransition(0, 0); // Evitamos la animación por defecto
+        });
         if (btnUneteMision != null) {
             btnUneteMision.setOnClickListener(v -> {
                 // Abrir la pantalla de Tienda
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, UnirseMisionActivity.class);
                 startActivity(intent);
 
-                // Opcional: Anula la animación por defecto de Android para que parezca
-                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
                 overridePendingTransition(0, 0);
             });
         }
 
-        // Al pulsar las rayitas, abrimos tu menú personalizado
         btnMenuOpciones.setOnClickListener(v -> mostrarMenuPersonalizado(v));
 
-        // ¡Al pulsar la copa, viajamos a la pantalla de clasificación!
         if (btnClasificacion != null) {
             btnClasificacion.setOnClickListener(v -> {
                 Intent intent = new Intent(HomeActivity.this, ClasificacionActivity.class);
@@ -145,8 +133,6 @@ public class HomeActivity extends AppCompatActivity {
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, TiendaActivity.class);
                 startActivity(intent);
 
-                // Opcional: Anula la animación por defecto de Android para que parezca
-                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
                 overridePendingTransition(0, 0);
             });
         }
@@ -157,20 +143,16 @@ public class HomeActivity extends AppCompatActivity {
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, PersonalizacionActivity.class);
                 startActivity(intent);
 
-                // Opcional: Anula la animación por defecto de Android para que parezca
-                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
                 overridePendingTransition(0, 0);
             });
         }
-        View btnNavPartidaPrueba = findViewById(R.id.btn_logros);
-        if (btnNavPartidaPrueba != null) {
-            btnNavPartidaPrueba.setOnClickListener(v -> {
+        View btnLogros = findViewById(R.id.btn_logros);
+        if (btnLogros != null) {
+            btnLogros.setOnClickListener(v -> {
                 // Abrir la pantalla de Tienda
-                android.content.Intent intent = new android.content.Intent(HomeActivity.this, PartidaActivity.class);
+                android.content.Intent intent = new android.content.Intent(HomeActivity.this, LogrosActivity.class);
                 startActivity(intent);
 
-                // Opcional: Anula la animación por defecto de Android para que parezca
-                // que cambias de pestaña sin que la pantalla "vuele" desde abajo
                 overridePendingTransition(0, 0);
             });
         }
@@ -178,9 +160,7 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
-    // =========================================================
     // LÓGICA DEL MENÚ DESPLEGABLE DE LA ESQUINA
-    // =========================================================
     private void mostrarMenuPersonalizado(View vistaBoton) {
         View popupView = LayoutInflater.from(this).inflate(R.layout.popup_menu_personalizado, null);
 
@@ -213,9 +193,7 @@ public class HomeActivity extends AppCompatActivity {
         popupWindow.showAsDropDown(vistaBoton, -350, 10);
     }
 
-    // =========================================================
     // MÉTODOS DE LOS POPUPS
-    // =========================================================
 
     private void mostrarDialogoMusica() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_musica, null);
@@ -247,9 +225,6 @@ public class HomeActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // =========================================================
-    // MÉTODO AYUDANTE PARA EL FONDO REDONDEADO DE LOS POPUPS
-    // =========================================================
     private AlertDialog crearDialogoBase(View dialogView) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(dialogView);
@@ -258,5 +233,18 @@ public class HomeActivity extends AppCompatActivity {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
         return dialog;
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Sincronizar el dinero en el Home al volver de otras pantallas
+        // Asegúrate de que el R.id coincide con el ID de las balas en tu home.xml
+        TextView txtBalasHome = findViewById(R.id.txt_balas_home); // O el ID que tengas
+
+        if (txtBalasHome != null) {
+            int misBalas = com.example.secretpanda.data.model.GestorEstadisticas.getInstance().getJugadorActual().getBalas();
+            txtBalasHome.setText(String.valueOf(misBalas));
+        }
     }
 }
