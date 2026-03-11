@@ -68,6 +68,9 @@
 
         <activity android:name=".ui.LogrosActivity" android:exported="false" />
 
+        <activity android:name=".ui.CrearMisionOpcionesActivity" android:exported="false" />
+        <activity android:name=".ui.ConfiguracionMisionActivity" android:exported="false" />
+
     </application>
 
 </manifest>
