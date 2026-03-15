@@ -62,7 +62,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center"
-            android:background="@drawable/icon_square_bg"
+            android:background="@drawable/ic_square_bg"
             android:backgroundTint="#FFFFFF"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp">

@@ -75,7 +75,7 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
             holder.txtNombre.setTextColor(Color.BLACK);
 
             if (permiteSeleccion && position == posicionSeleccionada && !esListaBloqueados) {
-                holder.fondo.setBackgroundResource(R.drawable.borde_verde_seleccion_personalizacion);
+                holder.fondo.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
             } else {
                 holder.fondo.setBackgroundResource(R.drawable.fondo_gris_redondeado);
             }

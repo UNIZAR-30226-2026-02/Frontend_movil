@@ -44,7 +44,7 @@
                     android:layout_width="100dp"
                     android:layout_height="80dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_tab_activo"
+                    android:background="@drawable/fondo_tab_activo"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintHorizontal_chainStyle="packed"
@@ -60,7 +60,7 @@
                     android:layout_width="100dp"
                     android:layout_height="50dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_tab_inactivo"
+                    android:background="@drawable/fondo_tab_inactivo"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintStart_toEndOf="@+id/tab_barajas"
@@ -74,7 +74,7 @@
                     android:id="@+id/tab_fondos"
                     android:layout_width="100dp"
                     android:layout_height="50dp"
-                    android:background="@drawable/bg_tab_inactivo"
+                    android:background="@drawable/fondo_tab_inactivo"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintStart_toEndOf="@+id/tab_bordes"
@@ -178,7 +178,7 @@
 
     <include
         android:id="@+id/bottom_navigation_bar"
-        layout="@layout/layout_bottom_navigation_personalizacion"
+        layout="@layout/item_bottom_navigation_personalizacion"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_alignParentBottom="true" />

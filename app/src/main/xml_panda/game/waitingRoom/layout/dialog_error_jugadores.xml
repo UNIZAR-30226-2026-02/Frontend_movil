@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="@drawable/fondo_gris_redondeado"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="serif"
+        android:text="Error"
+        android:textColor="#FFFFFF"
+        android:textSize="26sp"
+        android:textStyle="bold|italic"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="serif"
+        android:text="Faltan jugadores para poder iniciar la partida. Se requieren 4 jugadores mínimo."
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btn_cerrar_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/fondo_boton_mision"
+        android:fontFamily="serif"
+        android:paddingHorizontal="32dp"
+        android:text="Cerrar"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold|italic" />
+
+</LinearLayout>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:background="#D9D9D9"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+        <ImageButton
+            android:id="@+id/btn_cerrar_ajustes"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#000000" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tiempo"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#A0A0A0" android:layout_marginBottom="16dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:id="@+id/btn_tiempo_30"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="30s" />
+
+        <TextView
+            android:id="@+id/btn_tiempo_60"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_carta_seleccionada"
+            android:gravity="center"
+            android:text="60s" />
+
+        <TextView
+            android:id="@+id/btn_tiempo_80"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="80s" />
+
+        <TextView
+            android:id="@+id/btn_tiempo_120"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="120s" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Maximo Jugadores"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#A0A0A0" android:layout_marginBottom="16dp"/>
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:columnCount="4"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:id="@+id/btn_jugadores_4"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_carta_seleccionada"
+            android:gravity="center"
+            android:text="4" />
+
+        <TextView
+            android:id="@+id/btn_jugadores_6"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="6" />
+
+        <TextView
+            android:id="@+id/btn_jugadores_8"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="8" />
+
+        <TextView
+            android:id="@+id/btn_jugadores_10"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="10" />
+
+        <TextView
+            android:id="@+id/btn_jugadores_12"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="12" />
+
+        <TextView
+            android:id="@+id/btn_jugadores_14"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="14" />
+
+        <TextView
+            android:id="@+id/btn_jugadores_16"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/fondo_boton_mision"
+            android:gravity="center"
+            android:text="16" />
+    </GridLayout>
+
+    <TextView
+        android:id="@+id/tv_advertencia_sala"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No puedes cambiar la capacidad de la sala porque ya hay dentro demasiados jugadores"
+        android:textAlignment="center"
+        android:textStyle="bold|italic"
+        android:textColor="#000000" />
+
+</LinearLayout>

@@ -12,7 +12,7 @@
         android:id="@+id/texto_posicion"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:background="@drawable/bg_posicion_ranking"
+        android:background="@drawable/fondo_posicion_ranking"
         android:gravity="center"
         android:text="1"
         android:textColor="@color/white"
@@ -34,7 +34,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_launcher_foreground"
-            android:background="@drawable/icon_square_bg" />
+            android:background="@drawable/ic_square_bg" />
 
         <TextView
             android:id="@+id/nombre_jugador"
@@ -48,7 +48,7 @@
             android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_width="85dp"  android:layout_height="32dp" android:background="@drawable/bg_caja_victorias"
+            android:layout_width="85dp"  android:layout_height="32dp" android:background="@drawable/fondo_caja_victorias"
             android:gravity="center"     android:orientation="horizontal">
 
             <ImageView
@@ -56,7 +56,7 @@
                 android:layout_height="16dp"
                 android:layout_marginEnd="6dp"
                 app:tint="@color/white"
-                android:src="@drawable/baseline_emoji_events_24" /> <TextView
+                android:src="@drawable/ic_trofeo" /> <TextView
             android:id="@+id/texto_victorias"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

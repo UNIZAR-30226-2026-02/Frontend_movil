@@ -23,7 +23,7 @@ public class InventarioGlobal {
 
         // BORDES
         todosLosItems.add(new ItemPersonalizacion("Madera", false, "borde", R.drawable.ic_menu, 0));
-        todosLosItems.add(new ItemPersonalizacion("Metal", false, "borde", R.drawable.baseline_emoji_events_24, 0));
+        todosLosItems.add(new ItemPersonalizacion("Metal", false, "borde", R.drawable.ic_trofeo, 0));
         todosLosItems.add(new ItemPersonalizacion("Oro", true, "borde", R.drawable.ic_costumize, 1200));
         todosLosItems.add(new ItemPersonalizacion("Diamante", true, "borde", R.drawable.ic_candado, 3000));
 

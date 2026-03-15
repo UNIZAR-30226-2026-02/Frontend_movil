@@ -164,11 +164,12 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tv_contador_azul"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:fontFamily="serif"
-                        android:text="Azul: 5/5"
+                        android:text="Azul: 0/5"
                         android:textColor="#0000FF"
                         android:textSize="14sp"
                         android:textStyle="bold|italic" />
@@ -177,7 +178,7 @@
                         android:id="@+id/btn_unirse_azul"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_boton_unirse"
+                        android:background="@drawable/fondo_boton_unirse"
                         android:fontFamily="serif"
                         android:text="Unirse"
                         android:textColor="#FFFFFF"
@@ -193,11 +194,12 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tv_contador_rojo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:fontFamily="serif"
-                        android:text="Rojo: 4/5"
+                        android:text="Rojo: 0/5"
                         android:textColor="#FF0000"
                         android:textSize="14sp"
                         android:textStyle="bold|italic" />
@@ -206,7 +208,7 @@
                         android:id="@+id/btn_unirse_rojo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_boton_dentro"
+                        android:background="@drawable/fondo_boton_dentro"
                         android:fontFamily="serif"
                         android:text="Dentro"
                         android:textColor="#FF0000"
@@ -247,19 +249,19 @@
         <FrameLayout
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/bg_boton_circular">
+            android:background="@drawable/fondo_boton_circular">
             <ImageButton
                 android:id="@+id/btn_configuracion"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:background="@drawable/bg_boton_circular"
+                android:background="@drawable/fondo_boton_circular"
                 android:src="@drawable/ic_tuerca"
                 android:padding="12dp"
                 android:scaleType="centerInside" />
         </FrameLayout>
 
         <TextView
-            android:id="@+id/btn_iniciar_partida"
+            android:id="@+id/btn_iniciar_partida_principal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
@@ -276,12 +278,12 @@
         <FrameLayout
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/bg_boton_circular">
+            android:background="@drawable/fondo_boton_circular">
             <ImageButton
                 android:id="@+id/btn_tematicas"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:background="@drawable/bg_boton_circular"
+                android:background="@drawable/fondo_boton_circular"
                 android:src="@drawable/ic_estrella"
                 android:padding="12dp"
                 android:scaleType="centerInside" />

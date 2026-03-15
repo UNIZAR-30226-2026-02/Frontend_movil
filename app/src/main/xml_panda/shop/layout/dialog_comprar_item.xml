@@ -119,7 +119,7 @@
                 android:id="@+id/btn_dialogo_comprar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/btn_verde_borde_negro"
+                android:background="@drawable/fondo_verde_borde_negro"
                 android:gravity="center"
                 android:orientation="horizontal"
                 android:paddingHorizontal="24dp"

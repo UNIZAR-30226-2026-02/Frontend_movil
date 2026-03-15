@@ -95,9 +95,9 @@ public class PersonalizacionActivity extends AppCompatActivity {
         txtInactivo1.setVisibility(View.GONE);
         txtInactivo2.setVisibility(View.GONE);
 
-        activa.setBackgroundResource(R.drawable.bg_tab_activo);
-        inactiva1.setBackgroundResource(R.drawable.bg_tab_inactivo);
-        inactiva2.setBackgroundResource(R.drawable.bg_tab_inactivo);
+        activa.setBackgroundResource(R.drawable.fondo_tab_activo);
+        inactiva1.setBackgroundResource(R.drawable.fondo_tab_inactivo);
+        inactiva2.setBackgroundResource(R.drawable.fondo_tab_inactivo);
 
         animarAltura(activa, 80);
         animarAltura(inactiva1, 50);

@@ -108,6 +108,6 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
     }
 
     private void seleccionarBoton(TextView boton) {
-        boton.setBackgroundResource(R.drawable.borde_verde_seleccion_personalizacion);
+        boton.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
     }
 }

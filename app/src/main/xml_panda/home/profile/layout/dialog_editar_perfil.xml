@@ -28,7 +28,7 @@
             android:layout_height="30dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/btn_borde_negro"
+            android:background="@drawable/fondo_borde_negro"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             app:tint="#555555" />
     </RelativeLayout>

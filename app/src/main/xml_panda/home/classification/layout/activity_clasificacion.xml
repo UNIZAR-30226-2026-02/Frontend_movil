@@ -7,7 +7,7 @@
     android:id="@+id/top_bar_ranking"
     android:layout_width="0dp"
     android:layout_height="60dp"
-    android:background="@drawable/bg_top_bar_clasificacion"
+    android:background="@drawable/fondo_top_bar_clasificacion"
     android:gravity="center"
     android:orientation="horizontal"
     app:layout_constraintWidth_percent="0.95"
@@ -18,7 +18,7 @@
     <ImageView
         android:layout_width="28dp"
         android:layout_height="28dp"
-        android:src="@drawable/baseline_emoji_events_24"
+        android:src="@drawable/ic_trofeo"
         app:tint="@color/white" />
 
     <TextView
@@ -57,7 +57,7 @@
             android:layout_width="130dp"
             android:layout_height="55dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_tab_inactivo"
+            android:background="@drawable/fondo_tab_inactivo"
             android:gravity="center"
             android:text="Amigos"
             android:textColor="#BBBBBB"
@@ -72,7 +72,7 @@
         android:layout_width="130dp"
         android:layout_height="40dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/bg_tab_inactivo"
+        android:background="@drawable/fondo_tab_inactivo"
         android:gravity="center"
         android:text="Global"
         android:textColor="#BBBBBB"
