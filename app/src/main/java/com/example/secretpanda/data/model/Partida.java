@@ -1,41 +1,65 @@
 package com.example.secretpanda.data.model;
 
-public class Partida {
-    private String nombre;
-    private String creador;
-    private String tiempo;
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
-    private int jugadoresActuales;
+public class Partida {
+
+    @SerializedName("id_partida")
+    private int idPartida;
+
+    // El servidor lo llama codigo_partida, nosotros lo mostramos como nombre
+    @SerializedName("codigo_partida")
+    private String nombre;
+
+    @SerializedName("max_jugadores")
     private int maxJugadores;
 
-    private boolean bloqueada;
+    @SerializedName("es_publica")
+    private boolean esPublica;
+
+    // ¡Aquí estaba el fallo! El DTO lo llama nombreTema -> nombre_tema
+    @SerializedName("nombre_tema")
     private String tematica;
 
-    public Partida(String nombre, String creador, String tiempo, int jugadoresActuales, int maxJugadores, boolean bloqueada, String tematica) {
-        this.nombre = nombre;
-        this.creador = creador;
-        this.tiempo = tiempo;
-        this.jugadoresActuales = jugadoresActuales;
-        this.maxJugadores = maxJugadores;
-        this.bloqueada = bloqueada;
-        this.tematica = tematica;
+    @SerializedName("estado")
+    private String estado;
+
+    // El servidor nos envía una lista con los jugadores dentro de la sala
+    @SerializedName("jugadores")
+    private List<Object> jugadores;
+
+    // Constructor vacío obligatorio para Gson
+    public Partida() {}
+
+    // Getters básicos
+    public int getIdPartida() { return idPartida; }
+    public String getNombre() { return nombre; }
+    public int getMaxJugadores() { return maxJugadores; }
+    public String getTematica() { return tematica; }
+    public String getEstado() { return estado; }
+
+    // Como el servidor no nos envía creador ni tiempo en el LobbyStatusDTO,
+    // devolvemos un valor por defecto para que la interfaz no falle.
+    public String getCreador() { return "Sistema"; }
+    public String getTiempo() { return "Sin límite"; }
+
+    // ¡TRUCO! Calculamos los jugadores actuales contando el tamaño de la lista
+    public int getJugadoresActuales() {
+        if (jugadores == null) return 0;
+        return jugadores.size();
     }
 
-    public String getNombre() { return nombre; }
-    public String getCreador() { return creador; }
-    public String getTiempo() { return tiempo; }
-    public boolean isBloqueada() { return bloqueada; }
-    public String getTematica() { return tematica; }
-
-    public int getJugadoresActuales() { return jugadoresActuales; }
-    public int getMaxJugadores() { return maxJugadores; }
-
+    // Lógica para saber si está bloqueada (si no es pública)
+    public boolean isBloqueada() {
+        return !esPublica;
+    }
 
     public String getJugadoresTexto() {
-        return jugadoresActuales + "/" + maxJugadores;
+        return getJugadoresActuales() + "/" + maxJugadores;
     }
 
     public boolean isLlena() {
-        return jugadoresActuales >= maxJugadores;
+        return getJugadoresActuales() >= maxJugadores;
     }
 }
