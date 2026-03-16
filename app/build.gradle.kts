@@ -69,4 +69,5 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
     // para convertir JSON en java
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }
