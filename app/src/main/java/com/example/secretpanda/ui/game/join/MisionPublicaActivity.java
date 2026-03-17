@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
+import com.example.secretpanda.ui.game.match.PartidaActivity;
 import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 
@@ -70,8 +71,13 @@ public class MisionPublicaActivity extends AppCompatActivity {
             if (partida.isBloqueada() || partida.isLlena()) {
                 mostrarDialogoError(partida);
             } else {
-                Intent intent = new Intent(MisionPublicaActivity.this, SalaEsperaActivity.class);
-                intent.putExtra("TEMATICA_PARTIDA", partida.getTematica());
+                // Suponiendo que tienes un objeto "partida" con los datos del elemento clicado
+                int idPartidaClicada = partida.getIdPartida();
+                String miEquipo = "rojo"; // O el equipo que tenga asignado el jugador
+
+                Intent intent = new Intent(this, PartidaActivity.class);
+                intent.putExtra("ID_PARTIDA", idPartidaClicada);
+                intent.putExtra("MI_EQUIPO", miEquipo);
                 startActivity(intent);
             }
         });
