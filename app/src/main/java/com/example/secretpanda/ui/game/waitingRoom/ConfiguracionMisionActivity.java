@@ -74,7 +74,19 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                     "\nTiempo: " + tiempoSeleccionado + "s" +
                     "\nJugadores: " + jugadoresSeleccionados;
 
-            Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show();
+
+            android.content.Intent intent = new android.content.Intent(ConfiguracionMisionActivity.this, SalaEsperaActivity.class);
+
+            intent.putExtra("ES_LIDER", true); // Como tú la creas, eres el líder
+            intent.putExtra("ES_PRIVADA", esPrivada);
+            intent.putExtra("MAX_JUGADORES", jugadoresSeleccionados);
+            intent.putExtra("TIEMPO_TURNO", tiempoSeleccionado);
+
+            startActivity(intent);
+
+            // Cerramos la pantalla de configuración para que el jugador no pueda
+            // darle al botón de "Atrás" del móvil y volver a crear otra sala por accidente.
+            finish();
         });
     }
 
@@ -103,6 +115,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
 
                 if (esTiempo) tiempoSeleccionado = valores[index];
                 else jugadoresSeleccionados = valores[index];
+
             });
         }
     }

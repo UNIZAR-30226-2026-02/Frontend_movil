@@ -76,8 +76,13 @@ public class MisionPublicaActivity extends AppCompatActivity {
                 String miEquipo = "rojo"; // O el equipo que tenga asignado el jugador
 
                 Intent intent = new Intent(this, PartidaActivity.class);
-                intent.putExtra("ID_PARTIDA", idPartidaClicada);
-                intent.putExtra("MI_EQUIPO", miEquipo);
+                intent.putExtra("ES_LIDER", false); // NO eres líder
+                intent.putExtra("ES_PRIVADA", false); // Es pública
+
+
+                intent.putExtra("MAX_JUGADORES", partida.getMaxJugadores());
+                intent.putExtra("TIEMPO_TURNO", partida.getTiempo());
+
                 startActivity(intent);
             }
         });
