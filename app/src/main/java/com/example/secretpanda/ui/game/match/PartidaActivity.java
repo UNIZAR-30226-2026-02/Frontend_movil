@@ -17,6 +17,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 
+import org.json.JSONObject;
+
+import ua.naiksoftware.stomp.Stomp;
+import ua.naiksoftware.stomp.StompClient;
+
 public class PartidaActivity extends AppCompatActivity {
 
     private TextView btnAbandonar;
@@ -26,7 +31,13 @@ public class PartidaActivity extends AppCompatActivity {
     private TextView notificacionChat;
     private TextView tvMiRol;
     private android.widget.ImageView iconoBtnAlerta;
-    private String miRol = "Jefe";
+    private String miRol = "Agente";
+
+
+    private StompClient stompClient;
+    private int idPartidaActual; // <--- Sin valor fijo
+    private String miEquipo;     // <--- Sin valor fijo
+    private LinearLayout contenedorMensajesActual = null;
 
     // ¡NUEVA VARIABLE MAGICA!
     // Aquí guardaremos la carta que está verde en cada momento
@@ -36,6 +47,36 @@ public class PartidaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_partida);
+
+        // --- RECOGER DATOS DE LA PANTALLA ANTERIOR ---
+        idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
+        miEquipo = getIntent().getStringExtra("MI_EQUIPO");
+
+        // Por seguridad, si por algún motivo no llega el equipo, le ponemos uno por defecto
+        if (miEquipo == null) {
+            miEquipo = "rojo";
+        }
+
+        // Si el ID es -1, significa que hubo un error al pasar los datos
+        if (idPartidaActual == -1) {
+            Toast.makeText(this, "Error: No se encontró la partida", Toast.LENGTH_SHORT).show();
+            finish(); // Cerramos la pantalla porque está rota
+            return;
+        }
+
+        // 1. Conectar al WebSocket de Spring Boot (Asegúrate de que la URL /ws o /stomp es la tuya del backend)
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws/websocket");
+        stompClient.connect();
+        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo;
+
+        // 2. Escuchar los mensajes que mandan mis compañeros de equipo
+        stompClient.topic(topicDestino).subscribe(stompMessage -> {
+            // Cuando llega un mensaje nuevo del servidor, lo pintamos en la pantalla
+            runOnUiThread(() -> {
+                // Aquí procesas el JSON que llega y usas tu método:
+                // agregarMensajeAlChat(contenedorMensajes, "Compañero", textoDelMensaje, false);
+            });
+        });
 
         btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAlerta = findViewById(R.id.btn_alerta);
@@ -164,8 +205,12 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     // NUEVO MÉTODO MÁGICO
+    // NUEVO MÉTODO MÁGICO (ARREGLADO 🐼🔧)
     private void mostrarDialogoChat() {
+        // 1. Creamos el diálogo base
         android.app.Dialog dialog = new android.app.Dialog(this);
+
+        // 2. Le asignamos el diseño XML (Esto crea UNA SOLA VISTA real)
         dialog.setContentView(R.layout.dialog_chat);
 
         if (dialog.getWindow() != null) {
@@ -176,54 +221,54 @@ public class PartidaActivity extends AppCompatActivity {
             );
 
             // ¡EL TRUCO DEL TECLADO!
-            // Esto hace que el teclado redimensione el diálogo y no tape la caja donde escribes
             dialog.getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
 
-        // 1. Enlazamos los elementos del XML de tu diálogo
+        // 3. Buscamos TODOS los elementos DENTRO del diálogo real
+        // Fíjate que usamos 'dialog.findViewById' para todo
+        this.contenedorMensajesActual = dialog.findViewById(R.id.contenedor_mensajes);
         View btnCerrar = dialog.findViewById(R.id.btn_cerrar_chat);
-        LinearLayout contenedorMensajes = dialog.findViewById(R.id.contenedor_mensajes);
         android.widget.EditText inputMensaje = dialog.findViewById(R.id.input_mensaje);
         FrameLayout btnEnviar = dialog.findViewById(R.id.btn_enviar_mensaje);
         android.widget.ScrollView scrollChat = dialog.findViewById(R.id.scroll_chat);
         View zonaDeEscribir = (View) inputMensaje.getParent();
 
+        // 4. Lógica de roles
         if (miRol.equals("Jefe")) {
-            // Si es Jefe, desaparecemos por completo la zona inferior
             zonaDeEscribir.setVisibility(View.GONE);
         } else {
-            // Si es Agente, la mostramos
             zonaDeEscribir.setVisibility(View.VISIBLE);
         }
-        // 2. Cerrar el chat
+
+        // 5. Botones y acciones
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        // Mensajes de ejemplo iniciales (Para que no esté vacío al abrir)
-        agregarMensajeAlChat(contenedorMensajes, "BlascoMason", "¡Empieza la partida!", false);
-
-        // ==========================================
-        // 3. LA MAGIA DE ESCRIBIR Y ENVIAR
-        // ==========================================
         btnEnviar.setOnClickListener(v -> {
-            // A. Cogemos el texto que has escrito en el rectángulo blanco
             String textoEscrito = inputMensaje.getText().toString().trim();
 
-            // B. Comprobamos que no esté vacío (para evitar enviar mensajes sin letras)
             if (!textoEscrito.isEmpty()) {
+                // Lo pintamos en MI pantalla
+                agregarMensajeAlChat(this.contenedorMensajesActual, "Yo", textoEscrito, true);
 
-                // C. Creamos el mensaje en la pantalla usando nuestro método.
-                // Le pasamos "true" al final para decirle que es nuestro y lo ponga rosita y a la derecha.
-                agregarMensajeAlChat(contenedorMensajes, "Pelele Lover", textoEscrito, true);
+                // Disparamos al servidor
+                try {
+                    JSONObject jsonMensaje = new JSONObject();
+                    jsonMensaje.put("mensaje", textoEscrito);
+                    stompClient.send("/app/partidas/" + idPartidaActual + "/chat", jsonMensaje.toString()).subscribe();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                // D. Vaciamos el rectángulo blanco para que puedas escribir el siguiente mensaje
                 inputMensaje.setText("");
-
-                // E. Le decimos a la lista de mensajes que haga "scroll" hasta abajo del todo
-                // para que nuestro mensaje recién enviado se vea en la pantalla automáticamente
                 scrollChat.post(() -> scrollChat.fullScroll(View.FOCUS_DOWN));
             }
         });
 
+        // 6. ¡LLAMAMOS AL HISTORIAL!
+        // Ahora contenedorMensajesActual apunta a la ventana visible de verdad.
+        cargarHistorialChat();
+
+        // 7. Mostramos el diálogo (Y hemos borrado toda la morralla del AlertDialog)
         dialog.show();
     }
 
@@ -232,6 +277,7 @@ public class PartidaActivity extends AppCompatActivity {
      * y lo mete en el chat. Dependiendo de si es tuyo o no, cambia los colores y márgenes.
      */
     private void agregarMensajeAlChat(LinearLayout contenedor, String remitente, String texto, boolean esMio) {
+
 
         // Creamos la caja del mensaje
         LinearLayout globoMensaje = new LinearLayout(this);
@@ -457,6 +503,57 @@ public class PartidaActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void cargarHistorialChat() {
+        // Verificamos qué valores tienen las variables antes de disparar
+        android.util.Log.d("CHAT_DEBUG", "Cargando historial para Partida: " + idPartidaActual + " Equipo: " + miEquipo);
+
+        new Thread(() -> {
+            try {
+                String urlStr = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/chat/" + miEquipo;
+                java.net.URL url = new java.net.URL(urlStr);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+
+                int responseCode = conn.getResponseCode();
+                android.util.Log.d("CHAT_DEBUG", "Código respuesta servidor: " + responseCode);
+
+                if (responseCode == 200) {
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) response.append(line);
+
+                    android.util.Log.d("CHAT_DEBUG", "JSON recibido: " + response.toString());
+
+                    org.json.JSONArray historialArray = new org.json.JSONArray(response.toString());
+
+                    runOnUiThread(() -> {
+                        if (contenedorMensajesActual != null) {
+                            contenedorMensajesActual.removeAllViews();
+                            for (int i = 0; i < historialArray.length(); i++) {
+                                try {
+                                    android.util.Log.d("CHAT_DEBUG", "Dibujando mensaje número: " + i);
+                                    org.json.JSONObject msgJson = historialArray.getJSONObject(i);
+                                    // OJO: Tu JSON usa "mensaje" y "tag". Asegúrate de leer esos nombres.
+                                    String texto = msgJson.getString("mensaje");
+                                    String autor = msgJson.optString("tag", "Jugador");
+                                    boolean esMio = autor.equals("PandaNinja");
+
+                                    agregarMensajeAlChat(contenedorMensajesActual, autor, texto, esMio);
+                                } catch (Exception e) { e.printStackTrace(); }
+                            }
+                        } else {
+                            android.util.Log.e("CHAT_DEBUG", "¡ERROR! contenedorMensajesActual es NULL");
+                        }
+                        contenedorMensajesActual.requestLayout();
+                        contenedorMensajesActual.invalidate();
+                        android.util.Log.d("CHAT_DEBUG", "Refresco de vista solicitado");
+                    });
+                }
+            } catch (Exception e) {
+                android.util.Log.e("CHAT_DEBUG", "Error fatal: " + e.getMessage());
+            }
+        }).start();
+    }
 
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
