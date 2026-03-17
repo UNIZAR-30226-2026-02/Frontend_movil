@@ -5,7 +5,6 @@ plugins {
 android {
     namespace = "com.example.secretpanda"
 
-    // ¡AQUÍ ESTÁ EL CAMBIO CLAVE!
     compileSdk = 34
 
     defaultConfig {
@@ -18,7 +17,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Configuración de la firma compartida para el ID cliente de Google OAuth
+    signingConfigs {
+        getByName("debug") {
+            // Fichero con la firma
+            storeFile = file("compartido.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        // Se le asigna al modo debug
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -31,16 +46,16 @@ android {
         getByName("main") {
             res.srcDirs(
                 "src/main/xml_panda/home/achievements",
-                          "src/main/xml_panda/home/classification",
-                          "src/main/xml_panda/home/profile",
-                          "src/main/xml_panda/shop",
-                          "src/main/xml_panda/auth",
-                          "src/main/xml_panda/customization",
-                          "src/main/xml_panda/game/createMatch",
-                          "src/main/xml_panda/game/join",
-                          "src/main/xml_panda/game/match",
-                          "src/main/xml_panda/game/waitingRoom",
-                          "src/main/xml_panda/home/options"
+                "src/main/xml_panda/home/classification",
+                "src/main/xml_panda/home/profile",
+                "src/main/xml_panda/shop",
+                "src/main/xml_panda/auth",
+                "src/main/xml_panda/customization",
+                "src/main/xml_panda/game/createMatch",
+                "src/main/xml_panda/game/join",
+                "src/main/xml_panda/game/match",
+                "src/main/xml_panda/game/waitingRoom",
+                "src/main/xml_panda/home/options"
 
             )
         }

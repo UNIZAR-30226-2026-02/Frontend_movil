@@ -37,11 +37,14 @@ public class LoginActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                // Le pasamos los datos a tu método manejarResultadoGoogle SIEMPRE,
+                // haya ido bien o haya ido mal, para que su try/catch atrape el código de error
+                Intent data = result.getData();
+                if (data != null) {
+                    Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                     manejarResultadoGoogle(task);
                 } else {
-                    Toast.makeText(this, "Login cancelado", Toast.LENGTH_SHORT).show();
+                    Log.e("LOGIN_GOOGLE", "El intent ha devuelto null (se cerró la ventana pulsando fuera)");
                 }
             }
     );
@@ -51,13 +54,11 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // 1. Configuramos las opciones de Google Sign-In
-        // Aquí es donde usamos el client_id de tu archivo JSON web
-        String clientId = "271645130319-f9agsfadvl8njoaoitevnaspuchj5fb9.apps.googleusercontent.com";
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(clientId) // Pedimos el ticket (idToken)
-                .requestEmail()           // Pedimos el email
+                // ¡OJO AQUÍ! Tiene que ser el ID WEB, NO el ID de Android que creaste antes
+                .requestIdToken("271645130319-f9agsfadvl8njoaoitevnaspuchj5fb9.apps.googleusercontent.com")
+                .requestEmail()
                 .build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
