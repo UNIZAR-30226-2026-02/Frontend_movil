@@ -12,6 +12,8 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,32 +31,38 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
     private RecyclerView rvJugadores;
     private JugadorSalaAdapter adapter;
-
-    // NUEVO: Hacemos la lista global para poder usarla en cualquier método
     private List<Jugador> listaJugadores;
 
-    // Variables para la lógica
-    private boolean estoyEnEquipoAzul; // true = Azul, false = Rojo
+    private boolean estoyEnEquipoAzul;
     private TextView btnUnirseAzul;
     private TextView btnUnirseRojo;
     private PersonalizacionAdapter adapterPersonalizacionDialogo;
-    // Tu jugador
     private Jugador jugadorLocal;
     private int posicionJugadorLocal = 0;
+
     private TextView tvContadorAzul, tvContadorRojo, tvContadorTotal, tvTiempoSala;
 
-    private int maxJugadores = 8; // O el máximo que hayas configurado en los ajustes
-    private boolean esLider = false; // NUEVO: Variable global de rol (por defecto false)
+    // Variables de configuración de la sala
+    private int maxJugadores = 8;
+    private boolean esLider = false;
+    private boolean esPrivada = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sala_espera);
 
+        // ==========================================
+        //  RECUPERAR DATOS DEL INTENT
+        // ==========================================
+        esLider = getIntent().getBooleanExtra("ES_LIDER", false);
+        esPrivada = getIntent().getBooleanExtra("ES_PRIVADA", false);
+        maxJugadores = getIntent().getIntExtra("MAX_JUGADORES", 8);
+        int tiempoTurno = getIntent().getIntExtra("TIEMPO_TURNO", 60);
+
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
 
-        // 1. Vinculamos los TextViews de tu XML
         tvContadorAzul = findViewById(R.id.tv_contador_azul);
         tvContadorRojo = findViewById(R.id.tv_contador_rojo);
         tvContadorTotal = findViewById(R.id.tv_jugadores_sala);
@@ -62,115 +70,148 @@ public class SalaEsperaActivity extends AppCompatActivity {
         btnUnirseRojo = findViewById(R.id.btn_unirse_rojo);
         tvTiempoSala = findViewById(R.id.tv_tiempo_sala);
 
-        // ==========================================
-        // ASIGNACIÓN ALEATORIA AL ENTRAR (true o false)
-        // ==========================================
-        estoyEnEquipoAzul = new Random().nextBoolean();
-
-        if (estoyEnEquipoAzul) {
-            setModoDentro(btnUnirseAzul, "#0000FF");
-            setModoUnirse(btnUnirseRojo, "#FF0000");
-        } else {
-            setModoDentro(btnUnirseRojo, "#FF0000");
-            setModoUnirse(btnUnirseAzul, "#0000FF");
+        if (tvTiempoSala != null) {
+            tvTiempoSala.setText(tiempoTurno + "s");
         }
 
-        // Lógica al pulsar los botones
+        // ==========================================
+        // LÓGICA DEL CÓDIGO DE PARTIDA (PÚBLICA VS PRIVADA)
+        // ==========================================
+        TextView tvCodigoPartida = findViewById(R.id.tv_codigo_partida);
+        // Pillamos el layout "padre" que envuelve el texto "Código partida :" y el propio código
+        View layoutCodigoEntero = (View) tvCodigoPartida.getParent();
+
+        if (!esPrivada) {
+            // Si es pública, ocultamos el bloque del código entero
+            layoutCodigoEntero.setVisibility(View.GONE);
+        } else {
+            // Si es privada, lo mostramos y decidimos qué código poner
+            layoutCodigoEntero.setVisibility(View.VISIBLE);
+
+            if (esLider) {
+                // El líder crea la sala, así que generamos un código aleatorio nuevo
+                tvCodigoPartida.setText(generarCodigoAleatorio());
+            } else {
+                // Si te unes, mostramos el código que hayas metido en la pantalla anterior
+                String codigoRecibido = getIntent().getStringExtra("CODIGO_PARTIDA");
+                tvCodigoPartida.setText(codigoRecibido != null ? codigoRecibido : "------");
+            }
+        }
+
+        String equipoAsignado = getIntent().getStringExtra("MI_EQUIPO");
+
+        // Decidimos el booleano en base al texto (por defecto rojo si algo falla)
+        if (equipoAsignado != null && equipoAsignado.equalsIgnoreCase("azul")) {
+            estoyEnEquipoAzul = true;
+        } else {
+            estoyEnEquipoAzul = false;
+        }
+
+        // Actualizamos los colores de los botones visualmente
+        actualizarBotonesEquipo();
+
+        // 3. ¡IMPORTANTE! Actualizar la interfaz visual
+        // Si tienes un jugadorLocal creado en esta pantalla, actualiza su equipo:
+        if (jugadorLocal != null) {
+            jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
+        }
+
+
+        actualizarBotonesEquipo();
+
         btnUnirseAzul.setOnClickListener(v -> gestionarClicEquipo(true));
         btnUnirseRojo.setOnClickListener(v -> gestionarClicEquipo(false));
 
-        // ==========================================
-        // CONFIGURACIÓN DE LA LISTA
-        // ==========================================
+        // CONFIGURACIÓN DE LA LISTA DE JUGADORES
         rvJugadores = findViewById(R.id.rv_jugadores);
         rvJugadores.setLayoutManager(new LinearLayoutManager(this));
-
-        // NUEVO: Usamos la lista global en lugar de una local
         listaJugadores = new ArrayList<>();
 
-        // 1. CREAMOS TU JUGADOR con el equipo aleatorio
         jugadorLocal = new Jugador("TuNombreDeUsuario");
         jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
         listaJugadores.add(jugadorLocal);
-        posicionJugadorLocal = 0;
 
-        // 2. Añadimos otros jugadores de prueba
-        Jugador j2 = new Jugador("GabriThePro");
-        j2.setEsEquipoAzul(false); // Rojo
-        listaJugadores.add(j2);
-
-        Jugador j3 = new Jugador("PandaNinja");
-        j3.setEsEquipoAzul(true); // Azul
-        listaJugadores.add(j3);
-
-        // 2. Calculamos los contadores por primera vez al abrir la pantalla
         actualizarContadores(listaJugadores);
 
-        esLider = getIntent().getBooleanExtra("ES_LIDER", false); // Cámbialo a false para probar el rol normal
+        // CONFIGURACIÓN DE INTERFAZ SEGÚN SI ES LÍDER O NO
         TextView btnIniciarPartida = findViewById(R.id.btn_iniciar_partida_principal);
-        View btnConfiguracion = findViewById(R.id.btn_configuracion); // Asegúrate de que el ID del layout de la tuerca es este
+        View btnConfiguracion = findViewById(R.id.btn_configuracion);
 
         if (!esLider) {
-            // SI NO ERES LÍDER:
-
-            // 1. Ocultamos la tuerca de ajustes
             if (btnConfiguracion != null) btnConfiguracion.setVisibility(View.GONE);
-
-            // 2. Cambiamos el texto del botón y lo desactivamos
             if (btnIniciarPartida != null) {
                 btnIniciarPartida.setText("Esperando\nal líder...");
-                // Opcional: Le bajamos la opacidad para que parezca desactivado
                 btnIniciarPartida.setAlpha(0.5f);
                 btnIniciarPartida.setEnabled(false);
             }
         } else {
-            // SI SÍ ERES LÍDER:
-
-            // Configuramos los clics normales de líder
             if (btnConfiguracion != null) {
+                btnConfiguracion.setVisibility(View.VISIBLE);
                 btnConfiguracion.setOnClickListener(v -> mostrarDialogoAjustes());
             }
-
             if (btnIniciarPartida != null) {
-                btnIniciarPartida.setOnClickListener(v -> {
-                    if (listaJugadores != null && listaJugadores.size() < 4) {
-                        mostrarDialogoErrorJugadores();
-                    } else {
-                        mostrarDialogoConfirmacion();
-                    }
-                });
+                btnIniciarPartida.setText("Iniciar\npartida");
+                btnIniciarPartida.setAlpha(1.0f);
+                btnIniciarPartida.setEnabled(true);
+                btnIniciarPartida.setOnClickListener(v -> intentarIniciarPartida());
             }
         }
-        String miNombre = "TuNombreDeUsuario";
 
-        // NUEVO: Le pasamos la variable 'esLider' al adapter al crearlo
-        adapter = new JugadorSalaAdapter(listaJugadores, miNombre, esLider, nuevaLista -> {
+        adapter = new JugadorSalaAdapter(listaJugadores, "TuNombreDeUsuario", esLider, nuevaLista -> {
             actualizarContadores(nuevaLista);
         });
-
         rvJugadores.setAdapter(adapter);
 
-        rvJugadores.setAdapter(adapter);
-
-        // Botón de la estrella (Temáticas)
         findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
+    }
 
-        // Botón de la tuerca (Configuración)
-        findViewById(R.id.btn_configuracion).setOnClickListener(v -> mostrarDialogoAjustes());
+    // ==========================================
+    // GENERADOR DE CÓDIGO ALEATORIO (6 Caracteres)
+    // ==========================================
+    private String generarCodigoAleatorio() {
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder codigo = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < 6; i++) {
+            codigo.append(caracteres.charAt(rnd.nextInt(caracteres.length())));
+        }
+        return codigo.toString();
+    }
 
+    // ==========================================
+    // LÓGICA DE INICIO DE PARTIDA (SOLO LÍDER)
+    // ==========================================
+    private void intentarIniciarPartida() {
+        int contadorAzul = 0;
+        int contadorRojo = 0;
+
+        for (Jugador jugador : listaJugadores) {
+            if (jugador.isEsEquipoAzul()) contadorAzul++;
+            else contadorRojo++;
+        }
+
+        int totalJugadores = listaJugadores.size();
+
+        if (totalJugadores < 4 || contadorAzul < 2 || contadorRojo < 2) {
+            mostrarDialogoErrorJugadores();
+        }
+        else if (totalJugadores < maxJugadores) {
+            mostrarDialogoConfirmacion();
+        }
+        else {
+            iniciarJuegoReal();
+        }
     }
 
     private void mostrarDialogoErrorJugadores() {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        // Usaremos un nuevo layout XML que vamos a crear en el siguiente paso
         dialog.setContentView(R.layout.dialog_error_jugadores);
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
-        // Configuramos el botón de cerrar
         Button btnCerrar = dialog.findViewById(R.id.btn_cerrar_error);
         if (btnCerrar != null) {
             btnCerrar.setOnClickListener(v -> dialog.dismiss());
@@ -179,113 +220,186 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    /**
-     * Función que cuenta cuántos jugadores hay en cada equipo
-     * y actualiza los textos de la pantalla.
-     */
+    private void mostrarDialogoConfirmacion() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_confirmar_inicio);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_dialogo);
+        Button btnIniciar = dialog.findViewById(R.id.btn_iniciar_confirmado);
+
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+        btnIniciar.setOnClickListener(v -> {
+            dialog.dismiss();
+            iniciarJuegoReal();
+        });
+
+        dialog.show();
+    }
+
+    private void iniciarJuegoReal() {
+        Toast.makeText(this, "¡Iniciando partida!", Toast.LENGTH_SHORT).show();
+    }
+
+    // ==========================================
+    // AJUSTES DE SALA (SOLO LÍDER)
+    // ==========================================
+    private void mostrarDialogoAjustes() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_ajustes_sala);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_ajustes);
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+
+        // Configuración de Tiempo
+        TextView[] botonesTiempo = {
+                dialog.findViewById(R.id.btn_tiempo_30),
+                dialog.findViewById(R.id.btn_tiempo_60),
+                dialog.findViewById(R.id.btn_tiempo_80),
+                dialog.findViewById(R.id.btn_tiempo_120)
+        };
+
+        String tiempoActualStr = tvTiempoSala.getText().toString();
+        for (TextView btn : botonesTiempo) {
+            if ((btn.getText().toString()).equals(tiempoActualStr)) {
+                seleccionarBoton(btn, botonesTiempo);
+            }
+            btn.setOnClickListener(v -> {
+                seleccionarBoton(btn, botonesTiempo);
+                if (tvTiempoSala != null) tvTiempoSala.setText(btn.getText().toString());
+            });
+        }
+
+        // Configuración de Jugadores
+        TextView[] botonesJugadores = {
+                dialog.findViewById(R.id.btn_jugadores_4),
+                dialog.findViewById(R.id.btn_jugadores_6),
+                dialog.findViewById(R.id.btn_jugadores_8),
+                dialog.findViewById(R.id.btn_jugadores_10),
+                dialog.findViewById(R.id.btn_jugadores_12),
+                dialog.findViewById(R.id.btn_jugadores_14),
+                dialog.findViewById(R.id.btn_jugadores_16)
+        };
+
+        TextView tvAdvertencia = dialog.findViewById(R.id.tv_advertencia_sala);
+        tvAdvertencia.setVisibility(View.GONE);
+
+        for (TextView btn : botonesJugadores) {
+            if (btn.getText().toString().equals(String.valueOf(maxJugadores))) {
+                seleccionarBoton(btn, botonesJugadores);
+            }
+
+            btn.setOnClickListener(v -> {
+                int intentoMaxJugadores = Integer.parseInt(btn.getText().toString());
+
+                if (intentoMaxJugadores < listaJugadores.size()) {
+                    tvAdvertencia.setVisibility(View.VISIBLE);
+                } else {
+                    tvAdvertencia.setVisibility(View.GONE);
+                    maxJugadores = intentoMaxJugadores;
+                    seleccionarBoton(btn, botonesJugadores);
+                    actualizarContadores(listaJugadores);
+                }
+            });
+        }
+
+        dialog.show();
+    }
+
+    private void seleccionarBoton(TextView seleccionado, TextView[] grupo) {
+        for (TextView btn : grupo) {
+            if (btn != null) {
+                if (btn == seleccionado) {
+                    btn.setBackgroundResource(R.drawable.fondo_carta_seleccionada);
+                } else {
+                    btn.setBackgroundResource(R.drawable.fondo_boton_mision);
+                }
+            }
+        }
+    }
+
+    // ==========================================
+    // LÓGICA DE EQUIPOS Y UI
+    // ==========================================
     private void actualizarContadores(List<Jugador> lista) {
         int contadorAzul = 0;
         int contadorRojo = 0;
 
-        // Recorremos la lista actual para contar
         for (Jugador jugador : lista) {
-            if (jugador.isEsEquipoAzul()) {
-                contadorAzul++;
-            } else {
-                contadorRojo++;
-            }
+            if (jugador.isEsEquipoAzul()) contadorAzul++;
+            else contadorRojo++;
         }
 
-        // Actualizamos los textos en la pantalla
-        if (tvContadorAzul != null) tvContadorAzul.setText("Azul: " + String.valueOf(contadorAzul) + "/" + maxJugadores/2);
-        if (tvContadorRojo != null) tvContadorRojo.setText("Rojo: " + String.valueOf(contadorRojo) + "/" + maxJugadores/2);
-
-        // Actualizamos el contador total (ej: "4/8")
+        if (tvContadorAzul != null) tvContadorAzul.setText("Azul: " + contadorAzul + "/" + (maxJugadores/2));
+        if (tvContadorRojo != null) tvContadorRojo.setText("Rojo: " + contadorRojo + "/" + (maxJugadores/2));
         if (tvContadorTotal != null) tvContadorTotal.setText(lista.size() + "/" + maxJugadores);
     }
 
-    // ==========================================
-    // MÉTODOS PARA CONTROLAR LOS BOTONES Y LA LISTA
-    // ==========================================
-
     private void gestionarClicEquipo(boolean pulsadoAzul) {
-        // Si pulsas el botón del equipo en el que ya estás, no hacemos nada
-        if (estoyEnEquipoAzul == pulsadoAzul) {
-            return;
-        }
+        if (estoyEnEquipoAzul == pulsadoAzul) return;
 
-        // Si pulsas el equipo contrario, te cambiamos
         estoyEnEquipoAzul = pulsadoAzul;
+        actualizarBotonesEquipo();
 
+        jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
+        if (adapter != null) adapter.notifyItemChanged(posicionJugadorLocal);
+
+        if (listaJugadores != null) actualizarContadores(listaJugadores);
+    }
+
+    private void actualizarBotonesEquipo() {
         if (estoyEnEquipoAzul) {
-            // Me paso al AZUL
             setModoDentro(btnUnirseAzul, "#0000FF");
             setModoUnirse(btnUnirseRojo, "#FF0000");
         } else {
-            // Me paso al ROJO
             setModoDentro(btnUnirseRojo, "#FF0000");
             setModoUnirse(btnUnirseAzul, "#0000FF");
         }
-
-        // ¡MAGIA! Actualizamos tu tarjeta al nuevo equipo
-        jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
-        if (adapter != null) {
-            adapter.notifyItemChanged(posicionJugadorLocal);
-        }
-
-        // NUEVO: Volvemos a contar los jugadores para actualizar los textos
-        if (listaJugadores != null) {
-            actualizarContadores(listaJugadores);
-        }
     }
 
-    // Pinta el botón con el borde de color y fondo transparente
     private void setModoDentro(TextView btn, String colorHex) {
         btn.setText("Dentro");
         btn.setBackgroundResource(R.drawable.fondo_boton_dentro);
-
         GradientDrawable fondo = (GradientDrawable) btn.getBackground().mutate();
         fondo.setStroke(5, Color.parseColor(colorHex));
-
         btn.setTextColor(Color.parseColor(colorHex));
         btn.setShadowLayer(8f, 0f, 0f, Color.parseColor("#FFFFFF"));
     }
 
-    // Pinta el botón con el fondo sólido de color
     private void setModoUnirse(TextView btn, String colorHex) {
         btn.setText("Unirse");
         btn.setBackgroundResource(R.drawable.fondo_boton_unirse);
-
         GradientDrawable fondo = (GradientDrawable) btn.getBackground().mutate();
         fondo.setColor(Color.parseColor(colorHex));
         fondo.setStroke(0, Color.TRANSPARENT);
-
         btn.setTextColor(Color.parseColor("#FFFFFF"));
         btn.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT);
     }
 
     // ==========================================
-    // DIÁLOGOS
+    // OTROS DIÁLOGOS (Abandonar y Personalización)
     // ==========================================
-
     private void mostrarDialogoAbandonar() {
-        android.app.Dialog dialog = new android.app.Dialog(this);
+        Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_abandonar);
-
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
-            dialog.getWindow().setLayout(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
-
         dialog.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> dialog.dismiss());
         dialog.findViewById(R.id.btn_confirmar_abandonar).setOnClickListener(v -> {
             dialog.dismiss();
             finish();
         });
-
         dialog.show();
     }
 
@@ -293,7 +407,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_tematicas_sala);
-
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -324,8 +437,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void activarPestana(LinearLayout activo, TextView txtActivo,
-                                LinearLayout inactivo, TextView txtInactivo) {
+    private void activarPestana(LinearLayout activo, TextView txtActivo, LinearLayout inactivo, TextView txtInactivo) {
         activo.setBackgroundResource(R.drawable.fondo_tab_activo);
         ViewGroup.LayoutParams paramsActivo = activo.getLayoutParams();
         paramsActivo.height = (int) (80 * getResources().getDisplayMetrics().density);
@@ -344,131 +456,16 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private void cargarDatosEnDialogo(String categoria, RecyclerView recycler, TextView txtTematica) {
         List<ItemPersonalizacion> todos = InventarioGlobal.getInstance().getTodosLosItems();
         List<ItemPersonalizacion> posesion = new ArrayList<>();
-
         for (ItemPersonalizacion item : todos) {
-            if (item.getTipo().equals(categoria) && !item.isBloqueado()) {
-                posesion.add(item);
-            }
+            if (item.getTipo().equals(categoria) && !item.isBloqueado()) posesion.add(item);
         }
-
-        if (!posesion.isEmpty()) {
-            txtTematica.setText(posesion.get(0).getNombre());
-        } else {
-            txtTematica.setText("Ninguna");
-        }
+        if (!posesion.isEmpty()) txtTematica.setText(posesion.get(0).getNombre());
+        else txtTematica.setText("Ninguna");
 
         adapterPersonalizacionDialogo = new PersonalizacionAdapter(posesion, false, true, (item, position) -> {
             txtTematica.setText(item.getNombre());
-            if (adapterPersonalizacionDialogo != null) {
-                adapterPersonalizacionDialogo.setPosicionSeleccionada(position);
-            }
+            if (adapterPersonalizacionDialogo != null) adapterPersonalizacionDialogo.setPosicionSeleccionada(position);
         });
-
         recycler.setAdapter(adapterPersonalizacionDialogo);
-    }
-
-    private void mostrarDialogoConfirmacion() {
-        Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_confirmar_inicio);
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_dialogo);
-        Button btnIniciar = dialog.findViewById(R.id.btn_iniciar_confirmado);
-
-        btnCerrar.setOnClickListener(v -> dialog.dismiss());
-        btnIniciar.setOnClickListener(v -> {
-            dialog.dismiss();
-            iniciarJuegoReal();
-        });
-
-        dialog.show();
-    }
-
-    private void iniciarJuegoReal() {
-        // Código para pasar al tablero de juego...
-    }
-
-    private void mostrarDialogoAjustes() {
-        Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_ajustes_sala);
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_ajustes);
-        btnCerrar.setOnClickListener(v -> dialog.dismiss());
-
-        TextView btnTiempo30 = dialog.findViewById(R.id.btn_tiempo_30);
-        TextView btnTiempo60 = dialog.findViewById(R.id.btn_tiempo_60);
-        TextView btnTiempo80 = dialog.findViewById(R.id.btn_tiempo_80);
-        TextView btnTiempo120 = dialog.findViewById(R.id.btn_tiempo_120);
-
-        TextView[] botonesTiempo = {btnTiempo30, btnTiempo60, btnTiempo80, btnTiempo120};
-
-        // --- NUEVA LÓGICA PARA EL TIEMPO ---
-        for (TextView btn : botonesTiempo) {
-            btn.setOnClickListener(v -> {
-                // 1. Cambiamos el color (esto ya lo tenías)
-                seleccionarBoton(btn, botonesTiempo);
-
-                // 2. Leemos el texto del botón (ej: "60s" o "60")
-                String tiempoSeleccionado = btn.getText().toString();
-
-                // 3. Actualizamos el texto de la pantalla principal al instante
-                if (tvTiempoSala != null) {
-                    tvTiempoSala.setText(tiempoSeleccionado);
-                }
-            });
-        }
-
-        TextView btnJugadores4 = dialog.findViewById(R.id.btn_jugadores_4);
-        TextView btnJugadores6 = dialog.findViewById(R.id.btn_jugadores_6);
-        TextView btnJugadores8 = dialog.findViewById(R.id.btn_jugadores_8);
-        TextView btnJugadores10 = dialog.findViewById(R.id.btn_jugadores_10);
-
-        TextView[] botonesJugadores = {btnJugadores4, btnJugadores6, btnJugadores8, btnJugadores10};
-
-        // --- NUEVA LÓGICA PARA LOS JUGADORES ---
-        for (TextView btn : botonesJugadores) {
-            btn.setOnClickListener(v -> {
-                // 1. Cambiamos el color del botón
-                seleccionarBoton(btn, botonesJugadores);
-
-                try {
-                    // 2. Extraemos SOLO los números del texto del botón
-                    // (Por si tu botón dice "8 Jug." esto saca solo el "8")
-                    String numStr = btn.getText().toString().replaceAll("\\D+", "");
-
-                    // 3. Actualizamos nuestra variable global de maxJugadores
-                    maxJugadores = Integer.parseInt(numStr);
-
-                    // 4. ¡LA MAGIA! Llamamos a tu método de contadores para que
-                    // recalcule la pantalla (ej: pasará de "4/8" a "4/10")
-                    if (listaJugadores != null) {
-                        actualizarContadores(listaJugadores);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace(); // Por si ocurre algún error al leer el número
-                }
-            });
-        }
-
-        dialog.show();
-    }
-
-    private void seleccionarBoton(TextView seleccionado, TextView[] grupo) {
-        for (TextView btn : grupo) {
-            if (btn == seleccionado) {
-                btn.setBackgroundResource(R.drawable.fondo_carta_seleccionada);
-            } else {
-                btn.setBackgroundResource(R.drawable.fondo_boton_mision);
-            }
-        }
     }
 }

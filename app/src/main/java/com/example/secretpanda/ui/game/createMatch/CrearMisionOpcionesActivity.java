@@ -7,7 +7,6 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
-import com.example.secretpanda.ui.game.waitingRoom.ConfiguracionMisionActivity;
 
 public class CrearMisionOpcionesActivity extends AppCompatActivity {
 
