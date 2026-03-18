@@ -70,7 +70,7 @@
         <activity android:name=".ui.home.achivements.LogrosActivity" android:exported="false" />
 
         <activity android:name=".ui.game.createMatch.CrearMisionOpcionesActivity" android:exported="false" />
-        <activity android:name=".ui.game.waitingRoom.ConfiguracionMisionActivity" android:exported="false" />
+        <activity android:name=".ui.game.createMatch.ConfiguracionMisionActivity" android:exported="false" />
 
     </application>
 
