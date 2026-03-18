@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
-import com.example.secretpanda.ui.game.match.PartidaActivity;
 import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 
@@ -71,60 +70,9 @@ public class MisionPublicaActivity extends AppCompatActivity {
             if (partida.isBloqueada() || partida.isLlena()) {
                 mostrarDialogoError(partida);
             } else {
-                int idPartidaClicada = partida.getIdPartida();
-
-                // 1. PREPARAMOS LA LLAMADA AL SERVIDOR PARA UNIRNOS
-                OkHttpClient client = new OkHttpClient();
-                String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaClicada + "/unirse";
-
-                TokenManager tokenManager = new TokenManager(this);
-                String token = tokenManager.getToken();
-
-                // Mandamos un JSON vacío porque tu backend acepta dto nulo o vacío para partidas públicas
-                okhttp3.RequestBody body = okhttp3.RequestBody.create("{}", okhttp3.MediaType.parse("application/json"));
-
-                Request.Builder requestBuilder = new Request.Builder()
-                        .url(url)
-                        .post(body);
-
-                if (token != null && !token.isEmpty()) {
-                    requestBuilder.addHeader("Authorization", "Bearer " + token);
-                }
-
-                Request request = requestBuilder.build();
-
-                // 2. HACEMOS LA PETICIÓN EN SEGUNDO PLANO
-                client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        Log.e("API_ERROR", "Error de red al intentar unirse", e);
-                        runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "Error de conexión", android.widget.Toast.LENGTH_SHORT).show());
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        // Si da 200 (éxito) O da 409 (ya estabas dentro), te dejamos pasar
-                        if (response.isSuccessful() || response.code() == 409) {
-                            runOnUiThread(() -> {
-                                String miEquipo = "rojo";
-
-                                Intent intent = new Intent(MisionPublicaActivity.this, PartidaActivity.class);
-                                intent.putExtra("ID_PARTIDA", idPartidaClicada);
-                                intent.putExtra("MI_EQUIPO", miEquipo);
-                                intent.putExtra("ES_LIDER", false);
-                                intent.putExtra("ES_PRIVADA", false);
-                                intent.putExtra("MAX_JUGADORES", partida.getMaxJugadores());
-                                intent.putExtra("TIEMPO_TURNO", partida.getTiempo());
-
-                                startActivity(intent);
-                            });
-                        } else {
-                            // Otros errores (404 no encontrada, 401 sin token, etc.)
-                            Log.e("API_ERROR", "El servidor rechazó la entrada. Código: " + response.code());
-                            runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se pudo entrar a la partida", android.widget.Toast.LENGTH_SHORT).show());
-                        }
-                    }
-                });
+                Intent intent = new Intent(MisionPublicaActivity.this, SalaEsperaActivity.class);
+                intent.putExtra("TEMATICA_PARTIDA", partida.getTematica());
+                startActivity(intent);
             }
         });
 
