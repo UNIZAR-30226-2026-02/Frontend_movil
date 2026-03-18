@@ -22,6 +22,11 @@ import org.json.JSONObject;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
 
+import org.json.JSONObject;
+
+import ua.naiksoftware.stomp.Stomp;
+import ua.naiksoftware.stomp.StompClient;
+
 public class PartidaActivity extends AppCompatActivity {
 
     private TextView btnAbandonar;
@@ -31,6 +36,13 @@ public class PartidaActivity extends AppCompatActivity {
     private TextView notificacionChat;
     private TextView tvMiRol;
     private android.widget.ImageView iconoBtnAlerta;
+    private String miRol = "Agente";
+
+
+    private StompClient stompClient;
+    private int idPartidaActual; // <--- Sin valor fijo
+    private String miEquipo;     // <--- Sin valor fijo
+    private LinearLayout contenedorMensajesActual = null;
     private String miRol = "Agente";
 
 
@@ -216,9 +228,13 @@ public class PartidaActivity extends AppCompatActivity {
 
     // NUEVO MÉTODO MÁGICO
     // NUEVO MÉTODO MÁGICO (ARREGLADO 🐼🔧)
+    // NUEVO MÉTODO MÁGICO (ARREGLADO 🐼🔧)
     private void mostrarDialogoChat() {
         // 1. Creamos el diálogo base
+        // 1. Creamos el diálogo base
         android.app.Dialog dialog = new android.app.Dialog(this);
+
+        // 2. Le asignamos el diseño XML (Esto crea UNA SOLA VISTA real)
 
         // 2. Le asignamos el diseño XML (Esto crea UNA SOLA VISTA real)
         dialog.setContentView(R.layout.dialog_chat);
@@ -237,6 +253,9 @@ public class PartidaActivity extends AppCompatActivity {
         // 3. Buscamos TODOS los elementos DENTRO del diálogo real
         // Fíjate que usamos 'dialog.findViewById' para todo
         this.contenedorMensajesActual = dialog.findViewById(R.id.contenedor_mensajes);
+        // 3. Buscamos TODOS los elementos DENTRO del diálogo real
+        // Fíjate que usamos 'dialog.findViewById' para todo
+        this.contenedorMensajesActual = dialog.findViewById(R.id.contenedor_mensajes);
         View btnCerrar = dialog.findViewById(R.id.btn_cerrar_chat);
         android.widget.EditText inputMensaje = dialog.findViewById(R.id.input_mensaje);
         FrameLayout btnEnviar = dialog.findViewById(R.id.btn_enviar_mensaje);
@@ -244,11 +263,14 @@ public class PartidaActivity extends AppCompatActivity {
         View zonaDeEscribir = (View) inputMensaje.getParent();
 
         // 4. Lógica de roles
+        // 4. Lógica de roles
         if (miRol.equals("Jefe")) {
             zonaDeEscribir.setVisibility(View.GONE);
         } else {
             zonaDeEscribir.setVisibility(View.VISIBLE);
         }
+
+        // 5. Botones y acciones
 
         // 5. Botones y acciones
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
@@ -280,6 +302,11 @@ public class PartidaActivity extends AppCompatActivity {
         cargarHistorialChat();
 
         // 7. Mostramos el diálogo (Y hemos borrado toda la morralla del AlertDialog)
+        // 6. ¡LLAMAMOS AL HISTORIAL!
+        // Ahora contenedorMensajesActual apunta a la ventana visible de verdad.
+        cargarHistorialChat();
+
+        // 7. Mostramos el diálogo (Y hemos borrado toda la morralla del AlertDialog)
         dialog.show();
     }
 
@@ -288,6 +315,7 @@ public class PartidaActivity extends AppCompatActivity {
      * y lo mete en el chat. Dependiendo de si es tuyo o no, cambia los colores y márgenes.
      */
     private void agregarMensajeAlChat(LinearLayout contenedor, String remitente, String texto, boolean esMio) {
+
 
 
         // Creamos la caja del mensaje
