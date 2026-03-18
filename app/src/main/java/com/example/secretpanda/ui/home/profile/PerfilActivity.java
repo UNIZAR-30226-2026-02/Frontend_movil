@@ -108,10 +108,25 @@ public class PerfilActivity extends AppCompatActivity {
         });
 
         btnCerrarSesion.setOnClickListener(v -> {
-            Intent intent = new Intent(PerfilActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+            // avisamos a google de que cierre sesion
+            com.google.android.gms.auth.api.signin.GoogleSignInOptions gso =
+                    new com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).build();
+            com.google.android.gms.auth.api.signin.GoogleSignInClient googleClient =
+                    com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(this, gso);
+
+            // Usamos signOut() para que Google olvide la cuenta en este dispositivo
+            googleClient.signOut().addOnCompleteListener(this, task -> {
+
+                // borramos el token
+                com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
+                tokenManager.clearToken();
+
+                // volvemos a la pantalla de login
+                android.content.Intent intent = new android.content.Intent(PerfilActivity.this, com.example.secretpanda.ui.auth.LoginActivity.class);
+                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
         });
 
         ImageView btnEditarPerfil = findViewById(R.id.btn_editar_perfil);

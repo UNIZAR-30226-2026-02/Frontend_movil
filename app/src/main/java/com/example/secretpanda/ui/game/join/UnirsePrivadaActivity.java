@@ -53,7 +53,20 @@ public class UnirsePrivadaActivity extends AppCompatActivity {
 
     private void conectarASalaPrivada(String codigo) {
         // Por ahora, simulamos que estamos buscando la sala
-        Toast.makeText(this, "Conectando a la sala: " + codigo, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Conectando a la sala: " + codigo, Toast.LENGTH_SHORT).show();
+
+        android.content.Intent intent = new android.content.Intent(UnirsePrivadaActivity.this, com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity.class);
+
+        intent.putExtra("ES_LIDER", false); // NO eres líder, te estás uniendo
+        intent.putExtra("ES_PRIVADA", true); // Es una sala privada
+        intent.putExtra("CODIGO_PARTIDA", codigo); // Le pasamos el código que el jugador acaba de escribir
+
+        // Como aún no tienes servidor, pasamos valores por defecto para que la sala no pete
+        intent.putExtra("MAX_JUGADORES", 8);
+        intent.putExtra("TIEMPO_TURNO", 60);
+
+        startActivity(intent);
+        finish(); // Cerramos la pantalla de introducir código
 
         /* EN EL FUTURO:
            - Enviar el código a Firebase/Backend.
