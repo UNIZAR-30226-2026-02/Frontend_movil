@@ -110,31 +110,21 @@ public class SalaEsperaActivity extends AppCompatActivity {
             tvCodigoPartida.setText(codigoRecibido != null ? codigoRecibido : generarCodigoAleatorio());
         }
 
-        // ==========================================
+
         // BOTONES DE CAMBIO DE EQUIPO (RF-21)
-        // ==========================================
-        estoyEnEquipoAzul = new Random().nextBoolean();
-        actualizarBotonesEquipo();
+
 
         btnUnirseAzul.setOnClickListener(v -> cambiarEquipoEnBackend("AZUL"));
         btnUnirseRojo.setOnClickListener(v -> cambiarEquipoEnBackend("ROJO"));
 
-        // ==========================================
         // CONFIGURACIÓN DE LA LISTA DE JUGADORES
-        // ==========================================
         rvJugadores = findViewById(R.id.rv_jugadores);
         rvJugadores.setLayoutManager(new LinearLayoutManager(this));
         listaJugadores = new ArrayList<>();
 
-        jugadorLocal = new Jugador(miPropioIdGoogle);
-        jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
-        listaJugadores.add(jugadorLocal);
 
-        actualizarContadores(listaJugadores);
 
-        // ==========================================
         // BOTÓN INICIAR PARTIDA (RF-13)
-        // ==========================================
         TextView btnIniciarPartida = findViewById(R.id.btn_iniciar_partida_principal);
         View btnConfiguracion = findViewById(R.id.btn_configuracion);
 
@@ -162,13 +152,13 @@ public class SalaEsperaActivity extends AppCompatActivity {
             actualizarContadores(nuevaLista);
         });
         rvJugadores.setAdapter(adapter);
+        cargarLobbyInicial();
 
         findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
     }
 
-    // =========================================================================
+
     // API: PUT CAMBIAR EQUIPO (RF-21)
-    // =========================================================================
     private void cambiarEquipoEnBackend(String equipoElegido) {
         if ((equipoElegido.equals("AZUL") && estoyEnEquipoAzul) ||
                 (equipoElegido.equals("ROJO") && !estoyEnEquipoAzul)) {
@@ -508,5 +498,84 @@ public class SalaEsperaActivity extends AppCompatActivity {
             if (adapterPersonalizacionDialogo != null) adapterPersonalizacionDialogo.setPosicionSeleccionada(position);
         });
         recycler.setAdapter(adapterPersonalizacionDialogo);
+    }
+
+    // API: GET ESTADO INICIAL DE LA SALA
+    private void cargarLobbyInicial() {
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/partidas/" + idPartida;
+
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get() // ⬅ Es un método GET
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error de red al cargar el lobby", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonRespuesta = response.body().string();
+                        org.json.JSONObject lobbyJson = new org.json.JSONObject(jsonRespuesta);
+                        org.json.JSONArray jugadoresArray = lobbyJson.optJSONArray("jugadores");
+
+                        if (jugadoresArray != null) {
+                            runOnUiThread(() -> {
+                                //  Vaciamos la lista porque vamos a rellenarla con datos reales
+                                listaJugadores.clear();
+
+                                for (int i = 0; i < jugadoresArray.length(); i++) {
+                                    try {
+                                        org.json.JSONObject jp = jugadoresArray.getJSONObject(i);
+
+                                        // Dependiendo de si el Backend manda el jugador plano o anidado
+                                        String tag = "Anónimo";
+                                        if (jp.has("jugador")) {
+                                            tag = jp.getJSONObject("jugador").optString("tag", "Anónimo");
+                                        } else {
+                                            tag = jp.optString("tag", "Anónimo");
+                                        }
+
+                                        String equipo = jp.optString("equipo", "ROJO");
+
+                                        // Creamos el jugador y lo metemos en su equipo
+                                        Jugador jugadorActualizado = new Jugador(tag);
+                                        jugadorActualizado.setEsEquipoAzul(equipo.equalsIgnoreCase("AZUL"));
+                                        listaJugadores.add(jugadorActualizado);
+
+                                        // Si el jugador de la lista somos nosotros, actualizamos nuestra interfaz
+                                        if (tag.equals(miPropioIdGoogle)) {
+                                            estoyEnEquipoAzul = equipo.equalsIgnoreCase("AZUL");
+                                            jugadorLocal = jugadorActualizado;
+                                            actualizarBotonesEquipo();
+                                        }
+
+                                    } catch (Exception e) {
+                                        android.util.Log.e("API_LOBBY", "Error leyendo a un jugador", e);
+                                    }
+                                }
+
+                                //  Avisamos al RecyclerView de que repinte todo
+                                adapter.notifyDataSetChanged();
+                                actualizarContadores(listaJugadores);
+                            });
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("API_LOBBY", "Error procesando el JSON del Lobby", e);
+                    }
+                } else {
+                    runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "No se pudo cargar la sala. Código: " + response.code(), Toast.LENGTH_SHORT).show());
+                }
+            }
+        });
     }
 }

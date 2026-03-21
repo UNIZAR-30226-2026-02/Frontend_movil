@@ -26,6 +26,8 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
     private TextView[] botonesTiempo;
     private TextView[] botonesJugadores;
 
+    private java.util.Map<String, Integer> misTematicasDisponibles = new java.util.HashMap<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,10 +75,11 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
             }
 
             // 2. Mapear el nombre de la temática a su ID de la Base de Datos
-            int idTema = 1; // Por defecto
-            if (tematicaSeleccionada.equalsIgnoreCase("Misterio en la Jungla")) idTema = 2;
-            else if (tematicaSeleccionada.equalsIgnoreCase("Guerra Cibernética")) idTema = 3;
-            // ¡Añade aquí el resto de tus temáticas!
+            Integer idTema = misTematicasDisponibles.get(tematicaSeleccionada);
+            if (idTema == null) {
+                idTema = 1; // Un valor por defecto por si ocurre algún error
+            }
+            String miTagReal = "MiNombreDeUsuario";
 
             // 3. Crear el JSON basándonos en tu CrearPartidaDTO
             org.json.JSONObject jsonBody = new org.json.JSONObject();
@@ -141,6 +144,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                                 intent.putExtra("ID_PARTIDA", idPartidaCreada);
                                 intent.putExtra("CODIGO_PARTIDA", codigoPartida);
                                 intent.putExtra("ES_LIDER", true);
+                                intent.putExtra("MI_NOMBRE_USUARIO", miTagReal);
                                 startActivity(intent);
                                 finish();
                             } catch (Exception e) {
@@ -158,12 +162,15 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                 }
             });
         });
+        obtenerMisTematicas();
     }
 
     private void mostrarDialogoTematicas() {
         TematicasDialogFragment dialog = new TematicasDialogFragment();
 
-        dialog.setConfiguracionFiltros(true, false);
+        // Le decimos al diálogo que NO muestre el botón de "Todas" porque estamos creando
+        dialog.setMostrarOpcionTodas(false);
+
 
         dialog.setTematicaListener(tematica -> {
             tematicaSeleccionada = tematica;
@@ -192,5 +199,68 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
 
     private void seleccionarBoton(TextView boton) {
         boton.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
+    }
+
+
+    // API: GET TEMAS DEL JUGADOR
+    private void obtenerMisTematicas() {
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/jugadores/temas"; // URL de la API
+
+        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
+        String token = tokenManager.getToken();
+
+        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder()
+                .url(url)
+                .get();
+
+        if (token != null && !token.isEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer " + token);
+        }
+
+        client.newCall(requestBuilder.build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> Toast.makeText(ConfiguracionMisionActivity.this, "Error de red al cargar temas", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonRespuesta = response.body().string();
+                        org.json.JSONArray temasArray = new org.json.JSONArray(jsonRespuesta);
+
+                        misTematicasDisponibles.clear();
+
+                        // Leemos el array del backend y lo metemos en nuestro mapa
+                        for (int i = 0; i < temasArray.length(); i++) {
+                            org.json.JSONObject temaJson = temasArray.getJSONObject(i);
+
+                            // Aceptamos camelCase o snake_case por si acaso
+                            int idTema = temaJson.optInt("id_tema", temaJson.optInt("idTema", -1));
+                            String nombre = temaJson.optString("nombre", "");
+
+                            if (idTema != -1 && !nombre.isEmpty()) {
+                                misTematicasDisponibles.put(nombre, idTema);
+                            }
+                        }
+
+                        // Auto-seleccionar el primer tema que nos llegue
+                        runOnUiThread(() -> {
+                            if (!misTematicasDisponibles.isEmpty() && tematicaSeleccionada.isEmpty()) {
+                                tematicaSeleccionada = misTematicasDisponibles.keySet().iterator().next();
+                                txtTematica.setText(tematicaSeleccionada);
+                            }
+                        });
+
+                    } catch (Exception e) {
+                        android.util.Log.e("API_TEMAS", "Error procesando JSON de temas", e);
+                    }
+                } else {
+                    android.util.Log.e("API_TEMAS", "Error del backend: " + response.code());
+                }
+            }
+        });
     }
 }
