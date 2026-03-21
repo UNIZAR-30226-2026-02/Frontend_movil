@@ -254,38 +254,45 @@ public class SalaEsperaActivity extends AppCompatActivity {
     }
 
     private void mandarOrdenDeInicio() {
-        Toast.makeText(this, "Iniciando...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Arrancando motores...", Toast.LENGTH_SHORT).show();
 
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/partidas/" + idPartida + "/iniciar";
+        //  /api/partida (singular)  /crear
+        String url = "http://10.0.2.2:8080/api/partida/" + idPartida + "/crear";
 
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
 
-        RequestBody body = RequestBody.create(new byte[0]); // POST vacío
+        // Es un PUT, así que mandamos un cuerpo JSON vacío por si acaso el backend lo requiere
+        RequestBody body = RequestBody.create("{}", MediaType.parse("application/json; charset=utf-8"));
 
         Request request = new Request.Builder()
                 .url(url)
-                .post(body)
+                .put(body)
                 .addHeader("Authorization", "Bearer " + jwt)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error al iniciar", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error de red al intentar iniciar", Toast.LENGTH_SHORT).show());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "El servidor no pudo iniciar", Toast.LENGTH_SHORT).show());
+                    // Si falla, imprimimos el motivo exacto en el Logcat para poder decirselo al Backend
+                    String errorBody = response.body() != null ? response.body().string() : "Vacío";
+                    android.util.Log.e("API_INICIAR", " HTTP " + response.code() + " | Motivo: " + errorBody);
+
+                    runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "El servidor rechazó iniciar la partida", Toast.LENGTH_SHORT).show());
                 } else {
-                    // Como no hay WebSockets, el líder salta manualmente a la partida al recibir un 200 OK
+                    //  PARCHE TEMPORAL (Por no tener WebSockets)
+
                     runOnUiThread(() -> {
                         Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
                         intent.putExtra("ID_PARTIDA", idPartida);
-                        intent.putExtra("MI_ROL", "JEFE"); // Simulamos rol por ahora
+                        intent.putExtra("MI_ROL", "JEFE");
                         startActivity(intent);
                         finish();
                     });
