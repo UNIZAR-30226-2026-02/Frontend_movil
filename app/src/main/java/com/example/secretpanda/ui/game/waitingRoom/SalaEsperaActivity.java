@@ -1,6 +1,7 @@
 package com.example.secretpanda.ui.game.waitingRoom;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -18,14 +19,27 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.GridLayoutManager;
-import com.example.secretpanda.data.model.ItemPersonalizacion;
+
+import com.example.secretpanda.R;
+import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.InventarioGlobal;
+import com.example.secretpanda.data.model.ItemPersonalizacion;
+import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.customization.PersonalizacionAdapter;
+import com.example.secretpanda.ui.game.match.PartidaActivity;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import com.example.secretpanda.R;
-import com.example.secretpanda.data.model.Jugador;
 import java.util.Random;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class SalaEsperaActivity extends AppCompatActivity {
 
@@ -38,7 +52,10 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private TextView btnUnirseRojo;
     private PersonalizacionAdapter adapterPersonalizacionDialogo;
     private Jugador jugadorLocal;
-    private int posicionJugadorLocal = 0;
+
+    // ID real de la partida y Token del usuario
+    private long idPartida = -1;
+    private String miPropioIdGoogle = "";
 
     private TextView tvContadorAzul, tvContadorRojo, tvContadorTotal, tvTiempoSala;
 
@@ -53,12 +70,19 @@ public class SalaEsperaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sala_espera);
 
         // ==========================================
-        //  RECUPERAR DATOS DEL INTENT
+        // RECUPERAR DATOS DEL INTENT
         // ==========================================
         esLider = getIntent().getBooleanExtra("ES_LIDER", false);
         esPrivada = getIntent().getBooleanExtra("ES_PRIVADA", false);
         maxJugadores = getIntent().getIntExtra("MAX_JUGADORES", 8);
         int tiempoTurno = getIntent().getIntExtra("TIEMPO_TURNO", 60);
+
+        // Recuperamos el ID real de la partida que nos ha dado el Backend
+        idPartida = getIntent().getLongExtra("ID_PARTIDA", -1);
+
+        // Leemos quién somos nosotros (para luego saber nuestro rol)
+        miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        if(miPropioIdGoogle == null) miPropioIdGoogle = "TuNombreDeUsuario";
 
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
@@ -70,53 +94,47 @@ public class SalaEsperaActivity extends AppCompatActivity {
         btnUnirseRojo = findViewById(R.id.btn_unirse_rojo);
         tvTiempoSala = findViewById(R.id.tv_tiempo_sala);
 
-        if (tvTiempoSala != null) {
-            tvTiempoSala.setText(tiempoTurno + "s");
-        }
+        if (tvTiempoSala != null) tvTiempoSala.setText(tiempoTurno + "s");
 
         // ==========================================
-        // LÓGICA DEL CÓDIGO DE PARTIDA (PÚBLICA VS PRIVADA)
+        // LÓGICA DEL CÓDIGO DE PARTIDA
         // ==========================================
         TextView tvCodigoPartida = findViewById(R.id.tv_codigo_partida);
-        // Pillamos el layout "padre" que envuelve el texto "Código partida :" y el propio código
         View layoutCodigoEntero = (View) tvCodigoPartida.getParent();
 
         if (!esPrivada) {
-            // Si es pública, ocultamos el bloque del código entero
             layoutCodigoEntero.setVisibility(View.GONE);
         } else {
-            // Si es privada, lo mostramos y decidimos qué código poner
             layoutCodigoEntero.setVisibility(View.VISIBLE);
-
-            if (esLider) {
-                // El líder crea la sala, así que generamos un código aleatorio nuevo
-                tvCodigoPartida.setText(generarCodigoAleatorio());
-            } else {
-                // Si te unes, mostramos el código que hayas metido en la pantalla anterior
-                String codigoRecibido = getIntent().getStringExtra("CODIGO_PARTIDA");
-                tvCodigoPartida.setText(codigoRecibido != null ? codigoRecibido : "------");
-            }
+            String codigoRecibido = getIntent().getStringExtra("CODIGO_PARTIDA");
+            tvCodigoPartida.setText(codigoRecibido != null ? codigoRecibido : generarCodigoAleatorio());
         }
 
-        // ASIGNACIÓN ALEATORIA AL ENTRAR
+        // ==========================================
+        // BOTONES DE CAMBIO DE EQUIPO (RF-21)
+        // ==========================================
         estoyEnEquipoAzul = new Random().nextBoolean();
         actualizarBotonesEquipo();
 
-        btnUnirseAzul.setOnClickListener(v -> gestionarClicEquipo(true));
-        btnUnirseRojo.setOnClickListener(v -> gestionarClicEquipo(false));
+        btnUnirseAzul.setOnClickListener(v -> cambiarEquipoEnBackend("AZUL"));
+        btnUnirseRojo.setOnClickListener(v -> cambiarEquipoEnBackend("ROJO"));
 
+        // ==========================================
         // CONFIGURACIÓN DE LA LISTA DE JUGADORES
+        // ==========================================
         rvJugadores = findViewById(R.id.rv_jugadores);
         rvJugadores.setLayoutManager(new LinearLayoutManager(this));
         listaJugadores = new ArrayList<>();
 
-        jugadorLocal = new Jugador("TuNombreDeUsuario");
+        jugadorLocal = new Jugador(miPropioIdGoogle);
         jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
         listaJugadores.add(jugadorLocal);
 
         actualizarContadores(listaJugadores);
 
-        // CONFIGURACIÓN DE INTERFAZ SEGÚN SI ES LÍDER O NO
+        // ==========================================
+        // BOTÓN INICIAR PARTIDA (RF-13)
+        // ==========================================
         TextView btnIniciarPartida = findViewById(R.id.btn_iniciar_partida_principal);
         View btnConfiguracion = findViewById(R.id.btn_configuracion);
 
@@ -136,11 +154,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 btnIniciarPartida.setText("Iniciar\npartida");
                 btnIniciarPartida.setAlpha(1.0f);
                 btnIniciarPartida.setEnabled(true);
-                btnIniciarPartida.setOnClickListener(v -> intentarIniciarPartida());
+                btnIniciarPartida.setOnClickListener(v -> validarAntesDeIniciar());
             }
         }
 
-        adapter = new JugadorSalaAdapter(listaJugadores, "TuNombreDeUsuario", esLider, nuevaLista -> {
+        adapter = new JugadorSalaAdapter(listaJugadores, miPropioIdGoogle, esLider, nuevaLista -> {
             actualizarContadores(nuevaLista);
         });
         rvJugadores.setAdapter(adapter);
@@ -148,9 +166,136 @@ public class SalaEsperaActivity extends AppCompatActivity {
         findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
     }
 
-    // ==========================================
-    // GENERADOR DE CÓDIGO ALEATORIO (6 Caracteres)
-    // ==========================================
+    // =========================================================================
+    // API: PUT CAMBIAR EQUIPO (RF-21)
+    // =========================================================================
+    private void cambiarEquipoEnBackend(String equipoElegido) {
+        if ((equipoElegido.equals("AZUL") && estoyEnEquipoAzul) ||
+                (equipoElegido.equals("ROJO") && !estoyEnEquipoAzul)) {
+            return; // Ya estoy en ese equipo
+        }
+
+        // Reflejo visual instantáneo para el usuario
+        estoyEnEquipoAzul = equipoElegido.equals("AZUL");
+        jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
+        actualizarBotonesEquipo();
+        adapter.notifyDataSetChanged();
+        actualizarContadores(listaJugadores);
+
+        btnUnirseRojo.setEnabled(false);
+        btnUnirseAzul.setEnabled(false);
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/partida/" + idPartida + "/equipo";
+
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        RequestBody body = RequestBody.create(equipoElegido, MediaType.parse("text/plain; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(SalaEsperaActivity.this, "Error de red al cambiar equipo", Toast.LENGTH_SHORT).show();
+                    btnUnirseRojo.setEnabled(true);
+                    btnUnirseAzul.setEnabled(true);
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                // Leemos el mensaje real de error que manda el servidor
+                String cuerpoError = response.body() != null ? response.body().string() : "Vacío";
+                int codigoHTTP = response.code();
+
+                runOnUiThread(() -> {
+                    btnUnirseRojo.setEnabled(true);
+                    btnUnirseAzul.setEnabled(true);
+
+                    if (!response.isSuccessful()) {
+                        // Imprimimos el error exacto en el Logcat (en rojo)
+                        android.util.Log.e("API_EQUIPO", " URL LLAMADA: " + request.url());
+                        android.util.Log.e("API_EQUIPO", " CÓDIGO HTTP: " + codigoHTTP);
+                        android.util.Log.e("API_EQUIPO", " MOTIVO DEL BACKEND: " + cuerpoError);
+
+                        Toast.makeText(SalaEsperaActivity.this, "Error " + codigoHTTP + ". Mira el Logcat", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(SalaEsperaActivity.this, "¡Cambiado con éxito!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+    }
+
+    // API: POST INICIAR PARTIDA (RF-13)
+    private void validarAntesDeIniciar() {
+        int contadorAzul = 0;
+        int contadorRojo = 0;
+        for (Jugador jugador : listaJugadores) {
+            if (jugador.isEsEquipoAzul()) contadorAzul++;
+            else contadorRojo++;
+        }
+        int totalJugadores = listaJugadores.size();
+
+        if (totalJugadores < 4 || contadorAzul < 2 || contadorRojo < 2) {
+            mostrarDialogoErrorJugadores();
+        } else if (totalJugadores < maxJugadores) {
+            mostrarDialogoConfirmacion();
+        } else {
+            mandarOrdenDeInicio();
+        }
+    }
+
+    private void mandarOrdenDeInicio() {
+        Toast.makeText(this, "Iniciando...", Toast.LENGTH_SHORT).show();
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/partidas/" + idPartida + "/iniciar";
+
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        RequestBody body = RequestBody.create(new byte[0]); // POST vacío
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error al iniciar", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "El servidor no pudo iniciar", Toast.LENGTH_SHORT).show());
+                } else {
+                    // Como no hay WebSockets, el líder salta manualmente a la partida al recibir un 200 OK
+                    runOnUiThread(() -> {
+                        Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
+                        intent.putExtra("ID_PARTIDA", idPartida);
+                        intent.putExtra("MI_ROL", "JEFE"); // Simulamos rol por ahora
+                        startActivity(intent);
+                        finish();
+                    });
+                }
+            }
+        });
+    }
+
+    // MÉTODOS VISUALES ORIGINALES
+
     private String generarCodigoAleatorio() {
         String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder codigo = new StringBuilder();
@@ -161,162 +306,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
         return codigo.toString();
     }
 
-    // ==========================================
-    // LÓGICA DE INICIO DE PARTIDA (SOLO LÍDER)
-    // ==========================================
-    private void intentarIniciarPartida() {
-        int contadorAzul = 0;
-        int contadorRojo = 0;
-
-        for (Jugador jugador : listaJugadores) {
-            if (jugador.isEsEquipoAzul()) contadorAzul++;
-            else contadorRojo++;
-        }
-
-        int totalJugadores = listaJugadores.size();
-
-        if (totalJugadores < 4 || contadorAzul < 2 || contadorRojo < 2) {
-            mostrarDialogoErrorJugadores();
-        }
-        else if (totalJugadores < maxJugadores) {
-            mostrarDialogoConfirmacion();
-        }
-        else {
-            iniciarJuegoReal();
-        }
-    }
-
-    private void mostrarDialogoErrorJugadores() {
-        Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_error_jugadores);
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        Button btnCerrar = dialog.findViewById(R.id.btn_cerrar_error);
-        if (btnCerrar != null) {
-            btnCerrar.setOnClickListener(v -> dialog.dismiss());
-        }
-
-        dialog.show();
-    }
-
-    private void mostrarDialogoConfirmacion() {
-        Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_confirmar_inicio);
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_dialogo);
-        Button btnIniciar = dialog.findViewById(R.id.btn_iniciar_confirmado);
-
-        btnCerrar.setOnClickListener(v -> dialog.dismiss());
-        btnIniciar.setOnClickListener(v -> {
-            dialog.dismiss();
-            iniciarJuegoReal();
-        });
-
-        dialog.show();
-    }
-
-    private void iniciarJuegoReal() {
-        Toast.makeText(this, "¡Iniciando partida!", Toast.LENGTH_SHORT).show();
-    }
-
-    // ==========================================
-    // AJUSTES DE SALA (SOLO LÍDER)
-    // ==========================================
-    private void mostrarDialogoAjustes() {
-        Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_ajustes_sala);
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_ajustes);
-        btnCerrar.setOnClickListener(v -> dialog.dismiss());
-
-        // Configuración de Tiempo
-        TextView[] botonesTiempo = {
-                dialog.findViewById(R.id.btn_tiempo_30),
-                dialog.findViewById(R.id.btn_tiempo_60),
-                dialog.findViewById(R.id.btn_tiempo_80),
-                dialog.findViewById(R.id.btn_tiempo_120)
-        };
-
-        String tiempoActualStr = tvTiempoSala.getText().toString();
-        for (TextView btn : botonesTiempo) {
-            if ((btn.getText().toString()).equals(tiempoActualStr)) {
-                seleccionarBoton(btn, botonesTiempo);
-            }
-            btn.setOnClickListener(v -> {
-                seleccionarBoton(btn, botonesTiempo);
-                if (tvTiempoSala != null) tvTiempoSala.setText(btn.getText().toString());
-            });
-        }
-
-        // Configuración de Jugadores
-        TextView[] botonesJugadores = {
-                dialog.findViewById(R.id.btn_jugadores_4),
-                dialog.findViewById(R.id.btn_jugadores_6),
-                dialog.findViewById(R.id.btn_jugadores_8),
-                dialog.findViewById(R.id.btn_jugadores_10),
-                dialog.findViewById(R.id.btn_jugadores_12),
-                dialog.findViewById(R.id.btn_jugadores_14),
-                dialog.findViewById(R.id.btn_jugadores_16)
-        };
-
-        TextView tvAdvertencia = dialog.findViewById(R.id.tv_advertencia_sala);
-        tvAdvertencia.setVisibility(View.GONE);
-
-        for (TextView btn : botonesJugadores) {
-            if (btn.getText().toString().equals(String.valueOf(maxJugadores))) {
-                seleccionarBoton(btn, botonesJugadores);
-            }
-
-            btn.setOnClickListener(v -> {
-                int intentoMaxJugadores = Integer.parseInt(btn.getText().toString());
-
-                if (intentoMaxJugadores < listaJugadores.size()) {
-                    tvAdvertencia.setVisibility(View.VISIBLE);
-                } else {
-                    tvAdvertencia.setVisibility(View.GONE);
-                    maxJugadores = intentoMaxJugadores;
-                    seleccionarBoton(btn, botonesJugadores);
-                    actualizarContadores(listaJugadores);
-                }
-            });
-        }
-
-        dialog.show();
-    }
-
-    private void seleccionarBoton(TextView seleccionado, TextView[] grupo) {
-        for (TextView btn : grupo) {
-            if (btn != null) {
-                if (btn == seleccionado) {
-                    btn.setBackgroundResource(R.drawable.fondo_carta_seleccionada);
-                } else {
-                    btn.setBackgroundResource(R.drawable.fondo_boton_mision);
-                }
-            }
-        }
-    }
-
-    // ==========================================
-    // LÓGICA DE EQUIPOS Y UI
-    // ==========================================
     private void actualizarContadores(List<Jugador> lista) {
         int contadorAzul = 0;
         int contadorRojo = 0;
-
         for (Jugador jugador : lista) {
             if (jugador.isEsEquipoAzul()) contadorAzul++;
             else contadorRojo++;
@@ -325,18 +317,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
         if (tvContadorAzul != null) tvContadorAzul.setText("Azul: " + contadorAzul + "/" + (maxJugadores/2));
         if (tvContadorRojo != null) tvContadorRojo.setText("Rojo: " + contadorRojo + "/" + (maxJugadores/2));
         if (tvContadorTotal != null) tvContadorTotal.setText(lista.size() + "/" + maxJugadores);
-    }
-
-    private void gestionarClicEquipo(boolean pulsadoAzul) {
-        if (estoyEnEquipoAzul == pulsadoAzul) return;
-
-        estoyEnEquipoAzul = pulsadoAzul;
-        actualizarBotonesEquipo();
-
-        jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
-        if (adapter != null) adapter.notifyItemChanged(posicionJugadorLocal);
-
-        if (listaJugadores != null) actualizarContadores(listaJugadores);
     }
 
     private void actualizarBotonesEquipo() {
@@ -368,9 +348,84 @@ public class SalaEsperaActivity extends AppCompatActivity {
         btn.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT);
     }
 
-    // ==========================================
-    // OTROS DIÁLOGOS (Abandonar y Personalización)
-    // ==========================================
+    private void mostrarDialogoErrorJugadores() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_error_jugadores);
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Button btnCerrar = dialog.findViewById(R.id.btn_cerrar_error);
+        if (btnCerrar != null) btnCerrar.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private void mostrarDialogoConfirmacion() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_confirmar_inicio);
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.findViewById(R.id.btn_cerrar_dialogo).setOnClickListener(v -> dialog.dismiss());
+        dialog.findViewById(R.id.btn_iniciar_confirmado).setOnClickListener(v -> {
+            dialog.dismiss();
+            mandarOrdenDeInicio();
+        });
+        dialog.show();
+    }
+
+    private void mostrarDialogoAjustes() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_ajustes_sala);
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.findViewById(R.id.btn_cerrar_ajustes).setOnClickListener(v -> dialog.dismiss());
+
+        TextView[] botonesTiempo = {
+                dialog.findViewById(R.id.btn_tiempo_30), dialog.findViewById(R.id.btn_tiempo_60),
+                dialog.findViewById(R.id.btn_tiempo_80), dialog.findViewById(R.id.btn_tiempo_120)
+        };
+        String tiempoActualStr = tvTiempoSala.getText().toString();
+        for (TextView btn : botonesTiempo) {
+            if ((btn.getText().toString()).equals(tiempoActualStr)) seleccionarBoton(btn, botonesTiempo);
+            btn.setOnClickListener(v -> {
+                seleccionarBoton(btn, botonesTiempo);
+                if (tvTiempoSala != null) tvTiempoSala.setText(btn.getText().toString());
+            });
+        }
+
+        TextView[] botonesJugadores = {
+                dialog.findViewById(R.id.btn_jugadores_4), dialog.findViewById(R.id.btn_jugadores_6),
+                dialog.findViewById(R.id.btn_jugadores_8), dialog.findViewById(R.id.btn_jugadores_10),
+                dialog.findViewById(R.id.btn_jugadores_12), dialog.findViewById(R.id.btn_jugadores_14),
+                dialog.findViewById(R.id.btn_jugadores_16)
+        };
+        TextView tvAdvertencia = dialog.findViewById(R.id.tv_advertencia_sala);
+        tvAdvertencia.setVisibility(View.GONE);
+
+        for (TextView btn : botonesJugadores) {
+            if (btn.getText().toString().equals(String.valueOf(maxJugadores))) seleccionarBoton(btn, botonesJugadores);
+            btn.setOnClickListener(v -> {
+                int intentoMaxJugadores = Integer.parseInt(btn.getText().toString());
+                if (intentoMaxJugadores < listaJugadores.size()) {
+                    tvAdvertencia.setVisibility(View.VISIBLE);
+                } else {
+                    tvAdvertencia.setVisibility(View.GONE);
+                    maxJugadores = intentoMaxJugadores;
+                    seleccionarBoton(btn, botonesJugadores);
+                    actualizarContadores(listaJugadores);
+                }
+            });
+        }
+        dialog.show();
+    }
+
+    private void seleccionarBoton(TextView seleccionado, TextView[] grupo) {
+        for (TextView btn : grupo) {
+            if (btn != null) {
+                if (btn == seleccionado) btn.setBackgroundResource(R.drawable.fondo_carta_seleccionada);
+                else btn.setBackgroundResource(R.drawable.fondo_boton_mision);
+            }
+        }
+    }
+
     private void mostrarDialogoAbandonar() {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_abandonar);
@@ -390,11 +445,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_tematicas_sala);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-        ImageButton btnCerrar = dialog.findViewById(R.id.btn_cerrar_personalizacion);
+        dialog.findViewById(R.id.btn_cerrar_personalizacion).setOnClickListener(v -> dialog.dismiss());
         TextView txtTematica = dialog.findViewById(R.id.txt_tematica_seleccionada_dialog);
         RecyclerView recycler = dialog.findViewById(R.id.recycler_tematicas_dialog);
         recycler.setLayoutManager(new GridLayoutManager(this, 3));
@@ -403,8 +456,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
         LinearLayout tabFondos = dialog.findViewById(R.id.tab_fondos);
         TextView txtBordes = dialog.findViewById(R.id.txt_tab_bordes);
         TextView txtFondos = dialog.findViewById(R.id.txt_tab_fondos);
-
-        btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
         tabBordes.setOnClickListener(v -> {
             activarPestana(tabBordes, txtBordes, tabFondos, txtFondos);
