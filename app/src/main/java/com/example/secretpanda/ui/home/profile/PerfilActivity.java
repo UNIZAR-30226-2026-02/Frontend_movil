@@ -108,20 +108,19 @@ public class PerfilActivity extends AppCompatActivity {
         });
 
         btnCerrarSesion.setOnClickListener(v -> {
-            // avisamos a google de que cierre sesion
+            //  DESCONECTAR DE GOOGLE SIGN-IN
             com.google.android.gms.auth.api.signin.GoogleSignInOptions gso =
                     new com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).build();
             com.google.android.gms.auth.api.signin.GoogleSignInClient googleClient =
                     com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(this, gso);
 
-            // Usamos signOut() para que Google olvide la cuenta en este dispositivo
             googleClient.signOut().addOnCompleteListener(this, task -> {
 
-                // borramos el token
+                // BORRAR EL JWT LOCAL (TokenManager)
                 com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
                 tokenManager.clearToken();
 
-                // volvemos a la pantalla de login
+                //  REDIRIGIR AL LOGIN LIMPIANDO EL HISTORIAL DE PANTALLAS
                 android.content.Intent intent = new android.content.Intent(PerfilActivity.this, com.example.secretpanda.ui.auth.LoginActivity.class);
                 intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
