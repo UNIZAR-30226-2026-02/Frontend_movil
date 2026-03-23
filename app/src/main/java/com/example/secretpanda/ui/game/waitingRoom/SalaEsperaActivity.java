@@ -48,7 +48,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private List<Jugador> listaJugadores;
 
     private boolean estoyEnEquipoAzul;
-    private TextView btnUnirseAzul;
+    private TextView btnUnirseAzul, btnAbandonar, btnEmpezarPartida;
+
+
     private TextView btnUnirseRojo;
     private PersonalizacionAdapter adapterPersonalizacionDialogo;
     private Jugador jugadorLocal;
@@ -63,6 +65,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private int maxJugadores = 8;
     private boolean esLider = false;
     private boolean esPrivada = false;
+
+    private ua.naiksoftware.stomp.StompClient stompClient;
+    private boolean soyElCreador = false;
+    private String miTagPropio = ""; // Guárdalo desde el Token o SharedPreferences para identificarte
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,11 +87,17 @@ public class SalaEsperaActivity extends AppCompatActivity {
         // Recuperamos el ID real de la partida que nos ha dado el Backend
         idPartida = getIntent().getLongExtra("ID_PARTIDA", -1);
 
+
         // Leemos quién somos nosotros (para luego saber nuestro rol)
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         if(miPropioIdGoogle == null) miPropioIdGoogle = "TuNombreDeUsuario";
 
-        TextView btnAbandonar = findViewById(R.id.btn_abandonar);
+
+        // Leemos quién somos nosotros (para luego saber nuestro rol)
+        miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        if(miPropioIdGoogle == null) miPropioIdGoogle = "TuNombreDeUsuario";
+
+        btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
 
         tvContadorAzul = findViewById(R.id.tv_contador_azul);
@@ -114,37 +127,49 @@ public class SalaEsperaActivity extends AppCompatActivity {
         // BOTONES DE CAMBIO DE EQUIPO (RF-21)
 
 
+
+        btnUnirseAzul.setOnClickListener(v -> solicitarCambioEquipo("azul"));
+        btnUnirseRojo.setOnClickListener(v -> solicitarCambioEquipo("rojo"));
+
         btnUnirseAzul.setOnClickListener(v -> cambiarEquipoEnBackend("AZUL"));
         btnUnirseRojo.setOnClickListener(v -> cambiarEquipoEnBackend("ROJO"));
+
 
         // CONFIGURACIÓN DE LA LISTA DE JUGADORES
         rvJugadores = findViewById(R.id.rv_jugadores);
         rvJugadores.setLayoutManager(new LinearLayoutManager(this));
         listaJugadores = new ArrayList<>();
 
+        btnEmpezarPartida = findViewById(R.id.btn_iniciar_partida_principal);
 
-
-        // BOTÓN INICIAR PARTIDA (RF-13)
         TextView btnIniciarPartida = findViewById(R.id.btn_iniciar_partida_principal);
         View btnConfiguracion = findViewById(R.id.btn_configuracion);
 
-        if (!esLider) {
+        if (!soyElCreador) {
             if (btnConfiguracion != null) btnConfiguracion.setVisibility(View.GONE);
-            if (btnIniciarPartida != null) {
-                btnIniciarPartida.setText("Esperando\nal líder...");
-                btnIniciarPartida.setAlpha(0.5f);
-                btnIniciarPartida.setEnabled(false);
+            if (btnEmpezarPartida != null) {
+                btnEmpezarPartida.setText("Esperando\nal líder...");
+                btnEmpezarPartida.setAlpha(0.5f);
+                btnEmpezarPartida.setEnabled(false);
             }
         } else {
             if (btnConfiguracion != null) {
                 btnConfiguracion.setVisibility(View.VISIBLE);
                 btnConfiguracion.setOnClickListener(v -> mostrarDialogoAjustes());
             }
+
+            if (btnEmpezarPartida != null) {
+                btnEmpezarPartida.setText("Iniciar\npartida");
+                btnEmpezarPartida.setAlpha(1.0f);
+                btnEmpezarPartida.setEnabled(true);
+                btnEmpezarPartida.setOnClickListener(v -> iniciarPartida());
+            }
             if (btnIniciarPartida != null) {
                 btnIniciarPartida.setText("Iniciar\npartida");
                 btnIniciarPartida.setAlpha(1.0f);
                 btnIniciarPartida.setEnabled(true);
                 btnIniciarPartida.setOnClickListener(v -> validarAntesDeIniciar());
+
             }
         }
 
@@ -152,7 +177,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
             actualizarContadores(nuevaLista);
         });
         rvJugadores.setAdapter(adapter);
+
+        conectarWebSocketLobby();
+
         cargarLobbyInicial();
+
 
         findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
     }
@@ -243,6 +272,113 @@ public class SalaEsperaActivity extends AppCompatActivity {
         }
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (stompClient != null && stompClient.isConnected()) {
+            stompClient.disconnect();
+            android.util.Log.d("WS_LOBBY", "Desconectado del lobby");
+        }
+    }
+
+    private void conectarWebSocketLobby() {
+        // 1. Configurar la conexión con Token
+        String wsUrl = "ws://10.0.2.2:8080/ws-endpoint"; // Ajusta tu URL
+
+        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
+        String token = tokenManager.getToken();
+
+        java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
+        if (token != null && !token.isEmpty()) {
+            headers.add(new ua.naiksoftware.stomp.dto.StompHeader("Authorization", "Bearer " + token));
+        }
+
+        stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, wsUrl);
+        stompClient.connect(headers);
+
+        // 2. Suscribirnos al canal de esta partida en concreto
+        String topicUrl = "/topic/partidas/" + idPartida + "/lobby";
+
+        stompClient.topic(topicUrl).subscribe(topicMessage -> {
+            String payload = topicMessage.getPayload();
+            android.util.Log.d("WS_LOBBY", "Actualización del lobby: " + payload);
+
+            runOnUiThread(() -> {
+                try {
+                    org.json.JSONObject lobbyJson = new org.json.JSONObject(payload);
+                    String estado = lobbyJson.getString("estado");
+
+                    // ==========================================
+                    // LÓGICA 1: REDIRECCIONES SEGÚN EL ESTADO
+                    // ==========================================
+                    if ("finalizado".equalsIgnoreCase(estado)) {
+                        android.widget.Toast.makeText(SalaEsperaActivity.this, "El líder abortó la misión.", android.widget.Toast.LENGTH_LONG).show();
+                        finish(); // Echamos a todos a la pantalla anterior
+                        return;
+                    } else if ("en_curso".equalsIgnoreCase(estado)) {
+                        // El creador le dio a empezar. ¡Nos vamos a jugar!
+                        android.content.Intent intent = new android.content.Intent(SalaEsperaActivity.this, PartidaActivity.class);
+                        intent.putExtra("ID_PARTIDA", idPartida);
+                        intent.putExtra("ID_JUGADOR", miPropioIdGoogle);
+                        // Tu equipo (basado en la variable booleana que usas para saber de qué color estás)
+                        intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "azul" : "rojo");
+
+                        // Tu rol (lo leemos de la maleta con la que llegaste a esta pantalla)
+                        String miRol = getIntent().getStringExtra("MI_ROL");
+                        intent.putExtra("MI_ROL", miRol != null ? miRol : "agente");
+                        startActivity(intent);
+                        finish();
+                        return;
+                    }
+
+                    // ==========================================
+                    // LÓGICA 2: ACTUALIZACIÓN DE DATOS DE LA SALA
+                    // ==========================================
+                    boolean hayMinimo = lobbyJson.getBoolean("hayMinimo");
+                    String tagCreador = lobbyJson.getString("tag_creador");
+
+                    // Verificamos si nosotros somos el creador según el backend
+                    soyElCreador = tagCreador.equals(miTagPropio);
+
+                    btnEmpezarPartida.setEnabled(soyElCreador && hayMinimo);
+
+                    // Y para que sea evidente visualmente (opcional):
+                    btnEmpezarPartida.setAlpha((soyElCreador && hayMinimo) ? 1.0f : 0.5f);
+
+                    // ==========================================
+                    // LÓGICA 3: ACTUALIZAR LA LISTA DE JUGADORES
+                    // ==========================================
+                    org.json.JSONArray jugadoresArray = lobbyJson.getJSONArray("jugadores");
+
+                    // Limpiamos la lista actual y la rellenamos con lo nuevo
+                    listaJugadores.clear();
+
+                    for (int i = 0; i < jugadoresArray.length(); i++) {
+                        org.json.JSONObject jugJson = jugadoresArray.getJSONObject(i);
+
+                        Jugador j = new Jugador(jugJson.getString("tag"));
+                        j.setTag(jugJson.getString("tag")); // Cuidado si en tu modelo se llama de otra forma
+                        j.setEsEquipoAzul(Boolean.parseBoolean(jugJson.getString("equipo")));
+                        // j.setFotoPerfil(jugJson.optString("fotoPerfil", "")); // Si usas fotos de perfil
+
+                        listaJugadores.add(j);
+                    }
+
+                    // Refrescamos el RecyclerView
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                    }
+
+                } catch (Exception e) {
+                    android.util.Log.e("WS_LOBBY", "Error parseando JSON del lobby", e);
+                }
+            });
+        }, throwable -> {
+            android.util.Log.e("WS_LOBBY", "Error de conexión en el lobby", throwable);
+        });
+    }
+
     private void mandarOrdenDeInicio() {
         Toast.makeText(this, "Arrancando motores...", Toast.LENGTH_SHORT).show();
 
@@ -301,6 +437,33 @@ public class SalaEsperaActivity extends AppCompatActivity {
             codigo.append(caracteres.charAt(rnd.nextInt(caracteres.length())));
         }
         return codigo.toString();
+    }
+    private void solicitarCambioEquipo(String nuevoEquipo) {
+        // Comprobamos que el radar (WebSocket) está encendido
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 1. Preparamos el mensaje JSON: {"equipo": "rojo"}
+                org.json.JSONObject payload = new org.json.JSONObject();
+                payload.put("equipo", nuevoEquipo);
+
+
+                // 2. La ruta de publicación que me has dado
+                String destination = "/app/partida/" + idPartida + "/participantes/equipo";
+
+                // 3. Enviamos el mensaje al servidor
+                stompClient.send(destination, payload.toString()).subscribe(() -> {
+                    android.util.Log.d("WS_EQUIPO", "Petición de cambio a equipo " + nuevoEquipo + " enviada.");
+                }, throwable -> {
+                    android.util.Log.e("WS_EQUIPO", "Error al cambiar de equipo", throwable);
+                    runOnUiThread(() -> android.widget.Toast.makeText(SalaEsperaActivity.this, "Error de conexión al cambiar de equipo", android.widget.Toast.LENGTH_SHORT).show());
+                });
+
+            } catch (Exception e) {
+                android.util.Log.e("WS_EQUIPO", "Error creando el JSON para el equipo", e);
+            }
+        } else {
+            android.widget.Toast.makeText(this, "Conectando con la base... espere un momento.", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void actualizarContadores(List<Jugador> lista) {
@@ -368,6 +531,40 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialog.show();
     }
 
+
+    private void cambiarTiempoTurno(int nuevoTiempo) {
+        // 1. Verificación de seguridad: ¿Es este usuario el líder?
+        if (!soyElCreador) {
+            android.widget.Toast.makeText(this, "Solo el creador puede cambiar los ajustes de la misión.", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 2. Comprobamos que el radar sigue activo
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // Preparamos el paquete JSON: {"tiempoEspera": 60}
+                org.json.JSONObject payload = new org.json.JSONObject();
+                payload.put("tiempoEspera", nuevoTiempo);
+
+                // La ruta de publicación para el tiempo
+                String destination = "/app/partida/" + idPartida + "/tiempoTurno";
+
+                // Disparamos el mensaje
+                stompClient.send(destination, payload.toString()).subscribe(() -> {
+                    android.util.Log.d("WS_TIEMPO", "Petición de cambio de tiempo enviada: " + nuevoTiempo + "s");
+                }, throwable -> {
+                    android.util.Log.e("WS_TIEMPO", "Error al cambiar el tiempo", throwable);
+                    runOnUiThread(() -> android.widget.Toast.makeText(SalaEsperaActivity.this, "Error de conexión al cambiar tiempo", android.widget.Toast.LENGTH_SHORT).show());
+                });
+
+            } catch (Exception e) {
+                android.util.Log.e("WS_TIEMPO", "Error creando el JSON del tiempo", e);
+            }
+        } else {
+            android.widget.Toast.makeText(this, "Sin conexión con la base.", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void mostrarDialogoAjustes() {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -384,6 +581,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
             if ((btn.getText().toString()).equals(tiempoActualStr)) seleccionarBoton(btn, botonesTiempo);
             btn.setOnClickListener(v -> {
                 seleccionarBoton(btn, botonesTiempo);
+
+                cambiarTiempoTurno(Integer.parseInt(btn.getText().toString()));
+
                 if (tvTiempoSala != null) tvTiempoSala.setText(btn.getText().toString());
             });
         }
@@ -433,6 +633,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialog.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> dialog.dismiss());
         dialog.findViewById(R.id.btn_confirmar_abandonar).setOnClickListener(v -> {
             dialog.dismiss();
+            abandonarLobby();
             finish();
         });
         dialog.show();
@@ -577,5 +778,77 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void iniciarPartida() {
+        // 1. Doble comprobación de seguridad: solo el líder da la orden
+        if (!soyElCreador) {
+            android.widget.Toast.makeText(this, "Solo el líder puede iniciar la misión.", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 2. Preparamos el cliente HTTP y la URL
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/partida/" + idPartida + "/iniciar"; // Ajusta tu IP si es necesario
+
+        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
+        String token = tokenManager.getToken();
+
+        // 3. En peticiones PUT es obligatorio mandar un Body. Mandamos uno vacío.
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(null, "");
+
+        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder()
+                .url(url)
+                .put(body);
+
+        if (token != null && !token.isEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer " + token);
+        }
+
+        okhttp3.Request request = requestBuilder.build();
+
+        // 4. Disparamos la orden
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                android.util.Log.e("API_INICIAR", "Error de red al intentar iniciar la partida", e);
+                runOnUiThread(() -> android.widget.Toast.makeText(SalaEsperaActivity.this, "Error de comunicación con la base.", android.widget.Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful()) {
+                    android.util.Log.d("API_INICIAR", "¡Orden de inicio recibida por el servidor!");
+
+                } else {
+                    android.util.Log.e("API_INICIAR", "Error del servidor: " + response.code());
+                    runOnUiThread(() -> android.widget.Toast.makeText(SalaEsperaActivity.this, "No se pudo iniciar. ¿Están todos listos?", android.widget.Toast.LENGTH_SHORT).show());
+                }
+            }
+        });
+    }
+    private void abandonarLobby() {
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // La ruta para avisar de que nos vamos
+                String destination = "/app/partida/" + idPartida + "/abandonarLobby";
+
+                // Mandamos un JSON vacío o un texto simple, ya que el backend
+                // sabe quiénes somos por la sesión del WebSocket / Token.
+                stompClient.send(destination, "{}").subscribe(() -> {
+                    android.util.Log.d("WS_SALIR", "Aviso de abandono enviado al servidor.");
+
+                    // Desconectamos el radar de forma segura
+                    stompClient.disconnect();
+                }, throwable -> {
+                    android.util.Log.e("WS_SALIR", "Error al enviar el aviso de abandono", throwable);
+                });
+            } catch (Exception e) {
+                android.util.Log.e("WS_SALIR", "Error creando mensaje de abandono", e);
+            }
+        }
+
+        // Finalmente, cerramos la pantalla
+        finish();
     }
 }
