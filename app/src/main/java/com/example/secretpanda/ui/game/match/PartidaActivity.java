@@ -32,13 +32,20 @@ public class PartidaActivity extends AppCompatActivity {
     private TextView tvMiRol;
     private android.widget.ImageView iconoBtnAlerta;
     private String miRol = "Agente";
+<<<<<<< HEAD
     private String equipoInicial = ""; // Guardará "rojo" o "azul"
+=======
+
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
 
     private StompClient stompClient;
     private int idPartidaActual; // <--- Sin valor fijo
     private String miEquipo;     // <--- Sin valor fijo
+<<<<<<< HEAD
     private String equipoTurnoActual = "";
     private int idJugadorPartida = -1;
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
     private LinearLayout contenedorMensajesActual = null;
 
     // ¡NUEVA VARIABLE MAGICA!

@@ -48,7 +48,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private List<Jugador> listaJugadores;
 
     private boolean estoyEnEquipoAzul;
+<<<<<<< HEAD
     private TextView btnUnirseAzul, btnAbandonar, btnEmpezarPartida;
+=======
+    private TextView btnUnirseAzul;
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
     private TextView btnUnirseRojo;
     private PersonalizacionAdapter adapterPersonalizacionDialogo;
     private Jugador jugadorLocal;
@@ -63,10 +67,13 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private int maxJugadores = 8;
     private boolean esLider = false;
     private boolean esPrivada = false;
+<<<<<<< HEAD
 
     private ua.naiksoftware.stomp.StompClient stompClient;
     private boolean soyElCreador = false;
     private String miTagPropio = ""; // Guárdalo desde el Token o SharedPreferences para identificarte
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +90,13 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
         // Recuperamos el ID real de la partida que nos ha dado el Backend
         idPartida = getIntent().getLongExtra("ID_PARTIDA", -1);
+<<<<<<< HEAD
+=======
+
+        // Leemos quién somos nosotros (para luego saber nuestro rol)
+        miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        if(miPropioIdGoogle == null) miPropioIdGoogle = "TuNombreDeUsuario";
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
 
         // Leemos quién somos nosotros (para luego saber nuestro rol)
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
@@ -118,8 +132,13 @@ public class SalaEsperaActivity extends AppCompatActivity {
         // BOTONES DE CAMBIO DE EQUIPO (RF-21)
 
 
+<<<<<<< HEAD
         btnUnirseAzul.setOnClickListener(v -> solicitarCambioEquipo("azul"));
         btnUnirseRojo.setOnClickListener(v -> solicitarCambioEquipo("rojo"));
+=======
+        btnUnirseAzul.setOnClickListener(v -> cambiarEquipoEnBackend("AZUL"));
+        btnUnirseRojo.setOnClickListener(v -> cambiarEquipoEnBackend("ROJO"));
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
 
         // CONFIGURACIÓN DE LA LISTA DE JUGADORES
         rvJugadores = findViewById(R.id.rv_jugadores);
@@ -129,7 +148,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
 
         // BOTÓN INICIAR PARTIDA (RF-13)
+<<<<<<< HEAD
         btnEmpezarPartida = findViewById(R.id.btn_iniciar_partida_principal);
+=======
+        TextView btnIniciarPartida = findViewById(R.id.btn_iniciar_partida_principal);
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
         View btnConfiguracion = findViewById(R.id.btn_configuracion);
 
         if (!soyElCreador) {
@@ -144,11 +167,19 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 btnConfiguracion.setVisibility(View.VISIBLE);
                 btnConfiguracion.setOnClickListener(v -> mostrarDialogoAjustes());
             }
+<<<<<<< HEAD
             if (btnEmpezarPartida != null) {
                 btnEmpezarPartida.setText("Iniciar\npartida");
                 btnEmpezarPartida.setAlpha(1.0f);
                 btnEmpezarPartida.setEnabled(true);
                 btnEmpezarPartida.setOnClickListener(v -> iniciarPartida());
+=======
+            if (btnIniciarPartida != null) {
+                btnIniciarPartida.setText("Iniciar\npartida");
+                btnIniciarPartida.setAlpha(1.0f);
+                btnIniciarPartida.setEnabled(true);
+                btnIniciarPartida.setOnClickListener(v -> validarAntesDeIniciar());
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
             }
         }
 
@@ -156,7 +187,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
             actualizarContadores(nuevaLista);
         });
         rvJugadores.setAdapter(adapter);
+<<<<<<< HEAD
         conectarWebSocketLobby();
+=======
+        cargarLobbyInicial();
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
 
         findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
     }
@@ -247,6 +282,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         }
     }
 
+<<<<<<< HEAD
 
     @Override
     protected void onDestroy() {
@@ -354,6 +390,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
         });
     }
 
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
     private void mandarOrdenDeInicio() {
         Toast.makeText(this, "Arrancando motores...", Toast.LENGTH_SHORT).show();
 
@@ -421,6 +459,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 org.json.JSONObject payload = new org.json.JSONObject();
                 payload.put("equipo", nuevoEquipo);
 
+<<<<<<< HEAD
                 // 2. La ruta de publicación que me has dado
                 String destination = "/app/partida/" + idPartida + "/participantes/equipo";
 
@@ -439,6 +478,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
             android.widget.Toast.makeText(this, "Conectando con la base... espere un momento.", android.widget.Toast.LENGTH_SHORT).show();
         }
     }
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
     private void actualizarContadores(List<Jugador> lista) {
         int contadorAzul = 0;
         int contadorRojo = 0;
@@ -504,6 +545,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialog.show();
     }
 
+<<<<<<< HEAD
     private void cambiarTiempoTurno(int nuevoTiempo) {
         // 1. Verificación de seguridad: ¿Es este usuario el líder?
         if (!soyElCreador) {
@@ -537,6 +579,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
         }
     }
 
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
     private void mostrarDialogoAjustes() {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -553,7 +597,10 @@ public class SalaEsperaActivity extends AppCompatActivity {
             if ((btn.getText().toString()).equals(tiempoActualStr)) seleccionarBoton(btn, botonesTiempo);
             btn.setOnClickListener(v -> {
                 seleccionarBoton(btn, botonesTiempo);
+<<<<<<< HEAD
                 cambiarTiempoTurno(Integer.parseInt(btn.getText().toString()));
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
                 if (tvTiempoSala != null) tvTiempoSala.setText(btn.getText().toString());
             });
         }
@@ -749,6 +796,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
             }
         });
     }
+<<<<<<< HEAD
     private void iniciarPartida() {
         // 1. Doble comprobación de seguridad: solo el líder da la orden
         if (!soyElCreador) {
@@ -822,4 +870,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
     }
 
 
+=======
+>>>>>>> b1648d95a10bb97a88257c4d33d8b0e75c37d2e0
 }
