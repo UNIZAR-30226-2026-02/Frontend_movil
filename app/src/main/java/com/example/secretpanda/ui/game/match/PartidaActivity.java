@@ -33,20 +33,15 @@ public class PartidaActivity extends AppCompatActivity {
     private android.widget.ImageView iconoBtnAlerta;
     private String miRol = "Agente";
 
-    private String equipoInicial = ""; // Guardará "rojo" o "azul"
-
 
     private StompClient stompClient;
     private int idPartidaActual; // <--- Sin valor fijo
     private String miEquipo;     // <--- Sin valor fijo
-
-    private String equipoTurnoActual = "";
-    private int idJugadorPartida = -1;
     private LinearLayout contenedorMensajesActual = null;
 
+    // ¡NUEVA VARIABLE MAGICA!
+    // Aquí guardaremos la carta que está verde en cada momento
     private FrameLayout cartaActualmenteSeleccionada = null;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +84,7 @@ public class PartidaActivity extends AppCompatActivity {
             // Cuando llega un mensaje nuevo del servidor, lo pintamos en la pantalla
             runOnUiThread(() -> {
                 // Aquí procesas el JSON que llega y usas tu método:
-                //agregarMensajeAlChat(contenedorMensajes, "Compañero", textoDelMensaje, false);
+                // agregarMensajeAlChat(contenedorMensajes, "Compañero", textoDelMensaje, false);
             });
         });
 
@@ -101,190 +96,14 @@ public class PartidaActivity extends AppCompatActivity {
         // Enlazamos las nuevas variables
         tvMiRol = findViewById(R.id.tv_mi_rol);
         iconoBtnAlerta = findViewById(R.id.icono_btn_alerta);
-        //mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : Buena.", "El turno continua");
-        //mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : Mala.", "El turno se pierde");
-        //mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : la Muerte.", "Perdistes");
+        mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : Buena.", "El turno continua");
+        mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : Mala.", "El turno se pierde");
+        mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : la Muerte.", "Perdistes");
         //mostrarDialogoFinPartida("Victoria", "Has encontrado al asesino", 10000, 20);
-        obtenerDatosInicialesPartida();
-        conectarWebSocketJuego();
         configurarBotones();
         configurarTablero();
         // Ejecutamos la magia de los roles
         aplicarRol();
-    }
-
-    private void obtenerDatosInicialesPartida() {
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/partida/" + idPartidaActual + "/participantes/rol";
-
-        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
-        String token = tokenManager.getToken();
-
-        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder().url(url).get();
-        if (token != null && !token.isEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer " + token);
-        }
-
-        okhttp3.Request request = requestBuilder.build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                android.util.Log.e("API_PARTIDA_INIT", "Error de red", e);
-                runOnUiThread(() -> android.widget.Toast.makeText(PartidaActivity.this, "Error de conexión al cargar datos", android.widget.Toast.LENGTH_SHORT).show());
-            }
-
-            @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String jsonRespuesta = response.body().string();
-                        org.json.JSONObject jsonObj = new org.json.JSONObject(jsonRespuesta);
-
-                        // 1. Extraemos la verdad absoluta del servidor
-                        String rolServidor = jsonObj.getString("rol");
-                        String equipoServidor = jsonObj.getString("equipo");
-                        String inicial = jsonObj.getString("equipoInicial");
-                        idJugadorPartida = jsonObj.optInt("id_jugador_partida", -1);
-                        runOnUiThread(() -> {
-                            // 2. Actualizamos nuestras variables internas
-                            miRol = rolServidor;
-                            miEquipo = equipoServidor;
-                            equipoInicial = inicial;
-
-                            // 3. Actualizamos la interfaz visual
-                            if (tvMiRol != null) {
-                                tvMiRol.setText("Rol: " + miRol.toUpperCase() + " | Equipo: " + miEquipo.toUpperCase());
-
-                                // Pintar el texto del color de tu equipo para más inmersión
-                                if ("azul".equalsIgnoreCase(miEquipo)) {
-                                    tvMiRol.setTextColor(android.graphics.Color.BLUE);
-                                } else {
-                                    tvMiRol.setTextColor(android.graphics.Color.RED);
-                                }
-                            }
-
-                            // Opcional: Mostrar un aviso de a quién le toca
-                            String mensajeTurno = equipoInicial.equalsIgnoreCase(miEquipo) ? "¡Tu equipo empieza!" : "El equipo rival empieza.";
-                            android.widget.Toast.makeText(PartidaActivity.this, mensajeTurno, android.widget.Toast.LENGTH_SHORT).show();
-
-                            // 4. (Opcional) Si la lógica visual de tu tablero depende del rol,
-                            // aquí es un buen momento para llamar a generarTablero() o actualizar cartas.
-                            // generarTablero();
-                        });
-
-                    } catch (Exception e) {
-                        android.util.Log.e("API_PARTIDA_INIT", "Error procesando JSON", e);
-                    }
-                } else {
-                    android.util.Log.e("API_PARTIDA_INIT", "Error del servidor: " + response.code());
-                }
-            }
-        });
-    }
-
-    private void conectarWebSocketJuego() {
-        String wsUrl = "ws://10.0.2.2:8080/ws-endpoint"; // Ajusta tu URL
-        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
-        String token = tokenManager.getToken();
-
-        java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
-        if (token != null && !token.isEmpty()) {
-            headers.add(new ua.naiksoftware.stomp.dto.StompHeader("Authorization", "Bearer " + token));
-        }
-
-        stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, wsUrl);
-        stompClient.connect(headers);
-
-        // Suscripción al estado de la partida
-        String topicUrl = "/topic/partidas/" + idPartidaActual + "/estado";
-
-        stompClient.topic(topicUrl).subscribe(topicMessage -> {
-            String payload = topicMessage.getPayload();
-            android.util.Log.d("WS_JUEGO", "Actualización del tablero recibida: " + payload);
-
-            runOnUiThread(() -> {
-                try {
-                    org.json.JSONObject estadoJson = new org.json.JSONObject(payload);
-
-                    // ==========================================
-                    // 1. LEER EL ESTADO GENERAL Y EL TURNO
-                    // ==========================================
-                    String estadoPartida = estadoJson.optString("estado", "en_curso");
-                    equipoTurnoActual = estadoJson.optString("turno_actual", "");
-
-                    // Si tienes un TextView para mostrar de quién es el turno, actualízalo aquí:
-                    // if (tvTurno != null) {
-                    //    tvTurno.setText("Turno: " + turnoActual.toUpperCase());
-                    // }
-
-                    // Si la partida ha terminado, mostramos quién ha ganado y salimos
-                    if ("finalizado".equalsIgnoreCase(estadoPartida)) {
-                        boolean rojoGana = estadoJson.optBoolean("rojoGana", false);
-                        String ganador = rojoGana ? "¡Gana el Equipo Rojo!" : "¡Gana el Equipo Azul!";
-
-                        android.widget.Toast.makeText(PartidaActivity.this, "Fin de la misión: " + ganador, android.widget.Toast.LENGTH_LONG).show();
-
-                        // Aquí podrías abrir una pantalla de "Resultados" o simplemente cerrar
-                        finish();
-                        return; // Cortamos la ejecución para no actualizar el tablero
-                    }
-
-                    // ==========================================
-                    // 2. ACTUALIZAR LAS CARTAS DEL TABLERO
-                    // ==========================================
-
-
-                } catch (Exception e) {
-                    android.util.Log.e("WS_JUEGO", "Error leyendo estado del juego", e);
-                }
-            });
-        }, throwable -> {
-            android.util.Log.e("WS_JUEGO", "Error conectando al radar del juego", throwable);
-        });
-    }
-
-    private void abandonarPartida() {
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        // Cuidado con la ruta: aquí es "partidas" en plural según tu documento
-        String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/participantes";
-
-        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
-        String token = tokenManager.getToken();
-
-        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder()
-                .url(url)
-                .delete(); // Petición DELETE
-
-        if (token != null && !token.isEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer " + token);
-        }
-
-        okhttp3.Request request = requestBuilder.build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                android.util.Log.e("API_ABANDONAR", "Error de red al abandonar", e);
-                runOnUiThread(() -> android.widget.Toast.makeText(PartidaActivity.this, "Error de conexión. Intenta salir de nuevo.", android.widget.Toast.LENGTH_SHORT).show());
-            }
-
-            @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                if (response.isSuccessful()) {
-                    android.util.Log.d("API_ABANDONAR", "Abandono confirmado por el servidor.");
-
-                    runOnUiThread(() -> {
-                        android.widget.Toast.makeText(PartidaActivity.this, "Has abandonado la misión. Penalización aplicada.", android.widget.Toast.LENGTH_LONG).show();
-                        // Cerramos la pantalla del juego y volvemos al menú principal
-                        finish();
-                    });
-                } else {
-                    android.util.Log.e("API_ABANDONAR", "Error del servidor: " + response.code());
-                    runOnUiThread(() -> android.widget.Toast.makeText(PartidaActivity.this, "Error al procesar la salida.", android.widget.Toast.LENGTH_SHORT).show());
-                }
-            }
-        });
     }
 
     // ==========================================
@@ -347,7 +166,6 @@ public class PartidaActivity extends AppCompatActivity {
         // Si pulsa el botón rojo de "Abandonar"...
         btnConfirmar.setOnClickListener(v -> {
             dialog.dismiss(); // Cerramos el diálogo por limpieza
-            abandonarPartida();
             finish();         // Y ejecutamos 'finish()' para salir de la actividad de la partida
         });
 
@@ -524,7 +342,7 @@ public class PartidaActivity extends AppCompatActivity {
 
     private void configurarTablero() {
         gridTablero.removeAllViews();
-        int totalCartas = 20; // 4 columnas x 5 filas (Asegúrate de tener app:columnCount="4" o "5" en tu XML)
+        int totalCartas = 20;
 
         for (int i = 0; i < totalCartas; i++) {
 
@@ -534,25 +352,18 @@ public class PartidaActivity extends AppCompatActivity {
 
             GridLayout.LayoutParams gridParams = new GridLayout.LayoutParams();
             gridParams.width = 0;
-            gridParams.height = dpToPx(90); // Un poco más altas para que luzcan las imágenes
+            gridParams.height = dpToPx(75);
             gridParams.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
             gridParams.setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
             cartaContenedor.setLayoutParams(gridParams);
 
-            // 2. CREAR LA IMAGEN (Sustituye al View antiguo)
-            android.widget.ImageView cartaImagen = new android.widget.ImageView(this);
+            // 2. CREAR EL FONDO
+            View cartaFondo = new View(this);
             FrameLayout.LayoutParams fondoParams = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            cartaImagen.setLayoutParams(fondoParams);
-
-            // Configuramos la imagen para que llene la carta y tenga bordes redondos
-            cartaImagen.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
-            cartaImagen.setBackgroundResource(R.drawable.fondo_blanco_redondeado);
-            cartaImagen.setClipToOutline(true); // Hace que la imagen no se salga de los bordes redondos
-            cartaImagen.setElevation(dpToPx(2));
-
-            // Le ponemos una imagen por defecto hasta que el servidor nos mande las reales
-            cartaImagen.setImageResource(android.R.drawable.ic_menu_gallery);
+            cartaFondo.setLayoutParams(fondoParams);
+            cartaFondo.setBackgroundResource(R.drawable.fondo_blanco_redondeado);
+            cartaFondo.setElevation(dpToPx(2));
 
             // 3. CREAR LA ETIQUETA "1/x"
             TextView etiquetaFraccion = new TextView(this);
@@ -560,59 +371,59 @@ public class PartidaActivity extends AppCompatActivity {
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             etiquetaParams.gravity = Gravity.TOP | Gravity.END;
             etiquetaFraccion.setLayoutParams(etiquetaParams);
+
             etiquetaFraccion.setBackgroundResource(R.drawable.fondo_etiqueta_esquina);
             etiquetaFraccion.setElevation(dpToPx(4));
             etiquetaFraccion.setPadding(dpToPx(4), dpToPx(1), dpToPx(4), dpToPx(1));
-            etiquetaFraccion.setText("1/x");
+
+            etiquetaFraccion.setText("1/x"); // Le pongo 1/1 por defecto, ya que solo hay 1 seleccionable
             etiquetaFraccion.setTextColor(Color.BLACK);
             etiquetaFraccion.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
             etiquetaFraccion.setTypeface(null, Typeface.BOLD);
             etiquetaFraccion.setVisibility(View.INVISIBLE);
 
-            // 4. METER LA IMAGEN Y LA ETIQUETA
-            cartaContenedor.addView(cartaImagen);
+            // 4. METER EL FONDO Y LA ETIQUETA
+            cartaContenedor.addView(cartaFondo);
             cartaContenedor.addView(etiquetaFraccion);
 
-            // GUARDAMOS REFERENCIAS EN LOS ARRAYS PARA LUEGO
-            //imagenesTablero[i] = cartaImagen;
-            //contenedoresTablero[i] = cartaContenedor;
-            cartaContenedor.setTag(false); // Estado de selección
+            // 5. DARLE EL CLIC A LA CARTA (LÓGICA ACTUALIZADA)
+            cartaContenedor.setTag(false);
 
-            // 5. DARLE EL CLIC A LA CARTA
-            final int index = i; // Guardamos el índice para el clic
+
             cartaContenedor.setOnClickListener(v -> {
                 boolean estaSeleccionada = (boolean) cartaContenedor.getTag();
-
+                // ¡NUEVO! Comprobamos si es el jefe
                 if (miRol.equals("Jefe")) {
                     Toast.makeText(this, "Como Jefe, no puedes seleccionar cartas.", Toast.LENGTH_SHORT).show();
-                    return;
+                    return; // "return" hace que el código se detenga aquí y no ejecute lo de abajo
                 }
                 if (!estaSeleccionada) {
-                    // ¡OJO! Aquí le pasamos el ID REAL de la carta, que lo guardaremos en un atributo custom o lo sacaremos del JSON
-                    // Por ahora usamos el tag adicional que le pondremos en el WebSocket
-                    Object idRealCarta = cartaImagen.getTag();
-                    if (idRealCarta != null) {
-                        votarCarta((Integer) idRealCarta);
-                    }
 
-                    // Lógica visual de selección...
+                    // PASO A: ¿Había otra carta seleccionada antes? ¡Apágala!
                     if (cartaActualmenteSeleccionada != null) {
                         View fondoAnterior = cartaActualmenteSeleccionada.getChildAt(0);
                         TextView etiquetaAnterior = (TextView) cartaActualmenteSeleccionada.getChildAt(1);
+
                         fondoAnterior.setBackgroundResource(R.drawable.fondo_blanco_redondeado);
                         etiquetaAnterior.setVisibility(View.INVISIBLE);
                         cartaActualmenteSeleccionada.setTag(false);
                     }
 
-                    cartaImagen.setBackgroundResource(R.drawable.fondo_carta_seleccionada);
+                    // PASO B: Enciende la NUEVA carta que acabamos de tocar
+                    cartaFondo.setBackgroundResource(R.drawable.fondo_carta_seleccionada);
                     etiquetaFraccion.setVisibility(View.VISIBLE);
                     cartaContenedor.setTag(true);
+
+                    // PASO C: Guardamos esta nueva carta como la "Actualmente Seleccionada"
                     cartaActualmenteSeleccionada = cartaContenedor;
 
                 } else {
-                    cartaImagen.setBackgroundResource(R.drawable.fondo_blanco_redondeado);
+                    // Si tocaste LA MISMA carta que ya estaba verde, la apagamos (Deseleccionar)
+                    cartaFondo.setBackgroundResource(R.drawable.fondo_blanco_redondeado);
                     etiquetaFraccion.setVisibility(View.INVISIBLE);
                     cartaContenedor.setTag(false);
+
+                    // Como ya no hay ninguna seleccionada, vaciamos la memoria
                     cartaActualmenteSeleccionada = null;
                 }
             });
@@ -621,7 +432,6 @@ public class PartidaActivity extends AppCompatActivity {
             gridTablero.addView(cartaContenedor);
         }
     }
-
     // Llama a este método cuando quieras mostrar el resultado, pasándole los textos
     public void mostrarDialogoResultadoVotacion(String estado, String resultado, String consecuencia) {
         android.app.Dialog dialog = new android.app.Dialog(this);
@@ -766,59 +576,5 @@ public class PartidaActivity extends AppCompatActivity {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (stompClient != null && stompClient.isConnected()) {
-            stompClient.disconnect();
-            android.util.Log.d("WS_JUEGO", "Desconectado del radar del juego");
-        }
-    }
-
-    private void votarCarta(int idCartaSeleccionada) {
-        // 1. Validamos la cadena de mando: Los jefes no pisan el campo de minas.
-        if (!"agente".equalsIgnoreCase(miRol)) {
-            android.widget.Toast.makeText(this, "¡Negativo! Solo los agentes de campo pueden tocar las cartas.", android.widget.Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (!miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
-            android.widget.Toast.makeText(this, "¡Alto ahí! Es el turno del equipo " + equipoTurnoActual, android.widget.Toast.LENGTH_SHORT).show();
-            return; // Bloqueamos el clic
-        }
-
-
-        // 2. Comprobamos conexión con el Cuartel General
-        if (stompClient != null && stompClient.isConnected()) {
-            try {
-                // 3. Preparamos el maletín con el voto
-                org.json.JSONObject payload = new org.json.JSONObject();
-
-                // OJO: Asegúrate de tener estas variables actualizadas en tu Activity
-                payload.put("id_jugador_partida", idJugadorPartida);
-                payload.put("id_carta_tablero", idCartaSeleccionada);
-                payload.put("id_turno", equipoTurnoActual);
-
-                // 4. La ruta de disparo
-                String destination = "/app/partidas/" + idPartidaActual + "/votar";
-
-                // 5. Enviamos la confirmación
-                stompClient.send(destination, payload.toString()).subscribe(() -> {
-                    android.util.Log.d("WS_VOTO", "Voto confidencial enviado para la carta " + idCartaSeleccionada);
-
-                    // Feedback visual para el agente
-                    runOnUiThread(() -> android.widget.Toast.makeText(PartidaActivity.this, "Voto registrado. Esperando a los demás agentes...", android.widget.Toast.LENGTH_SHORT).show());
-                }, throwable -> {
-                    android.util.Log.e("WS_VOTO", "Fallo de comunicaciones al votar", throwable);
-                    runOnUiThread(() -> android.widget.Toast.makeText(PartidaActivity.this, "Error al enviar el voto.", android.widget.Toast.LENGTH_SHORT).show());
-                });
-
-            } catch (Exception e) {
-                android.util.Log.e("WS_VOTO", "Error encriptando el JSON del voto", e);
-            }
-        } else {
-            android.widget.Toast.makeText(this, "Sin conexión con la base. Imposible votar.", android.widget.Toast.LENGTH_SHORT).show();
-        }
     }
 }
