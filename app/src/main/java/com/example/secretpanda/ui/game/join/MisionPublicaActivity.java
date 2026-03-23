@@ -17,7 +17,6 @@ import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
 import com.example.secretpanda.ui.game.match.PartidaActivity;
-import com.example.secretpanda.ui.game.match.PartidaActivity;
 import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 
@@ -45,8 +44,9 @@ public class MisionPublicaActivity extends AppCompatActivity {
     private PartidaAdapter adapter;
     private List<Partida> listaPartidasTodas;
     private List<Partida> listaPartidasFiltradas;
-
+    private ua.naiksoftware.stomp.StompClient stompClient;
     private String tematicaFiltroActual = "Todas las temáticas";
+    private List<String> misTemasAdquiridos = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +135,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
             recyclerMisiones.setAdapter(adapter);
         }
 
+        obtenerTemasDelJugador();
         // 4. Por último, pedimos los datos reales al backend
         obtenerPartidasDelServidor();
     }
@@ -230,7 +231,17 @@ public class MisionPublicaActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if (partidasServidor != null) {
                             listaPartidasTodas.clear();
-                            listaPartidasTodas.addAll(partidasServidor);
+
+                            // ---> LA MAGIA DEL BLOQUEO <---
+                            for (Partida p : partidasServidor) {
+                                // Si la temática de la partida NO está en mi lista de temas comprados...
+                                if (!misTemasAdquiridos.contains(p.getTematica())) {
+                                    // Bloqueamos la partida (Asegúrate de tener un setter en tu modelo Partida.java)
+                                    ///Falta de hacer
+                                }
+                                listaPartidasTodas.add(p);
+                            }
+
                             filtrarMisionesPorTematica(tematicaFiltroActual);
                         }
                     });
@@ -240,4 +251,49 @@ public class MisionPublicaActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void obtenerTemasDelJugador() {
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/jugadores/temas";
+
+        TokenManager tokenManager = new TokenManager(this);
+        String token = tokenManager.getToken();
+
+        Request.Builder requestBuilder = new Request.Builder().url(url).get();
+        if (token != null && !token.isEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer " + token);
+        }
+        Request request = requestBuilder.build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("API_TEMAS", "Error al obtener temas", e);
+                // Aunque falle, pedimos las partidas para no dejar la pantalla vacía
+                obtenerPartidasDelServidor();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonRespuesta = response.body().string();
+                    try {
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(jsonRespuesta);
+                        misTemasAdquiridos.clear();
+
+                        // Guardamos los nombres de los temas que el jugador SÍ tiene
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            org.json.JSONObject temaJson = jsonArray.getJSONObject(i);
+                            misTemasAdquiridos.add(temaJson.getString("nombre"));
+                        }
+                    } catch (Exception e) {
+                        Log.e("API_TEMAS", "Error procesando JSON de temas", e);
+                    }
+                }
+                // ¡Magia en cadena! Una vez tenemos mis temas, pedimos las partidas públicas
+                obtenerPartidasDelServidor();
+            }
+        });
+    }
+
 }

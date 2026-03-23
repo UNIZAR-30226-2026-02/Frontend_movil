@@ -24,26 +24,79 @@ public class UserSelectionActivity extends AppCompatActivity {
         btnAceptar.setOnClickListener(v -> {
             String username = inputUsuario.getText().toString().trim();
 
-            // 1. Lógica: Mínimo 4 caracteres
             if (username.length() < 4) {
                 Toast.makeText(this, "El nombre debe tener al menos 4 caracteres", Toast.LENGTH_SHORT).show();
-                return; // Cortamos aquí, no avanza
+                return;
             }
 
-            // 2. Lógica: Usuario único (Simulación)
-            if (username.equalsIgnoreCase("panda") || username.equalsIgnoreCase("admin")) {
-                Toast.makeText(this, "Ese usuario ya existe. ¡Elige otro!", Toast.LENGTH_SHORT).show();
-                return; // Cortamos aquí, no avanza
+            // Recuperamos el ID de Google que nos envió LoginActivity
+            String idGoogle = getIntent().getStringExtra("ID_GOOGLE");
+            if (idGoogle == null) {
+                Toast.makeText(this, "Error crítico: Falta el ID de Google", Toast.LENGTH_SHORT).show();
+                return;
             }
 
-            // 3. CREAMOS EL JUGADOR con el "tag" que ha escrito
-            Jugador nuevoJugador = new Jugador(username);
+            // Bloqueamos el botón para que no mande 20 registros a la vez
+            btnAceptar.setEnabled(false);
 
-            // 4. Vamos a HomeActivity y le pasamos el objeto entero
-            Intent intent = new Intent(UserSelectionActivity.this, HomeActivity.class);
-            intent.putExtra("DATOS_JUGADOR", nuevoJugador);
-            startActivity(intent);
-            finish();
+            // PREPARAMOS LA LLAMADA AL BACKEND PARA REGISTRAR
+            okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+            String url = "http://10.0.2.2:8080/api/auth/registro";
+
+            // Construimos el JSON con los dos datos que exige el backend
+            String json = "{\"id_google\":\"" + idGoogle + "\", \"tag\":\"" + username + "\"}";
+            okhttp3.RequestBody body = okhttp3.RequestBody.create(json, okhttp3.MediaType.parse("application/json; charset=utf-8"));
+
+            okhttp3.Request request = new okhttp3.Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(UserSelectionActivity.this, "Error de conexión", Toast.LENGTH_SHORT).show();
+                        btnAceptar.setEnabled(true);
+                    });
+                }
+
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                    if (response.isSuccessful() && response.body() != null) {
+                        try {
+                            String jsonRespuesta = response.body().string();
+                            org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
+
+                            // Extraemos el JWT definitivo
+                            String tokenJwt = jsonObject.getString("token");
+
+                            //  Lo guardamos en la app
+                            com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(UserSelectionActivity.this);
+                            tokenManager.saveToken(tokenJwt);
+
+                            // Saltamos a la Home
+                            runOnUiThread(() -> {
+                                android.content.Intent intent = new android.content.Intent(UserSelectionActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
+                                intent.putExtra("DESTINO", "HOME");
+                                startActivity(intent);
+                                finish();
+                            });
+                        } catch (Exception e) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(UserSelectionActivity.this, "Error procesando registro", Toast.LENGTH_SHORT).show();
+                                btnAceptar.setEnabled(true);
+                            });
+                        }
+                    } else {
+                        runOnUiThread(() -> {
+                            // Si falla, suele ser porque el 'tag' ya está en uso en la BD
+                            Toast.makeText(UserSelectionActivity.this, "Error en registro. Quizás el nombre ya existe.", Toast.LENGTH_SHORT).show();
+                            btnAceptar.setEnabled(true);
+                        });
+                    }
+                }
+            });
         });
     }
 }

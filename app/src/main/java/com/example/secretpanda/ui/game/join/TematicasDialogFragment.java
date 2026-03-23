@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
@@ -19,7 +21,7 @@ import java.util.List;
 public class TematicasDialogFragment extends DialogFragment {
 
     // "Interruptores" de configuración del diálogo
-    private boolean soloDesbloqueadas = false;
+    private boolean soloDesbloqueadas = true;
     private boolean mostrarBotonTodas = true;
 
     public interface TematicaListener {
@@ -36,6 +38,9 @@ public class TematicasDialogFragment extends DialogFragment {
     public void setConfiguracionFiltros(boolean soloDesbloqueadas, boolean mostrarBotonTodas) {
         this.soloDesbloqueadas = soloDesbloqueadas;
         this.mostrarBotonTodas = mostrarBotonTodas;
+    }
+    public void setMostrarOpcionTodas(boolean mostrar) {
+        this.mostrarBotonTodas = mostrar;
     }
 
     @Nullable
@@ -74,6 +79,16 @@ public class TematicasDialogFragment extends DialogFragment {
         TematicaAdapter adapter = new TematicaAdapter(misTematicas, listener, this);
         rvTematicas.setAdapter(adapter);
 
+        LinearLayout opcionTodas = view.findViewById(R.id.opcion_todas);
+        if (!mostrarBotonTodas) {
+            opcionTodas.setVisibility(View.GONE); // Desaparece y no ocupa espacio
+        } else {
+            // Si está visible, le ponemos su OnClickListener normal
+            opcionTodas.setOnClickListener(v -> {
+                if (listener != null) listener.onTematicaSelected("Todas las temáticas");
+                dismiss();
+            });
+        }
         return view;
     }
 

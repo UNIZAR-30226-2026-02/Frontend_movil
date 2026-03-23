@@ -19,6 +19,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -32,7 +34,7 @@ import okhttp3.Response;
 public class LoginActivity extends AppCompatActivity {
 
     private GoogleSignInClient mGoogleSignInClient;
-
+    private Button btnLogin;
     // Este es el "receptor" que espera a que el usuario elija su cuenta de Google
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -56,7 +58,6 @@ public class LoginActivity extends AppCompatActivity {
 
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                // ¡OJO AQUÍ! Tiene que ser el ID WEB, NO el ID de Android que creaste antes
                 .requestIdToken("271645130319-f9agsfadvl8njoaoitevnaspuchj5fb9.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
@@ -64,7 +65,7 @@ public class LoginActivity extends AppCompatActivity {
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // 2. Configuramos el botón
-        Button btnLogin = findViewById(R.id.button);
+        btnLogin = findViewById(R.id.button);
         btnLogin.setOnClickListener(v -> {
             // Al pulsar, abrimos la ventana de cuentas de Google
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
@@ -96,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String url = "http://10.0.2.2:8080/api/auth/login";
 
-        // ¡AQUÍ ESTÁ LA MAGIA! Construimos el JSON exactamente como lo pide tu AuthController
+        // Construimos el JSON exactamente como lo pide tu AuthController
         String json = "{\"id_google\":\"" + idToken + "\"}";
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
 
@@ -117,31 +118,76 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String jsonRespuesta = response.body().string();
+                        Log.w("LOGIN_API", "JSON del servidor: " + jsonRespuesta);
+
                         org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
 
-                        // Tu AuthController devuelve un AuthResponseDTO que tiene el "token"
-                        String tokenJwt = jsonObject.getString("token");
+                        // 1. ¿Es nuevo?
+                        boolean esNuevo = jsonObject.optBoolean("esNuevo", false);
 
-                        // 3. ¡LO GUARDAMOS EN LA CAJA FUERTE (TokenManager)!
-                        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(LoginActivity.this);
-                        tokenManager.saveToken(tokenJwt);
+                        final String tokenFinal = idToken;
 
-                        Log.d("LOGIN_API", "¡Login exitoso en Spring Boot! Token guardado: " + tokenJwt);
-
-                        // 4. Saltamos a la siguiente pantalla
                         runOnUiThread(() -> {
-                            Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
-                            intent.putExtra("DESTINO", "ELEGIR_USUARIO");
-                            startActivity(intent);
-                            finish();
+                            if (esNuevo) {
+                                // ES NUEVO -> A elegir nombre (Registro)
+                                Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.auth.UserSelectionActivity.class);
+                                intent.putExtra("ID_GOOGLE", tokenFinal);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                // YA EXISTE -> Guardamos JWT y miramos si estaba jugando
+                                String tokenJwt = jsonObject.optString("token", "");
+                                if (!tokenJwt.isEmpty()) {
+                                    com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(LoginActivity.this);
+                                    tokenManager.saveToken(tokenJwt);
+
+                                    try {
+                                        // 🕵️‍♂️ NUEVO: Extraemos el jugador y miramos si tiene partida activa
+                                        org.json.JSONObject jugadorJson = jsonObject.getJSONObject("Jugador");
+                                        // optLong devuelve 0 si no existe el campo o es null
+                                        long partidaActivaId = jugadorJson.optLong("partidaActivaId", 0);
+
+                                        Intent intent;
+                                        if (partidaActivaId > 0) {
+                                            // 🔥 ¡Estaba en una partida! Lo reconectamos
+                                            intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.game.match.PartidaActivity.class);
+                                            intent.putExtra("ID_PARTIDA", partidaActivaId);
+                                            Toast.makeText(LoginActivity.this, "Reconectando a la partida...", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            // No estaba jugando -> A la Home
+                                            intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
+                                            intent.putExtra("DESTINO", "HOME");
+                                        }
+                                        startActivity(intent);
+                                        finish();
+
+                                    } catch (org.json.JSONException e) {
+                                        // Si por lo que sea el backend no mandó el objeto Jugador, vamos a la Home por defecto
+                                        Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
+                                        intent.putExtra("DESTINO", "HOME");
+                                        startActivity(intent);
+                                        finish();
+                                    }
+
+                                } else {
+                                    Toast.makeText(LoginActivity.this, "Error: El servidor no envió el Token", Toast.LENGTH_SHORT).show();
+                                    if (btnLogin != null) btnLogin.setEnabled(true);
+                                }
+                            }
                         });
 
-                    } catch (org.json.JSONException e) {
-                        Log.e("LOGIN_API", "Error extrayendo el token del JSON", e);
+                    } catch (Exception e) {
+                        Log.e("LOGIN_API", "Error procesando el JSON", e);
+                        runOnUiThread(() -> {
+                            Toast.makeText(LoginActivity.this, "Error leyendo datos del servidor", Toast.LENGTH_SHORT).show();
+                            if (btnLogin != null) btnLogin.setEnabled(true);
+                        });
                     }
                 } else {
-                    Log.e("LOGIN_API", "Error en el backend. Código: " + response.code());
-                    runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Error al validar con el servidor", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> {
+                        Toast.makeText(LoginActivity.this, "Error de credenciales", Toast.LENGTH_SHORT).show();
+                        if (btnLogin != null) btnLogin.setEnabled(true);
+                    });
                 }
             }
         });
