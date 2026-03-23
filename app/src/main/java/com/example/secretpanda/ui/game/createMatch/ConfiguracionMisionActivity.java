@@ -136,7 +136,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                                 int idPartidaCreada = res.optInt("id_partida", res.optInt("idPartida", -1));
                                 String codigoPartida = res.optString("codigo_partida", res.optString("codigoPartida", ""));
 
-                                Intent intent = new Intent(ConfiguracionMisionActivity.this, com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity.class);
+                                Intent intent = new Intent(ConfiguracionMisionActivity.this, SalaEsperaActivity.class);
                                 intent.putExtra("ES_PRIVADA", esPrivada);
                                 intent.putExtra("TEMATICA", tematicaSeleccionada);
                                 intent.putExtra("TIEMPO", tiempoSeleccionado);
