@@ -40,6 +40,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import ua.naiksoftware.stomp.Stomp;
+import ua.naiksoftware.stomp.StompClient;
+import ua.naiksoftware.stomp.dto.StompHeader;
 
 public class SalaEsperaActivity extends AppCompatActivity {
 
@@ -63,6 +66,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private int maxJugadores = 8;
     private boolean esLider = false;
     private boolean esPrivada = false;
+
+    private StompClient stompClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,8 +119,27 @@ public class SalaEsperaActivity extends AppCompatActivity {
         // BOTONES DE CAMBIO DE EQUIPO (RF-21)
 
 
-        btnUnirseAzul.setOnClickListener(v -> cambiarEquipoEnBackend("AZUL"));
-        btnUnirseRojo.setOnClickListener(v -> cambiarEquipoEnBackend("ROJO"));
+        // Ejemplo para el botón del Equipo Azul
+        btnUnirseAzul.setOnClickListener(v -> {
+            if (!estoyEnEquipoAzul) { // Solo si no está ya en el azul
+                estoyEnEquipoAzul = true;
+                actualizarBotonesEquipo();
+
+                // ¡LA CONEXIÓN AL BACKEND!
+                cambiarEquipoEnBackend("AZUL");
+            }
+        });
+
+        // Ejemplo para el botón del Equipo Rojo
+        btnUnirseRojo.setOnClickListener(v -> {
+            if (estoyEnEquipoAzul) { // Solo si estaba en el azul y quiere pasar al rojo
+                estoyEnEquipoAzul = false;
+                actualizarBotonesEquipo();
+
+                // ¡LA CONEXIÓN AL BACKEND!
+                cambiarEquipoEnBackend("ROJO");
+            }
+        });
 
         // CONFIGURACIÓN DE LA LISTA DE JUGADORES
         rvJugadores = findViewById(R.id.rv_jugadores);
@@ -152,76 +176,121 @@ public class SalaEsperaActivity extends AppCompatActivity {
             actualizarContadores(nuevaLista);
         });
         rvJugadores.setAdapter(adapter);
+        conectarWebSocketLobby();
         cargarLobbyInicial();
 
         findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
     }
 
 
-    // API: PUT CAMBIAR EQUIPO (RF-21)
-    private void cambiarEquipoEnBackend(String equipoElegido) {
-        if ((equipoElegido.equals("AZUL") && estoyEnEquipoAzul) ||
-                (equipoElegido.equals("ROJO") && !estoyEnEquipoAzul)) {
-            return; // Ya estoy en ese equipo
+    private void suscribirseAlCanalDelLobby() {
+        // IMPORTANTE: Asegúrate de que esta ruta coincide con el canal (@SendTo) que use tu backend
+        String destinoTopic = "/topic/partidas/" + idPartida + "/lobby";
+
+        stompClient.topic(destinoTopic).subscribe(stompMessage -> {
+            try {
+                // === AQUÍ VA EL CÓDIGO QUE ME HAS PASADO ===
+                String jsonCrudo = stompMessage.getPayload();
+                org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
+
+                // Si el backend avisa de que la partida ha empezado...
+                if (json.optString("estado", "").equals("EN_CURSO")) {
+
+                    // ¡AQUÍ ES DONDE TODOS HACEN EL INTENT A LA VEZ!
+                    runOnUiThread(() -> {
+                        android.content.Intent intent = new android.content.Intent(SalaEsperaActivity.this, PartidaActivity.class);
+                        // Pasamos los datos vitales a la siguiente pantalla
+                        intent.putExtra("ID_PARTIDA", idPartida);
+                        intent.putExtra("MI_NOMBRE_USUARIO", miPropioIdGoogle);
+                        intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "AZUL" : "ROJO");
+                        startActivity(intent);
+                        finish();
+                    });
+                }
+                // ===========================================
+
+                else {
+                    // (Opcional) Aquí podrías añadir en un futuro la lógica para actualizar
+                    // la lista visual de jugadores cuando alguien entra o cambia de equipo
+                }
+
+            } catch (Exception e) {
+                android.util.Log.e("WS_LOBBY", "Error desencriptando el mensaje del lobby", e);
+            }
+        }, throwable -> {
+            android.util.Log.e("WS_LOBBY", "Error de interferencia al suscribirse", throwable);
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (stompClient != null && stompClient.isConnected()) {
+            stompClient.disconnect();
         }
+    }
+    private void cambiarEquipoEnBackend(String nuevoEquipo) {
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 1. Empaquetamos la decisión.
+                // Tu backend usa CambiarEquipoPayload que seguramente espera el campo "equipo"
+                org.json.JSONObject payload = new org.json.JSONObject();
+                payload.put("equipo", nuevoEquipo); // "ROJO" o "AZUL"
 
-        // Reflejo visual instantáneo para el usuario
-        estoyEnEquipoAzul = equipoElegido.equals("AZUL");
-        jugadorLocal.setEsEquipoAzul(estoyEnEquipoAzul);
-        actualizarBotonesEquipo();
-        adapter.notifyDataSetChanged();
-        actualizarContadores(listaJugadores);
+                // 2. Ruta exacta hacia tu backend (con el prefijo /app)
+                String destino = "/app/partida/" + idPartida + "/participantes/equipo";
 
-        btnUnirseRojo.setEnabled(false);
-        btnUnirseAzul.setEnabled(false);
+                // 3. Disparamos la señal
+                stompClient.send(destino, payload.toString()).subscribe(() -> {
+                    android.util.Log.d("WS_EQUIPO", "Señal de cambio a equipo " + nuevoEquipo + " enviada con éxito.");
+                }, throwable -> {
+                    android.util.Log.e("WS_EQUIPO", "Error de interferencia al cambiar de equipo", throwable);
+                    runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error al comunicar el cambio de equipo", Toast.LENGTH_SHORT).show());
+                });
 
-        OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/partida/" + idPartida + "/equipo";
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, "Sin conexión por radio con el servidor.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void conectarWebSocketLobby() {
+        // 1. URL de tu WebSocket (Basado en tu IP del emulador)
+        // Nota: Revisa en tu backend (WebSocketConfig) si la ruta de conexión es /ws, /stomp, etc.
+        String wsUrl = "ws://10.0.2.2:8080/ws/websocket";
 
+        // 2. Inicializar el cliente
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, wsUrl);
+
+        // 3. Recuperar tu credencial (Token JWT)
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
 
-        RequestBody body = RequestBody.create(equipoElegido, MediaType.parse("text/plain; charset=utf-8"));
+        // 4. Preparar las cabeceras de seguridad
+        List<StompHeader> headers = new ArrayList<>();
+        if (jwt != null && !jwt.isEmpty()) {
+            headers.add(new StompHeader("Authorization", "Bearer " + jwt));
+        }
 
-        Request request = new Request.Builder()
-                .url(url)
-                .put(body)
-                .addHeader("Authorization", "Bearer " + jwt)
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                runOnUiThread(() -> {
-                    Toast.makeText(SalaEsperaActivity.this, "Error de red al cambiar equipo", Toast.LENGTH_SHORT).show();
-                    btnUnirseRojo.setEnabled(true);
-                    btnUnirseAzul.setEnabled(true);
-                });
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                // Leemos el mensaje real de error que manda el servidor
-                String cuerpoError = response.body() != null ? response.body().string() : "Vacío";
-                int codigoHTTP = response.code();
-
-                runOnUiThread(() -> {
-                    btnUnirseRojo.setEnabled(true);
-                    btnUnirseAzul.setEnabled(true);
-
-                    if (!response.isSuccessful()) {
-                        // Imprimimos el error exacto en el Logcat (en rojo)
-                        android.util.Log.e("API_EQUIPO", " URL LLAMADA: " + request.url());
-                        android.util.Log.e("API_EQUIPO", " CÓDIGO HTTP: " + codigoHTTP);
-                        android.util.Log.e("API_EQUIPO", " MOTIVO DEL BACKEND: " + cuerpoError);
-
-                        Toast.makeText(SalaEsperaActivity.this, "Error " + codigoHTTP + ". Mira el Logcat", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(SalaEsperaActivity.this, "¡Cambiado con éxito!", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        // 5. Escuchar el estado del radar (Para saber si conectó bien)
+        stompClient.lifecycle().subscribe(lifecycleEvent -> {
+            switch (lifecycleEvent.getType()) {
+                case OPENED:
+                    android.util.Log.d("WS_LOBBY", "¡Radar WebSocket Conectado!");
+                    suscribirseAlCanalDelLobby();
+                    break;
+                case ERROR:
+                    android.util.Log.e("WS_LOBBY", "Error en la señal del radar", lifecycleEvent.getException());
+                    break;
+                case CLOSED:
+                    android.util.Log.d("WS_LOBBY", "Radar desconectado.");
+                    break;
             }
         });
+
+        // 6. ¡Encender la antena!
+        stompClient.connect(headers);
     }
 
     // API: POST INICIAR PARTIDA (RF-13)
@@ -247,13 +316,12 @@ public class SalaEsperaActivity extends AppCompatActivity {
         Toast.makeText(this, "Arrancando motores...", Toast.LENGTH_SHORT).show();
 
         OkHttpClient client = new OkHttpClient();
-        //  /api/partida (singular)  /crear
-        String url = "http://10.0.2.2:8080/api/partida/" + idPartida + "/crear";
+        // 1. URL CORREGIDA a "/iniciar"
+        String url = "http://10.0.2.2:8080/api/partida/" + idPartida + "/iniciar";
 
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
 
-        // Es un PUT, así que mandamos un cuerpo JSON vacío por si acaso el backend lo requiere
         RequestBody body = RequestBody.create("{}", MediaType.parse("application/json; charset=utf-8"));
 
         Request request = new Request.Builder()
@@ -271,21 +339,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    // Si falla, imprimimos el motivo exacto en el Logcat para poder decirselo al Backend
-                    String errorBody = response.body() != null ? response.body().string() : "Vacío";
-                    android.util.Log.e("API_INICIAR", " HTTP " + response.code() + " | Motivo: " + errorBody);
-
+                    android.util.Log.e("API_INICIAR", " HTTP " + response.code());
                     runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "El servidor rechazó iniciar la partida", Toast.LENGTH_SHORT).show());
-                } else {
-                    //  PARCHE TEMPORAL (Por no tener WebSockets)
-
-                    runOnUiThread(() -> {
-                        Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
-                        intent.putExtra("ID_PARTIDA", idPartida);
-                        intent.putExtra("MI_ROL", "JEFE");
-                        startActivity(intent);
-                        finish();
-                    });
                 }
             }
         });
@@ -400,20 +455,46 @@ public class SalaEsperaActivity extends AppCompatActivity {
         for (TextView btn : botonesJugadores) {
             if (btn.getText().toString().equals(String.valueOf(maxJugadores))) seleccionarBoton(btn, botonesJugadores);
             btn.setOnClickListener(v -> {
-                int intentoMaxJugadores = Integer.parseInt(btn.getText().toString());
-                if (intentoMaxJugadores < listaJugadores.size()) {
-                    tvAdvertencia.setVisibility(View.VISIBLE);
-                } else {
-                    tvAdvertencia.setVisibility(View.GONE);
-                    maxJugadores = intentoMaxJugadores;
-                    seleccionarBoton(btn, botonesJugadores);
-                    actualizarContadores(listaJugadores);
-                }
+                seleccionarBoton(btn, botonesTiempo);
+                String nuevoTiempoStr = btn.getText().toString();
+
+                if (tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempoStr);
+
+                // Limpiamos la cadena por si el botón dice "60s" en vez de "60"
+                int nuevoTiempoNum = Integer.parseInt(nuevoTiempoStr.replace("s", "").trim());
+
+                // ¡AQUÍ ESTÁ LA CONEXIÓN! Avisamos al backend
+                cambiarTiempoTurnoEnBackend(nuevoTiempoNum);
             });
         }
         dialog.show();
     }
 
+    private void cambiarTiempoTurnoEnBackend(int nuevoTiempo) {
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 1. Preparamos el JSON (Asegúrate de que la clase CambiarTiempoPayload de tu backend espera el campo "tiempoEspera")
+                org.json.JSONObject payload = new org.json.JSONObject();
+                payload.put("tiempoEspera", nuevoTiempo);
+
+                // 2. Ruta de destino del @MessageMapping (recuerda que Spring Boot suele usar /app)
+                String destino = "/app/partida/" + idPartida + "/tiempoTurno";
+
+                // 3. Disparamos el cambio por radio
+                stompClient.send(destino, payload.toString()).subscribe(() -> {
+                    android.util.Log.d("WS_TIEMPO", "Tiempo actualizado a " + nuevoTiempo + " segundos.");
+                }, throwable -> {
+                    android.util.Log.e("WS_TIEMPO", "Error al enviar el nuevo tiempo", throwable);
+                    runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error de red al cambiar el tiempo", Toast.LENGTH_SHORT).show());
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(this, "El radar WebSocket no está conectado", Toast.LENGTH_SHORT).show();
+        }
+    }
     private void seleccionarBoton(TextView seleccionado, TextView[] grupo) {
         for (TextView btn : grupo) {
             if (btn != null) {
@@ -430,12 +511,47 @@ public class SalaEsperaActivity extends AppCompatActivity {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
+
         dialog.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> dialog.dismiss());
+
         dialog.findViewById(R.id.btn_confirmar_abandonar).setOnClickListener(v -> {
             dialog.dismiss();
-            finish();
+
+            // ¡NUEVO! Avisamos al servidor antes de irnos
+            abandonarLobbyEnBackend();
         });
+
         dialog.show();
+    }
+    private void abandonarLobbyEnBackend() {
+        Toast.makeText(this, "Avisando al Cuartel General...", Toast.LENGTH_SHORT).show();
+
+        // Comprobamos que el canal de comunicación en tiempo real está abierto
+        if (stompClient != null && stompClient.isConnected()) {
+
+            // ⚠️ ATENCIÓN: Por lo general, Spring Boot añade el prefijo "/app" a los @MessageMapping.
+            // Si tu configuración de WebSocket tiene otro prefijo (como "/ws" o ninguno), cámbialo aquí.
+            String rutaDestino = "/app/partida/" + idPartida + "/abandonarLobby";
+
+            // Disparamos el mensaje por el WebSocket (mandamos un JSON vacío porque el backend solo necesita saber tu identidad por el token/principal)
+            stompClient.send(rutaDestino, "{}").subscribe(() -> {
+                runOnUiThread(() -> {
+                    Toast.makeText(SalaEsperaActivity.this, "Has abandonado la sala", Toast.LENGTH_SHORT).show();
+                    // Nos retiramos de la pantalla
+                    finish();
+                });
+            }, throwable -> {
+                runOnUiThread(() -> {
+                    android.util.Log.e("WS_ABANDONAR", "Error de radio al abandonar", throwable);
+                    // Aunque falle, nos vamos de la pantalla
+                    finish();
+                });
+            });
+
+        } else {
+            // Si por algún motivo se cortó la conexión STOMP, cerramos la pantalla igualmente
+            finish();
+        }
     }
 
     private void mostrarDialogoEstrella() {

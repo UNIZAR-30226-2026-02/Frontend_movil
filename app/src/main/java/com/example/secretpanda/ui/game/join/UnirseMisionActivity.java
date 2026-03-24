@@ -37,7 +37,7 @@ public class UnirseMisionActivity extends AppCompatActivity {
 
         // Clic en Misión Privada
         tarjetaPrivada.setOnClickListener(v -> {
-            android.content.Intent intent = new android.content.Intent(UnirseMisionActivity.this, UnirsePrivadaActivity.class);
+            android.content.Intent intent = new android.content.Intent(UnirseMisionActivity.this, MisionPrivadaActivity.class);
             startActivity(intent);
 
             // Opcional: Anula la animación por defecto de Android para que parezca

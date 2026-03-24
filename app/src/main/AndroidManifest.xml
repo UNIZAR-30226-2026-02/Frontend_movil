@@ -34,9 +34,7 @@
             android:name=".ui.home.HomeActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
+
 
         <activity
             android:name=".ui.home.classification.ClasificacionActivity"
@@ -60,7 +58,7 @@
 
         <activity android:name=".ui.game.join.UnirseMisionActivity"
             android:exported="false"/>
-        <activity android:name=".ui.game.join.UnirsePrivadaActivity"
+        <activity android:name=".ui.game.join.MisionPrivadaActivity"
             android:exported="false"/>
         <activity android:name=".ui.game.join.MisionPublicaActivity"
             android:exported="false"/>

@@ -1,25 +1,24 @@
-package com.example.secretpanda.ui.game.join;
+package com.example.secretpanda.ui.game.join; // Asegúrate de que coincida con tu paquete real
 
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Partida;
-import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
-import com.example.secretpanda.ui.game.match.PartidaActivity;
 import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -34,7 +33,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MisionPublicaActivity extends AppCompatActivity {
+public class MisionPrivadaActivity extends AppCompatActivity {
+
+    private EditText etCodigoSala;
+    private TextView btnUnirse;
+    private FrameLayout btnHome;
 
     private RecyclerView recyclerMisiones;
     private FrameLayout btnCerrar;
@@ -55,6 +58,12 @@ public class MisionPublicaActivity extends AppCompatActivity {
         // Cuidado aquí: asegúrate de que tu XML se llama así. Antes pusiste "activity_misiones_publicas"
         setContentView(R.layout.activity_misiones_publicas);
 
+        etCodigoSala = findViewById(R.id.et_codigo_sala);
+        btnUnirse = findViewById(R.id.btn_confirmar_union);
+        btnHome = findViewById(R.id.btn_volver_home);
+
+        // 2. Configurar los eventos de clic
+
         recyclerMisiones = findViewById(R.id.rv_misiones);
         btnCerrar = findViewById(R.id.btn_volver_home);
         btnSelectorTematicas = findViewById(R.id.btn_selector_tematicas);
@@ -69,63 +78,16 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
         // 2. Inicializamos el Adapter configurando qué pasa al hacer clic en una partida
         adapter = new PartidaAdapter(listaPartidasFiltradas, partida -> {
+            // 1. Comprobamos si no se puede entrar (llena o bloqueada por algún motivo)
             if (partida.isBloqueada() || partida.isLlena()) {
                 mostrarDialogoError(partida);
             } else {
-                int idPartidaClicada = partida.getIdPartida();
+                // 2. ¡EL CAMBIO CLAVE!
+                // En lugar de llamar al servidor aquí, simplemente abrimos la ventana
+                // para pedirle la contraseña, pasándole el ID de la partida tocada.
+                int idPartidaClicada = partida.getIdPartida(); // O partida.getId(), según tu modelo
 
-                // 1. PREPARAMOS LA LLAMADA AL SERVIDOR PARA UNIRNOS
-                OkHttpClient client = new OkHttpClient();
-                String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaClicada + "/unirse/publica";
-
-                TokenManager tokenManager = new TokenManager(this);
-                String token = tokenManager.getToken();
-
-                // Mandamos un JSON vacío porque tu backend acepta dto nulo o vacío para partidas públicas
-                okhttp3.RequestBody body = okhttp3.RequestBody.create("{}", okhttp3.MediaType.parse("application/json"));
-
-                Request.Builder requestBuilder = new Request.Builder()
-                        .url(url)
-                        .post(body);
-
-                if (token != null && !token.isEmpty()) {
-                    requestBuilder.addHeader("Authorization", "Bearer " + token);
-                }
-
-                Request request = requestBuilder.build();
-
-                // 2. HACEMOS LA PETICIÓN EN SEGUNDO PLANO
-                client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        Log.e("API_ERROR", "Error de red al intentar unirse", e);
-                        runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "Error de conexión", android.widget.Toast.LENGTH_SHORT).show());
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        // Si da 200 (éxito) O da 409 (ya estabas dentro), te dejamos pasar
-                        if (response.isSuccessful() || response.code() == 409) {
-                            runOnUiThread(() -> {
-                                String miEquipo = "rojo";
-
-                                Intent intent = new Intent(MisionPublicaActivity.this, PartidaActivity.class);
-                                intent.putExtra("ID_PARTIDA", idPartidaClicada);
-                                intent.putExtra("MI_EQUIPO", miEquipo);
-                                intent.putExtra("ES_LIDER", false);
-                                intent.putExtra("ES_PRIVADA", false);
-                                intent.putExtra("MAX_JUGADORES", partida.getMaxJugadores());
-                                intent.putExtra("TIEMPO_TURNO", partida.getTiempo());
-
-                                startActivity(intent);
-                            });
-                        } else {
-                            // Otros errores (404 no encontrada, 401 sin token, etc.)
-                            Log.e("API_ERROR", "El servidor rechazó la entrada. Código: " + response.code());
-                            runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se pudo entrar a la partida", android.widget.Toast.LENGTH_SHORT).show());
-                        }
-                    }
-                });
+                mostrarDialogoUnirsePrivada(idPartidaClicada);
             }
         });
 
@@ -136,14 +98,12 @@ public class MisionPublicaActivity extends AppCompatActivity {
         }
 
         obtenerTemasDelJugador();
-        // 4. Por último, pedimos los datos reales al backend
-        obtenerPartidasDelServidor();
     }
 
     // --- LÓGICA DE INTERFAZ Y DIÁLOGOS ---
 
     private void mostrarDialogoError(Partida partida) {
-        Dialog dialogError = new Dialog(MisionPublicaActivity.this);
+        Dialog dialogError = new Dialog(MisionPrivadaActivity.this);
         dialogError.setContentView(R.layout.dialog_error_mision);
 
         if (dialogError.getWindow() != null) {
@@ -201,7 +161,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
     private void obtenerPartidasDelServidor() {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/partidas/publicas";
+        String url = "http://10.0.2.2:8080/api/partidas/privadas";
 
         TokenManager tokenManager = new TokenManager(this);
         String token = tokenManager.getToken();
@@ -296,4 +256,104 @@ public class MisionPublicaActivity extends AppCompatActivity {
         });
     }
 
+
+
+    private void conectarASalaPrivada(int idPartida, String codigo) {
+        Toast.makeText(this, "Desencriptando acceso...", Toast.LENGTH_SHORT).show();
+
+        OkHttpClient client = new OkHttpClient();
+        TokenManager tokenManager = new TokenManager(this);
+        String token = tokenManager.getToken();
+
+        // 1. Armamos el maletín JSON con los dos datos para tu backend
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
+        try {
+            jsonBody.put("idPartida", idPartida);
+            jsonBody.put("codigoPartida", codigo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(
+                jsonBody.toString(),
+                okhttp3.MediaType.parse("application/json; charset=utf-8")
+        );
+
+        // 2. Disparamos al endpoint (Asegúrate de que esta URL es la de tu @PostMapping)
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url("http://10.0.2.2:8080/api/partidas/unirse/privada")
+                .post(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(MisionPrivadaActivity.this, "Error de radio: Servidor inalcanzable", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        // ¡ÉXITO! Código correcto, entramos a la sala
+                        Toast.makeText(MisionPrivadaActivity.this, "¡Acceso concedido!", Toast.LENGTH_SHORT).show();
+
+                        Intent intent = new Intent(MisionPrivadaActivity.this, SalaEsperaActivity.class);
+                        intent.putExtra("ES_LIDER", false);
+                        intent.putExtra("ES_PRIVADA", true);
+                        intent.putExtra("ID_PARTIDA", idPartida); // Pasamos el ID real a la sala
+
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        // ERROR (Código mal, partida llena, etc.)
+                        String mensajeError = "Acceso denegado: Código incorrecto";
+                        try {
+                            org.json.JSONObject errorJson = new org.json.JSONObject(responseBody);
+                            if (errorJson.has("message")) mensajeError = errorJson.getString("message");
+                        } catch (Exception e) {}
+
+                        Toast.makeText(MisionPrivadaActivity.this, mensajeError, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
+    }
+    // ¡NUEVO! Ahora recibe el ID de la partida al abrirse
+    public void mostrarDialogoUnirsePrivada(int idPartidaSeleccionada) {
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.activity_unirse_privada);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setLayout(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
+
+        android.widget.EditText etCodigoSala = dialog.findViewById(R.id.et_codigo_sala);
+        android.widget.TextView btnUnirse = dialog.findViewById(R.id.btn_confirmar_union);
+        android.widget.FrameLayout btnCancelar = dialog.findViewById(R.id.btn_volver_home);
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        btnUnirse.setOnClickListener(v -> {
+            String codigo = etCodigoSala.getText().toString().trim();
+
+            if (codigo.isEmpty()) {
+                etCodigoSala.setError("Debes introducir un código");
+                android.widget.Toast.makeText(this, "Por favor, escribe el código de la sala", android.widget.Toast.LENGTH_SHORT).show();
+            } else {
+                // ¡AQUÍ ESTÁ LA MAGIA! Pasamos el ID exacto y el código que ha escrito
+                conectarASalaPrivada(idPartidaSeleccionada, codigo);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
 }
