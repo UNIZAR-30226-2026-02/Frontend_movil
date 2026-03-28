@@ -7,11 +7,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.ui.game.join.TematicasDialogFragment;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
+
+import java.io.IOException;
+import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Response;
 
 public class ConfiguracionMisionActivity extends AppCompatActivity {
 
@@ -94,7 +101,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
 
             // 4. Preparar la petición OkHttp
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-            String url = "http://10.0.2.2:8080/api/partidas"; // Endpoint de tu backend
+            String url = "http://10.0.2.2:8080/api/partidas/"; // Endpoint de tu backend
 
             com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
             String token = tokenManager.getToken();
@@ -123,41 +130,46 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                    // Leemos el cuerpo de la respuesta (tanto si es éxito como si es error)
-                    String cuerpoRespuesta = response.body() != null ? response.body().string() : "Sin cuerpo";
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    if (response.isSuccessful() && response.body() != null) {
+                        String jsonRespuesta = response.body().string();
 
-                    if (response.isSuccessful()) {
-                        // ¡EL SERVIDOR HA GUARDADO LA PARTIDA!
-                        runOnUiThread(() -> {
-                            try {
-                                org.json.JSONObject res = new org.json.JSONObject(cuerpoRespuesta);
+                        // 🎙️ MICRÓFONO OCULTO: Imprimimos el JSON exacto en la consola
+                        android.util.Log.w("CREAR_PARTIDA", "El servidor me ha respondido esto: " + jsonRespuesta);
 
-                                int idPartidaCreada = res.optInt("id_partida", res.optInt("idPartida", -1));
-                                String codigoPartida = res.optString("codigo_partida", res.optString("codigoPartida", ""));
+                        try {
+                            org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
 
-                                Intent intent = new Intent(ConfiguracionMisionActivity.this, SalaEsperaActivity.class);
-                                intent.putExtra("ES_PRIVADA", esPrivada);
-                                intent.putExtra("TEMATICA", tematicaSeleccionada);
-                                intent.putExtra("TIEMPO", tiempoSeleccionado);
-                                intent.putExtra("JUGADORES", jugadoresSeleccionados);
-                                intent.putExtra("ID_PARTIDA", idPartidaCreada);
-                                intent.putExtra("CODIGO_PARTIDA", codigoPartida);
-                                intent.putExtra("ES_LIDER", true);
-                                intent.putExtra("MI_NOMBRE_USUARIO", miTagReal);
-                                startActivity(intent);
-                                finish();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Toast.makeText(ConfiguracionMisionActivity.this, "Error procesando la respuesta", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                            // Extraemos la variable "idPartida" tal y como se llama en tu DTO
+                            // Le decimos: "Busca 'id_partida'. Si no lo encuentras, busca 'idPartida'. Y extráelo como Long"
+                            long idPartidaCreada = jsonObject.optLong("id_partida", jsonObject.optLong("idPartida", -1L));
+
+                            android.util.Log.w("CREAR_PARTIDA", "ID extraído en Android: " + idPartidaCreada);
+
+                            String codigoPartida = jsonObject.optString("codigoPartida", "");
+
+                            // 🎙️ MICRÓFONO OCULTO: Imprimimos el ID extraído
+                            android.util.Log.w("CREAR_PARTIDA", "ID extraído en Android: " + idPartidaCreada);
+
+
+                            Intent intent = new Intent(ConfiguracionMisionActivity.this, SalaEsperaActivity.class);
+                            intent.putExtra("ES_PRIVADA", esPrivada);
+                            intent.putExtra("TEMATICA", tematicaSeleccionada);
+                            intent.putExtra("TIEMPO", tiempoSeleccionado);
+                            intent.putExtra("JUGADORES", jugadoresSeleccionados);
+                            intent.putExtra("ID_PARTIDA", idPartidaCreada);
+                            intent.putExtra("CODIGO_PARTIDA", codigoPartida);
+                            intent.putExtra("ES_LIDER", true);
+                            intent.putExtra("MI_NOMBRE_USUARIO", miTagReal);
+
+                            startActivity(intent);
+                            finish();
+
+                        } catch (org.json.JSONException e) {
+                            android.util.Log.e("CREAR_PARTIDA", "Error leyendo el JSON", e);
+                        }
                     } else {
-
-                        android.util.Log.e("API_ERROR_500", "Código: " + response.code());
-                        android.util.Log.e("API_ERROR_500", "Motivo exacto del backend: " + cuerpoRespuesta);
-
-                        runOnUiThread(() -> Toast.makeText(ConfiguracionMisionActivity.this, "Error del servidor. Mira el Logcat", Toast.LENGTH_LONG).show());
+                        android.util.Log.e("CREAR_PARTIDA", "Fallo al crear. Código: " + response.code());
                     }
                 }
             });
@@ -168,16 +180,21 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
     private void mostrarDialogoTematicas() {
         TematicasDialogFragment dialog = new TematicasDialogFragment();
 
-        // Le decimos al diálogo que NO muestre el botón de "Todas" porque estamos creando
-        dialog.setMostrarOpcionTodas(false);
+        // 1. Extraemos los nombres de los temas de nuestro mapa y se los pasamos al diálogo DIRECTAMENTE
+        List<String> listaNombres = new java.util.ArrayList<>(misTematicasDisponibles.keySet());
+        dialog.setMisTematicas(listaNombres);
 
+        // 2. Configuramos el resto de opciones
+        dialog.setConfiguracionFiltros(true, false);
 
+        // 3. Le decimos qué hacer cuando el usuario seleccione un cubo
         dialog.setTematicaListener(tematica -> {
             tematicaSeleccionada = tematica;
-            txtTematica.setText(tematicaSeleccionada);
+            txtTematica.setText(tematica);
         });
 
-        dialog.show(getSupportFragmentManager(), "TematicasDialogConfig");
+        // 4. ¡Mostramos el diálogo ya cargado con la información!
+        dialog.show(getSupportFragmentManager(), "TematicasDialog");
     }
 
     // Método ayudante para que los botones actúen como "Radio Buttons" visuales

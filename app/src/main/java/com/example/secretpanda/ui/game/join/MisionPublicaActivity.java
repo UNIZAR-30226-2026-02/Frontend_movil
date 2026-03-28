@@ -33,6 +33,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import ua.naiksoftware.stomp.StompClient;
 
 public class MisionPublicaActivity extends AppCompatActivity {
 
@@ -44,7 +45,8 @@ public class MisionPublicaActivity extends AppCompatActivity {
     private PartidaAdapter adapter;
     private List<Partida> listaPartidasTodas;
     private List<Partida> listaPartidasFiltradas;
-    private ua.naiksoftware.stomp.StompClient stompClient;
+    private StompClient mStompClient;
+    private io.reactivex.disposables.CompositeDisposable compositeDisposable = new io.reactivex.disposables.CompositeDisposable();
     private String tematicaFiltroActual = "Todas las temáticas";
     private List<String> misTemasAdquiridos = new ArrayList<>();
 
@@ -76,7 +78,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
                 // 1. PREPARAMOS LA LLAMADA AL SERVIDOR PARA UNIRNOS
                 OkHttpClient client = new OkHttpClient();
-                String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaClicada + "/unirse";
+                String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaClicada + "/unirse/publica";
 
                 TokenManager tokenManager = new TokenManager(this);
                 String token = tokenManager.getToken();
@@ -136,8 +138,9 @@ public class MisionPublicaActivity extends AppCompatActivity {
         }
 
         obtenerTemasDelJugador();
+        obtenerPartidasHTTP();
+        conectarWebSocketPartidas();
         // 4. Por último, pedimos los datos reales al backend
-        obtenerPartidasDelServidor();
     }
 
     // --- LÓGICA DE INTERFAZ Y DIÁLOGOS ---
@@ -167,6 +170,16 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
     private void mostrarDialogoFiltro() {
         TematicasDialogFragment dialog = new TematicasDialogFragment();
+
+        // 🚩 ¡LA LÍNEA MÁGICA! Le pasamos la lista de temas al diálogo antes de abrirlo.
+        // Asegúrate de añadir "Todas las temáticas" al principio para que puedan quitar el filtro
+        List<String> temasParaElDialogo = new ArrayList<>();
+        temasParaElDialogo.add("Todas las temáticas");
+        temasParaElDialogo.addAll(misTemasAdquiridos);
+
+        // *NOTA: Necesitas tener un método en tu TematicasDialogFragment para recibir esto
+        dialog.setMisTematicas(temasParaElDialogo);
+
         dialog.setTematicaListener(tematica -> {
             tematicaFiltroActual = tematica;
             if (tvTematicaActual != null) {
@@ -183,117 +196,170 @@ public class MisionPublicaActivity extends AppCompatActivity {
     private void filtrarMisionesPorTematica(String tematica) {
         listaPartidasFiltradas.clear();
 
-        if (tematica == null || tematica.equals("Todas las temáticas")) {
+        // 1. Si el filtro es nulo o es "Todas", metemos todas las partidas
+        if (tematica == null || tematica.equals("Todas las temáticas") || tematica.equals("TODAS")) {
             listaPartidasFiltradas.addAll(listaPartidasTodas);
         } else {
+            // 2. Si hay una temática específica, buscamos las que coincidan
             for (Partida partida : listaPartidasTodas) {
-                if (partida.getTematica() != null && partida.getTematica().equals(tematica)) {
+                // Cuidado con los nulos aquí
+                if (partida.getTematica() != null && partida.getTematica().equalsIgnoreCase(tematica)) {
                     listaPartidasFiltradas.add(partida);
                 }
             }
         }
 
-        // Avisamos al adaptador de que la lista ha cambiado
+        // 3. Avisamos al adaptador
         if (adapter != null) {
             adapter.notifyDataSetChanged();
         }
+
+        // 🚩 CHIVATO PARA EL LOGCAT: Nos dirá si el filtro funciona
+        Log.d("WS_PARTIDAS", "Filtro: " + tematica + " | Partidas a mostrar: " + listaPartidasFiltradas.size());
     }
 
-    private void obtenerPartidasDelServidor() {
-        OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/partidas/publicas";
+    private void conectarWebSocketPartidas() {
+        // 1. Configurar el cliente Stomp
+        // Importante: "/ws/websocket" debe coincidir con tu registerStompEndpoints en Spring Boot
+        mStompClient = ua.naiksoftware.stomp.Stomp.over(
+                ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP,
+                "ws://10.0.2.2:8080/ws/websocket"
+        );
 
-        TokenManager tokenManager = new TokenManager(this);
-        String token = tokenManager.getToken();
+        // 2. Obtener el Token usando la Opción B (la que te funcionó)
+        String token = new com.example.secretpanda.data.TokenManager(this).getToken();
 
-        Request.Builder requestBuilder = new Request.Builder().url(url);
-        if (token != null && !token.isEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer " + token);
-        }
-        Request request = requestBuilder.build();
+        // 3. Preparar las cabeceras de seguridad
+        java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
+        headers.add(new ua.naiksoftware.stomp.dto.StompHeader("Authorization", "Bearer " + token));
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e("API_ERROR", "Error de red al conectar con el servidor", e);
-            }
+        // 4. Conectar al servidor
+        mStompClient.connect(headers);
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    String jsonRespuesta = response.body().string();
-                    Log.d("API_JSON", "Datos del servidor: " + jsonRespuesta);
+        // 5. Suscribirse al canal de partidas
+        io.reactivex.disposables.Disposable disposable = mStompClient.topic("/partidas/publicas")
+                .subscribeOn(io.reactivex.schedulers.Schedulers.io())
+                .observeOn(io.reactivex.android.schedulers.AndroidSchedulers.mainThread())
+                .subscribe(topicMessage -> {
+                    Log.d("WS_PARTIDAS", "Datos recibidos por el radar: " + topicMessage.getPayload());
 
+                    // Usamos GSON para convertir el mensaje en una lista de nuestras Partidas
                     Gson gson = new Gson();
-                    Type listType = new TypeToken<ArrayList<Partida>>(){}.getType();
-                    List<Partida> partidasServidor = gson.fromJson(jsonRespuesta, listType);
+                    java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<List<Partida>>(){}.getType();
+                    List<Partida> nuevasPartidas = gson.fromJson(topicMessage.getPayload(), listType);
 
-                    runOnUiThread(() -> {
-                        if (partidasServidor != null) {
-                            listaPartidasTodas.clear();
+                    // Actualizar la interfaz
+                    if (nuevasPartidas != null) {
+                        listaPartidasTodas.clear();
+                        listaPartidasTodas.addAll(nuevasPartidas);
+                        filtrarMisionesPorTematica(tematicaFiltroActual);
+                    }
 
-                            // ---> LA MAGIA DEL BLOQUEO <---
-                            for (Partida p : partidasServidor) {
-                                // Si la temática de la partida NO está en mi lista de temas comprados...
-                                if (!misTemasAdquiridos.contains(p.getTematica())) {
-                                    // Bloqueamos la partida (Asegúrate de tener un setter en tu modelo Partida.java)
-                                    ///Falta de hacer
-                                }
-                                listaPartidasTodas.add(p);
-                            }
+                }, throwable -> {
+                    Log.e("WS_PARTIDAS", "Error en la recepción de datos", throwable);
+                });
 
-                            filtrarMisionesPorTematica(tematicaFiltroActual);
-                        }
-                    });
-                } else {
-                    Log.e("API_ERROR", "Código de error del servidor: " + response.code());
-                }
-            }
-        });
+        compositeDisposable.add(disposable);
     }
 
     private void obtenerTemasDelJugador() {
+        // 🚩 LOG DE CONTROL: Para saber si el método llega a arrancar
+        Log.d("API_TEMAS", "🚀 Misión iniciada: Intentando obtener temas del servidor...");
+
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores/temas";
 
-        TokenManager tokenManager = new TokenManager(this);
-        String token = tokenManager.getToken();
+        // 🔑 Usamos la Opción B que te funcionó:
+        String token = new com.example.secretpanda.data.TokenManager(this).getToken();
 
-        Request.Builder requestBuilder = new Request.Builder().url(url).get();
-        if (token != null && !token.isEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer " + token);
-        }
-        Request request = requestBuilder.build();
+        Request request = new Request.Builder()
+                .url("http://10.0.2.2:8080/api/jugadores/temas") // Verifica que esta ruta sea correcta
+                .header("Authorization", "Bearer " + token)
+                .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.e("API_TEMAS", "Error al obtener temas", e);
-                // Aunque falle, pedimos las partidas para no dejar la pantalla vacía
-                obtenerPartidasDelServidor();
+                Log.e("API_TEMAS", "❌ FALLO TOTAL de red: " + e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                Log.d("API_TEMAS", "📡 Respuesta recibida. Código: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
                     String jsonRespuesta = response.body().string();
+                    Log.d("API_TEMAS", "📦 JSON de temas: " + jsonRespuesta);
+
                     try {
                         org.json.JSONArray jsonArray = new org.json.JSONArray(jsonRespuesta);
                         misTemasAdquiridos.clear();
-
-                        // Guardamos los nombres de los temas que el jugador SÍ tiene
                         for (int i = 0; i < jsonArray.length(); i++) {
                             org.json.JSONObject temaJson = jsonArray.getJSONObject(i);
                             misTemasAdquiridos.add(temaJson.getString("nombre"));
                         }
+
+                        // IMPORTANTE: Refrescar la interfaz en el hilo principal
+                        runOnUiThread(() -> {
+                            Log.d("API_TEMAS", "✅ Temas cargados: " + misTemasAdquiridos.size());
+                            // Aquí podrías llamar a un método para actualizar tu Spinner o Selector
+                        });
+
                     } catch (Exception e) {
-                        Log.e("API_TEMAS", "Error procesando JSON de temas", e);
+                        Log.e("API_TEMAS", "🤯 Error procesando el JSON", e);
                     }
+                } else {
+                    Log.e("API_TEMAS", "⚠️ El servidor respondió pero con error: " + response.code());
                 }
-                // ¡Magia en cadena! Una vez tenemos mis temas, pedimos las partidas públicas
-                obtenerPartidasDelServidor();
             }
         });
     }
 
+    private void obtenerPartidasHTTP() {
+        Log.d("WS_PARTIDAS", "📡 Iniciando escaneo HTTP de partidas existentes...");
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String token = new com.example.secretpanda.data.TokenManager(this).getToken();
+
+        // Llama al @GetMapping("/publicas") que creamos ayer en el servidor
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url("http://10.0.2.2:8080/topic/partidas/publicas")
+                .header("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                Log.e("WS_PARTIDAS", "❌ Fallo en el escaneo inicial: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonRespuesta = response.body().string();
+                    Log.d("WS_PARTIDAS", "📦 JSON Partidas Iniciales: " + jsonRespuesta);
+
+                    com.google.gson.Gson gson = new com.google.gson.Gson();
+                    java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<List<Partida>>(){}.getType();
+                    List<Partida> partidasIniciales = gson.fromJson(jsonRespuesta, listType);
+
+                    // Volvemos a la interfaz para enseñarlas
+                    runOnUiThread(() -> {
+                        if (partidasIniciales != null) {
+                            listaPartidasTodas.clear();
+                            listaPartidasTodas.addAll(partidasIniciales);
+                            // ¡Y llamamos al filtro para que las dibuje!
+                            filtrarMisionesPorTematica(tematicaFiltroActual);
+                        }
+                    });
+                } else {
+                    Log.e("WS_PARTIDAS", "⚠️ Error del servidor en el escaneo inicial: " + response.code());
+                }
+            }
+        });
+    }
+    @Override
+    protected void onDestroy() {
+        if (mStompClient != null) mStompClient.disconnect();
+        if (compositeDisposable != null) compositeDisposable.dispose();
+        super.onDestroy();
+    }
 }

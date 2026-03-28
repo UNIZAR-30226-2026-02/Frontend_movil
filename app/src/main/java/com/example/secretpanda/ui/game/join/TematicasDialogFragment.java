@@ -10,19 +10,21 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
-import com.example.secretpanda.data.model.InventarioGlobal;
-import com.example.secretpanda.data.model.ItemPersonalizacion;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TematicasDialogFragment extends DialogFragment {
 
-    // "Interruptores" de configuración del diálogo
     private boolean soloDesbloqueadas = true;
     private boolean mostrarBotonTodas = true;
+
+    // 🌟 NUEVO: Variable para guardar la lista que nos pase la Activity
+    private List<String> misTematicas = new ArrayList<>();
 
     public interface TematicaListener {
         void onTematicaSelected(String tematica);
@@ -34,13 +36,17 @@ public class TematicasDialogFragment extends DialogFragment {
         this.listener = listener;
     }
 
-    // Nuevo método para configurarlo desde las Activities
     public void setConfiguracionFiltros(boolean soloDesbloqueadas, boolean mostrarBotonTodas) {
         this.soloDesbloqueadas = soloDesbloqueadas;
         this.mostrarBotonTodas = mostrarBotonTodas;
     }
     public void setMostrarOpcionTodas(boolean mostrar) {
         this.mostrarBotonTodas = mostrar;
+    }
+
+    // 🌟 NUEVO: Método para inyectar los datos a la velocidad de la luz
+    public void setMisTematicas(List<String> tematicas) {
+        this.misTematicas = tematicas;
     }
 
     @Nullable
@@ -57,33 +63,20 @@ public class TematicasDialogFragment extends DialogFragment {
                 dismiss();
             });
         } else {
-            btnOpcionTodas.setVisibility(View.GONE); // Lo ocultamos
+            btnOpcionTodas.setVisibility(View.GONE);
         }
 
-        List<ItemPersonalizacion> todosLosItems = InventarioGlobal.getInstance().getTodosLosItems();
-        List<String> misTematicas = new ArrayList<>();
-
-        for (ItemPersonalizacion item : todosLosItems) {
-            if ("baraja".equals(item.getTipo())) {
-                // Si piden "solo desbloqueadas", nos saltamos las bloqueadas
-                if (soloDesbloqueadas && item.isBloqueado()) {
-                    continue;
-                }
-                misTematicas.add(item.getNombre());
-            }
-        }
-
-        androidx.recyclerview.widget.RecyclerView rvTematicas = view.findViewById(R.id.rv_tematicas_grid);
-        rvTematicas.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(getContext(), 2));
+        // Cargamos el RecyclerView con la lista de temas inyectada
+        RecyclerView rvTematicas = view.findViewById(R.id.rv_tematicas_grid);
+        rvTematicas.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
         TematicaAdapter adapter = new TematicaAdapter(misTematicas, listener, this);
         rvTematicas.setAdapter(adapter);
 
         LinearLayout opcionTodas = view.findViewById(R.id.opcion_todas);
         if (!mostrarBotonTodas) {
-            opcionTodas.setVisibility(View.GONE); // Desaparece y no ocupa espacio
+            opcionTodas.setVisibility(View.GONE);
         } else {
-            // Si está visible, le ponemos su OnClickListener normal
             opcionTodas.setOnClickListener(v -> {
                 if (listener != null) listener.onTematicaSelected("Todas las temáticas");
                 dismiss();

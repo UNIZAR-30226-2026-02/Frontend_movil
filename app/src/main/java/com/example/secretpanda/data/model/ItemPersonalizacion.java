@@ -1,6 +1,7 @@
 package com.example.secretpanda.data.model;
 
 public class ItemPersonalizacion {
+    private int id;
     private String nombre;
     private boolean bloqueado;
     private String tipo;
@@ -24,4 +25,11 @@ public class ItemPersonalizacion {
     public String getTipo() { return tipo; }
     public int getIconoResId() { return iconoResId; }
     public int getPrecio() { return precio; }
+
+    public void setTipo(String tipo){ this.tipo=tipo;}
+
+    public void setPrecio(int tipo){ this.precio=precio;}
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 }

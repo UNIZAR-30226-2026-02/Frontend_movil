@@ -123,7 +123,7 @@ public class LoginActivity extends AppCompatActivity {
                         org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
 
                         // 1. ¿Es nuevo?
-                        boolean esNuevo = jsonObject.optBoolean("esNuevo", false);
+                        boolean esNuevo = jsonObject.optBoolean("es_nuevo", false);
 
                         final String tokenFinal = idToken;
 
