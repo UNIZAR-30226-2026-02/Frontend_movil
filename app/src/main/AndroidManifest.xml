@@ -26,6 +26,7 @@
             android:name=".ui.LoadingActivity"
             android:exported="false" />
 
+
         <activity
             android:name=".ui.auth.UserSelectionActivity"
             android:exported="false" />

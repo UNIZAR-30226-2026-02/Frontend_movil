@@ -68,10 +68,10 @@ public class MisionPublicaActivity extends AppCompatActivity {
         // 1. ¡SUPER IMPORTANTE! Inicializamos las listas ANTES de pedir datos al servidor
         listaPartidasTodas = new ArrayList<>();
         listaPartidasFiltradas = new ArrayList<>();
-
+        obtenerTemasDelJugador();
         // 2. Inicializamos el Adapter configurando qué pasa al hacer clic en una partida
-        adapter = new PartidaAdapter(listaPartidasFiltradas, partida -> {
-            if (partida.isBloqueada() || partida.isLlena()) {
+        adapter = new PartidaAdapter(listaPartidasFiltradas, misTemasAdquiridos, partida -> {
+            if (partida.isLlena()) {
                 mostrarDialogoError(partida);
             } else {
                 int idPartidaClicada = partida.getIdPartida();
@@ -106,15 +106,34 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
+                        // IMPORTANTE: Guardamos el cuerpo de la respuesta. (Solo se puede leer .string() una vez)
+                        String jsonRespuesta = response.body() != null ? response.body().string() : "";
+
                         // Si da 200 (éxito) O da 409 (ya estabas dentro), te dejamos pasar
                         if (response.isSuccessful() || response.code() == 409) {
-                            runOnUiThread(() -> {
-                                String miEquipo = "rojo";
 
-                                Intent intent = new Intent(MisionPublicaActivity.this, PartidaActivity.class);
+                            // 🕵️‍♂️ Intentamos leer qué equipo nos asignó el backend
+                            String equipoAsignado = "rojo"; // Valor de emergencia por defecto
+                            try {
+                                if (!jsonRespuesta.isEmpty()) {
+                                    org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
+                                    // OJO: Pon aquí exactamente cómo se llama la variable de equipo que te devuelve tu backend
+                                    if (jsonObject.has("equipo")) {
+                                        equipoAsignado = jsonObject.getString("equipo");
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.e("WS_PARTIDAS", "No se pudo extraer el equipo del JSON. Usando defecto.", e);
+                            }
+
+                            // Congelamos la variable para poder usarla dentro del hilo principal
+                            final String miEquipoFinal = equipoAsignado;
+
+                            runOnUiThread(() -> {
+                                Intent intent = new Intent(MisionPublicaActivity.this, SalaEsperaActivity.class);
                                 intent.putExtra("ID_PARTIDA", idPartidaClicada);
-                                intent.putExtra("MI_EQUIPO", miEquipo);
-                                intent.putExtra("ES_LIDER", false);
+                                intent.putExtra("MI_EQUIPO", miEquipoFinal); // ¡Usamos el equipo real del servidor!
+                                intent.putExtra("ES_LIDER", false); // Como nos unimos a partida ajena, no somos líder
                                 intent.putExtra("ES_PRIVADA", false);
                                 intent.putExtra("MAX_JUGADORES", partida.getMaxJugadores());
                                 intent.putExtra("TIEMPO_TURNO", partida.getTiempo());
@@ -122,9 +141,9 @@ public class MisionPublicaActivity extends AppCompatActivity {
                                 startActivity(intent);
                             });
                         } else {
-                            // Otros errores (404 no encontrada, 401 sin token, etc.)
-                            Log.e("API_ERROR", "El servidor rechazó la entrada. Código: " + response.code());
-                            runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se pudo entrar a la partida", android.widget.Toast.LENGTH_SHORT).show());
+                            // Otros errores
+                            Log.e("API_ERROR", "El servidor rechazó la entrada. Código: " + response.code() + " Cuerpo: " + jsonRespuesta);
+                            runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se pudo entrar a la sala", android.widget.Toast.LENGTH_SHORT).show());
                         }
                     }
                 });
@@ -137,10 +156,9 @@ public class MisionPublicaActivity extends AppCompatActivity {
             recyclerMisiones.setAdapter(adapter);
         }
 
-        obtenerTemasDelJugador();
+
         obtenerPartidasHTTP();
         conectarWebSocketPartidas();
-        // 4. Por último, pedimos los datos reales al backend
     }
 
     // --- LÓGICA DE INTERFAZ Y DIÁLOGOS ---
@@ -156,10 +174,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
         TextView txtTitulo = dialogError.findViewById(R.id.txt_titulo_error);
         TextView txtMensaje = dialogError.findViewById(R.id.txt_mensaje_error);
 
-        if (partida.isBloqueada()) {
-            if (txtTitulo != null) txtTitulo.setText("Bloqueado");
-            if (txtMensaje != null) txtMensaje.setText("No tienes la temática: " + partida.getTematica());
-        } else {
+        if(partida.isLlena()) {
             if (txtTitulo != null) txtTitulo.setText("Sala Llena");
             if (txtMensaje != null) txtMensaje.setText("La partida ya tiene " + partida.getJugadoresTexto() + " jugadores.");
         }
@@ -237,7 +252,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
         mStompClient.connect(headers);
 
         // 5. Suscribirse al canal de partidas
-        io.reactivex.disposables.Disposable disposable = mStompClient.topic("/partidas/publicas")
+        io.reactivex.disposables.Disposable disposable = mStompClient.topic("/topic/partidas/publicas")
                 .subscribeOn(io.reactivex.schedulers.Schedulers.io())
                 .observeOn(io.reactivex.android.schedulers.AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
@@ -321,7 +336,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
         // Llama al @GetMapping("/publicas") que creamos ayer en el servidor
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url("http://10.0.2.2:8080/topic/partidas/publicas")
+                .url("http://10.0.2.2:8080/api/partidas/publicas")
                 .header("Authorization", "Bearer " + token)
                 .build();
 

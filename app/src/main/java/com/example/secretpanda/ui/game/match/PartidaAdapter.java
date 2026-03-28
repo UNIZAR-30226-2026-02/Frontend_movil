@@ -18,13 +18,15 @@ public class PartidaAdapter extends RecyclerView.Adapter<PartidaAdapter.PartidaV
 
     private List<Partida> listaPartidas;
     private OnItemClickListener listener;
+    private List<String> tematicasDesbloqueadas;
 
     public interface OnItemClickListener {
         void onItemClick(Partida partida);
     }
 
-    public PartidaAdapter(List<Partida> listaPartidas, OnItemClickListener listener) {
+    public PartidaAdapter(List<Partida> listaPartidas, List<String> tematicasDesbloqueadas, OnItemClickListener listener) {
         this.listaPartidas = listaPartidas;
+        this.tematicasDesbloqueadas = tematicasDesbloqueadas;
         this.listener = listener;
     }
 
@@ -40,31 +42,37 @@ public class PartidaAdapter extends RecyclerView.Adapter<PartidaAdapter.PartidaV
     public void onBindViewHolder(@NonNull PartidaViewHolder holder, int position) {
         Partida partida = listaPartidas.get(position);
 
+        // 🕵️‍♂️ LECTURA DE DATOS:
+        // Según tu servidor, getTag() es el líder y getNombre() es la temática
+        String lider = partida.getNombre() != null ? partida.getNombre() : "Agente Secreto";
+        String tematica = partida.getTematica() != null ? partida.getTematica() : "Desconocida";
+        holder.tvLider.setText(lider);
         // 1. Asignamos los textos a la tarjeta
-        holder.tvNombre.setText(partida.getNombre());
-        holder.tvTematica.setText(partida.getTematica());
+        holder.tvNombre.setText(tematica);
+
+        // Comprobamos si el recuadro de la temática existe en el XML para no sobrescribir nada
+        if (holder.tvTematica != null) {
+            holder.tvTematica.setText(tematica);
+        }
+
+        holder.tvSegundos.setText(String.valueOf(partida.getSegundos()));
         holder.tvJugadores.setText(partida.getJugadoresActuales() + "/" + partida.getMaxJugadores());
 
-        // 2. LÓGICA DE BLOQUEO: Comprobamos si tiene la temática
-        boolean tengoLaTematica = partida.getTematica().equalsIgnoreCase("Clásico") ||
-                partida.getTematica().equalsIgnoreCase("Clasico");
+        // 2. LÓGICA DE BLOQUEO
+        boolean tengoLaTematica = "Clásico".equalsIgnoreCase(tematica) || "Clasico".equalsIgnoreCase(tematica);
 
-        // Recorremos el inventario global para ver si la tiene comprada
-        List<ItemPersonalizacion> misItems = InventarioGlobal.getInstance().getTodosLosItems();
-        if (misItems != null && !tengoLaTematica) {
-            for (ItemPersonalizacion item : misItems) {
-                // Si encontramos la temática y no está bloqueada, significa que la tenemos
-                if (item.getNombre().equalsIgnoreCase(partida.getTematica()) && !item.isBloqueado()) {
+        if (!tengoLaTematica && tematicasDesbloqueadas != null) {
+            for (String miTematica : tematicasDesbloqueadas) {
+                if (miTematica.equalsIgnoreCase(tematica)) {
                     tengoLaTematica = true;
                     break;
                 }
             }
         }
-
-        // 3. CAMBIAR LA INTERFAZ SEGÚN SI LA TENEMOS O NO
+        // 3. CAMBIAR LA INTERFAZ
         if (tengoLaTematica) {
             holder.itemView.setBackgroundResource(R.drawable.fondo_item_mision_publica);
-            holder.itemView.setAlpha(1.0f); // Opacidad normal
+            holder.itemView.setAlpha(1.0f);
 
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
@@ -73,9 +81,7 @@ public class PartidaAdapter extends RecyclerView.Adapter<PartidaAdapter.PartidaV
             });
         } else {
             holder.itemView.setBackgroundResource(R.drawable.fondo_item_mision_bloqueada);
-            holder.itemView.setAlpha(0.6f); // La difuminamos un poco para que parezca desactivada
-
-            // Quitamos el listener para que no haga nada al pulsar
+            holder.itemView.setAlpha(0.6f);
             holder.itemView.setOnClickListener(null);
         }
     }
@@ -89,15 +95,16 @@ public class PartidaAdapter extends RecyclerView.Adapter<PartidaAdapter.PartidaV
         TextView tvNombre;
         TextView tvTematica;
         TextView tvJugadores;
+        TextView tvLider;
+        TextView tvSegundos;
 
-        public PartidaViewHolder( View itemView) {
+        public PartidaViewHolder(View itemView) {
             super(itemView);
             tvNombre = itemView.findViewById(R.id.tv_nombre_mision);
             tvTematica = itemView.findViewById(R.id.tv_nombre_tematica);
-            if(tvTematica==null){
-                tvTematica=tvNombre;
-            }
             tvJugadores = itemView.findViewById(R.id.tv_jugadores_mision);
+            tvLider = itemView.findViewById(R.id.tv_creador_mision);
+            tvSegundos = itemView.findViewById(R.id.tv_tiempo_mision);
         }
     }
 }

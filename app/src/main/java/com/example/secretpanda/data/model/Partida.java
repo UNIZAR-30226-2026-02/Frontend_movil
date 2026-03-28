@@ -10,16 +10,25 @@ public class Partida {
 
     // El servidor lo llama codigo_partida, nosotros lo mostramos como nombre
     @SerializedName("codigo_partida")
-    private String nombre;
+    private String codigo_partida;
 
+    @com.google.gson.annotations.SerializedName("tag")
+    private String nombre;
     @SerializedName("max_jugadores")
     private int maxJugadores;
 
     @SerializedName("es_publica")
     private boolean esPublica;
 
-    // ¡Aquí estaba el fallo! El DTO lo llama nombreTema -> nombre_tema
-    @SerializedName("nombre_tema")
+    @com.google.gson.annotations.SerializedName("tiempo_espera")
+    private int segundos;
+
+    public int getSegundos() {
+        return segundos;
+    }
+
+    // Le decimos a Android: "Cuando el JSON diga 'nombre', guárdalo en temática"
+    @com.google.gson.annotations.SerializedName("nombre")
     private String tematica;
 
     @SerializedName("estado")
@@ -51,9 +60,6 @@ public class Partida {
     }
 
     // Lógica para saber si está bloqueada (si no es pública)
-    public boolean isBloqueada() {
-        return !esPublica;
-    }
 
     public String getJugadoresTexto() {
         return getJugadoresActuales() + "/" + maxJugadores;

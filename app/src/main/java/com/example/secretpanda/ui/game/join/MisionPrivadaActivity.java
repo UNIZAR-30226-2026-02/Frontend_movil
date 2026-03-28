@@ -75,9 +75,9 @@ public class MisionPrivadaActivity extends AppCompatActivity {
         listaPartidasFiltradas = new ArrayList<>();
 
         // 2. Inicializamos el Adapter configurando qué pasa al hacer clic en una partida
-        adapter = new PartidaAdapter(listaPartidasFiltradas, partida -> {
+        adapter = new PartidaAdapter(listaPartidasFiltradas, misTemasAdquiridos, partida -> {
             // 1. Comprobamos si no se puede entrar (llena o bloqueada por algún motivo)
-            if (partida.isBloqueada() || partida.isLlena()) {
+            if (partida.isLlena()) {
                 mostrarDialogoError(partida);
             } else {
                 // 2. ¡EL CAMBIO CLAVE!
@@ -111,10 +111,7 @@ public class MisionPrivadaActivity extends AppCompatActivity {
         TextView txtTitulo = dialogError.findViewById(R.id.txt_titulo_error);
         TextView txtMensaje = dialogError.findViewById(R.id.txt_mensaje_error);
 
-        if (partida.isBloqueada()) {
-            if (txtTitulo != null) txtTitulo.setText("Bloqueado");
-            if (txtMensaje != null) txtMensaje.setText("No tienes la temática: " + partida.getTematica());
-        } else {
+        if(partida.isLlena()) {
             if (txtTitulo != null) txtTitulo.setText("Sala Llena");
             if (txtMensaje != null) txtMensaje.setText("La partida ya tiene " + partida.getJugadoresTexto() + " jugadores.");
         }

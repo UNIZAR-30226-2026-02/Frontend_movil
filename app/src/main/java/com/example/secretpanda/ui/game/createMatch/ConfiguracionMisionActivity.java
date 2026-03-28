@@ -142,7 +142,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
 
                             // Extraemos la variable "idPartida" tal y como se llama en tu DTO
                             // Le decimos: "Busca 'id_partida'. Si no lo encuentras, busca 'idPartida'. Y extráelo como Long"
-                            long idPartidaCreada = jsonObject.optLong("id_partida", jsonObject.optLong("idPartida", -1L));
+                            int idPartidaCreada = (int) jsonObject.optLong("id_partida", jsonObject.optLong("idPartida", -1L));
 
                             android.util.Log.w("CREAR_PARTIDA", "ID extraído en Android: " + idPartidaCreada);
 

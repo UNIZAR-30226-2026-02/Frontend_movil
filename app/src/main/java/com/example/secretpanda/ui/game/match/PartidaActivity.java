@@ -44,7 +44,6 @@ public class PartidaActivity extends AppCompatActivity {
 
     private StompClient stompClient;
     private int idPartidaActual;
-    private boolean esEquipoAzul;
     private String miEquipo;
     private LinearLayout contenedorMensajesActual = null;
     private String miPropioIdGoogle = "";
@@ -58,18 +57,14 @@ public class PartidaActivity extends AppCompatActivity {
 
         // --- RECOGER DATOS DE LA PANTALLA ANTERIOR ---
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
-        esEquipoAzul = getIntent().getBooleanExtra("MI_EQUIPO", false);
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
-        // Por seguridad, si por algún motivo no llega el equipo, le ponemos uno por defecto
-
-        if(esEquipoAzul == false){
-            miEquipo = "rojo";
+        // Leer el equipo como String (Soluciona el error ClassCastException)
+        miEquipo = getIntent().getStringExtra("MI_EQUIPO");
+        if (miEquipo == null || miEquipo.isEmpty()) {
+            miEquipo = "rojo"; // Por seguridad
         }
-        else{
-            miEquipo = "azul";
-        }
-
+        obtenerMiRolDelServidor();
 
 
         // Si el ID es -1, significa que hubo un error al pasar los datos
@@ -78,10 +73,10 @@ public class PartidaActivity extends AppCompatActivity {
             finish(); // Cerramos la pantalla porque está rota
             return;
         }
-
-
+        //suscribirseAlEstadoDeLaPartida();
+        //obtenerEstadoCompletoDePartida();
         conectarWebSocket();
-
+        suscribirseAlChat();
         btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAlerta = findViewById(R.id.btn_alerta);
         btnChat = findViewById(R.id.btn_chat);
@@ -96,10 +91,98 @@ public class PartidaActivity extends AppCompatActivity {
         //mostrarDialogoFinPartida("Victoria", "Has encontrado al asesino", 10000, 20);
         configurarBotones();
         configurarTablero();
-        obtenerMiRolDelServidor();
+
         aplicarRol();
     }
 
+    private void suscribirseAlEstadoDeLaPartida() {
+        String destinoTopic = "/topic/partidas/" + idPartidaActual + "/estado";
+        android.util.Log.d("WS_TABLERO", "📡 Conectando radar al canal: " + destinoTopic);
+
+        stompClient.topic(destinoTopic).subscribe(stompMessage -> {
+            try {
+                String jsonCrudo = stompMessage.getPayload();
+                org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
+
+                // Pasamos los datos al hilo principal para poder cambiar la pantalla
+                runOnUiThread(() -> {
+                    // 1. LEER EL ESTADO GENERAL
+                    String estado = json.optString("estado", "");
+                    String turnoActual = json.optString("turno_actual", "");
+                    // boolean rojoGana = json.optBoolean("rojoGana", false); // Si lo necesitas luego
+
+                    // Aquí podrías cambiar un TextView que diga de quién es el turno
+                    // tvTurno.setText("Turno del equipo: " + turnoActual);
+
+                    // 2. LEER EL TABLERO (Comprueba cómo se llama tu array en el JSON real, yo usaré "cartas")
+                    if (json.has("cartas")) { // ⚠️ CAMBIA "cartas" por el nombre real de tu array en el JSON
+                        try {
+                            org.json.JSONArray tableroArray = json.getJSONArray("cartas");
+
+                            // Aquí iría tu lógica para pintar las cartas en el gridTablero
+                            // for (int i = 0; i < tableroArray.length(); i++) {
+                            //     JSONObject carta = tableroArray.getJSONObject(i);
+                            //     String tipo = carta.optString("tipo", "oculta");
+                            //     // pintarCarta(carta, i);
+                            // }
+                        } catch (Exception e) {
+                            android.util.Log.e("WS_TABLERO", "Error leyendo el array del tablero", e);
+                        }
+                    }
+
+                    // 3. DETECTAR EL FINAL DE LA MISIÓN
+                    if ("FINALIZADA".equalsIgnoreCase(estado)) {
+                        android.util.Log.d("WS_TABLERO", "🏁 ¡La partida ha terminado!");
+                        // Mostrar diálogo de victoria/derrota
+                        // Toast.makeText(PartidaActivity.this, "¡Partida finalizada!", Toast.LENGTH_LONG).show();
+                    }
+                });
+
+            } catch (Exception e) {
+                android.util.Log.e("WS_TABLERO", "Error desencriptando el estado de la partida", e);
+            }
+        }, throwable -> {
+            android.util.Log.e("WS_TABLERO", "❌ Interferencia en el radar del tablero", throwable);
+        });
+    }
+    private void obtenerEstadoCompletoDePartida() {
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        // Reemplaza esto por tu endpoint real que devuelva los datos de la partida
+        String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual;
+
+        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
+        String token = tokenManager.getToken();
+
+        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder().url(url).get();
+        if (token != null && !token.isEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer " + token);
+        }
+
+        client.newCall(requestBuilder.build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                android.util.Log.e("API_PARTIDA", "❌ Error al obtener el estado de la partida", e);
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonCrudo = response.body().string();
+                    try {
+                        org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
+                        // Aquí puedes extraer el array de "jugadores", de quién es el "turno_actual", etc.
+                        android.util.Log.d("API_PARTIDA", "✅ Datos completos recuperados: " + json.toString());
+
+                        // Si extraes datos para actualizar la interfaz, recuerda usar:
+                        // runOnUiThread(() -> { ... });
+
+                    } catch (Exception e) {
+                        android.util.Log.e("API_PARTIDA", "Error procesando JSON de la partida", e);
+                    }
+                }
+            }
+        });
+    }
     private void conectarWebSocket() {
         // Si ya está conectado, no hacemos nada
         if (stompClient != null && stompClient.isConnected()) {
@@ -386,13 +469,13 @@ public class PartidaActivity extends AppCompatActivity {
             if (!textoEscrito.isEmpty()) {
                 // Lo pintamos en MI pantalla
 
-                agregarMensajeAlChat(this.contenedorMensajesActual, "Yo", textoEscrito, true);
+                //agregarMensajeAlChat(this.contenedorMensajesActual, "Yo", textoEscrito, true);
 
                 // Disparamos al servidor
                 try {
                     JSONObject jsonMensaje = new JSONObject();
                     jsonMensaje.put("mensaje", textoEscrito);
-                    stompClient.send("/app/partidas/" + idPartidaActual + "/chat/" + miEquipo, jsonMensaje.toString()).subscribe();
+                    stompClient.send("/app/partidas/" + idPartidaActual + "/chat", jsonMensaje.toString()).subscribe();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -471,6 +554,7 @@ public class PartidaActivity extends AppCompatActivity {
         gridTablero.removeAllViews();
         int totalCartas = 20;
 
+        imagenesTablero = new android.widget.ImageView[totalCartas];
         for (int i = 0; i < totalCartas; i++) {
             final int i2 = i;
 
@@ -678,9 +762,11 @@ public class PartidaActivity extends AppCompatActivity {
 
         new Thread(() -> {
             try {
-                String urlStr = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/chat/" + miEquipo;
+                String urlStr = "http://10.0.2.2:8080/app/partidas/" + idPartidaActual + "/chat";
                 java.net.URL url = new java.net.URL(urlStr);
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                com.example.secretpanda.data.TokenManager tm = new com.example.secretpanda.data.TokenManager(this);
+                conn.setRequestProperty("Authorization", "Bearer " + tm.getToken());
 
                 int responseCode = conn.getResponseCode();
                 android.util.Log.d("CHAT_DEBUG", "Código respuesta servidor: " + responseCode);
@@ -731,46 +817,78 @@ public class PartidaActivity extends AppCompatActivity {
 
     // Llama a este método en tu onCreate()
     private void obtenerMiRolDelServidor() {
-        OkHttpClient client = new OkHttpClient();
-        // Recuerda añadir tu token JWT en las cabeceras
-        Request request = new Request.Builder()
-                .url("URL_DE_TU_BACKEND/api/partidas/" + idPartidaActual + "/participantes/rol")
-                .build();
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
 
-        client.newCall(request).enqueue(new Callback() {
+        // ⚠️ ALERTA DE RUTA: Asegúrate de que esta sea la URL correcta de tu backend.
+        // Si la ruta en tu Spring Boot es distinta, cámbiala aquí.
+        String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/participantes/rol";
+
+        // Extraemos la credencial (token) del agente
+        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
+        String token = tokenManager.getToken();
+
+        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder()
+                .url(url)
+                .get(); // Asumo que es una petición GET
+
+        // Añadimos el token al escudo de la petición
+        if (token != null && !token.isEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer " + token);
+        }
+
+        client.newCall(requestBuilder.build()).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                android.util.Log.e("API_ROL", "Error al obtener el rol", e);
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                android.util.Log.e("API_ROL", "❌ Fallo en las comunicaciones solicitando el rol", e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
                 if (response.isSuccessful() && response.body() != null) {
+                    String respuestaServidor = response.body().string();
+
                     try {
-                        String jsonResp = response.body().string();
-                        JSONObject jsonObject = new JSONObject(jsonResp);
+                        // 🕵️‍♂️ DEPENDIENDO DE TU BACKEND, ELIGE UNA DE ESTAS DOS OPCIONES:
 
-                        // El backend devuelve algo como { "rol": "lider", "equipo": "rojo" }
-                        String rolServidor = jsonObject.getString("rol");
-                        miEquipo = jsonObject.getString("equipo");
+                        // Opción A: Si tu backend devuelve un JSON ej: {"rol": "Lider"}
+                        org.json.JSONObject json = new org.json.JSONObject(respuestaServidor);
+                        final String rolAsignado = json.optString("rol", "Agente");
 
+                        // Opción B: Si tu backend devuelve solo el texto ej: "Lider"
+                        // final String rolAsignado = respuestaServidor;
+
+                        android.util.Log.d("API_ROL", "✅ El Cuartel General ha confirmado tu rol: " + rolAsignado);
+
+                        // Pasamos a la interfaz gráfica para actualizarla
                         runOnUiThread(() -> {
-                            if ("lider".equalsIgnoreCase(rolServidor)) {
-                                miRol = "Jefe";
-                            } else {
-                                miRol = "Agente";
-                            }
+                            miRol = rolAsignado; // Actualizamos la variable global
 
-                            // Actualizar la interfaz
+                            // Actualizamos el texto en la pantalla si tienes el TextView
                             if (tvMiRol != null) {
-                                tvMiRol.setText("Rol: " + miRol + " | Equipo: " + miEquipo);
+                                if (miRol.equals("agente")) {
+                                    miRol = "Agente de Campo";
+                                } else if (miRol.equals("jefe")) {
+                                    miRol = "Jefe de Espionaje";
+                                }
+                                tvMiRol.setText("Tu rol: " + miRol);
                             }
-                            suscribirseAlChat();
-                            suscribirseAlTablero();
                         });
+
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        android.util.Log.e("API_ROL", "Error al descifrar el rol recibido del servidor", e);
                     }
+                } else {
+                    // 🕵️‍♂️ Vamos a extraer el mensaje de error que Spring Boot nos manda por defecto
+                    String cuerpoError = "Cuerpo vacío";
+                    try {
+                        if (response.body() != null) {
+                            cuerpoError = response.body().string();
+                        }
+                    } catch (Exception e) {
+                        cuerpoError = "No se pudo leer el error";
+                    }
+
+                    android.util.Log.e("API_ROL", "⚠️ El servidor denegó la solicitud de rol. Código: " + response.code() + " - Detalles: " + cuerpoError);
                 }
             }
         });
