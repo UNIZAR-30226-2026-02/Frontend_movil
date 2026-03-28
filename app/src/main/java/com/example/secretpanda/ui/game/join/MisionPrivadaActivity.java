@@ -58,8 +58,6 @@ public class MisionPrivadaActivity extends AppCompatActivity {
         // Cuidado aquí: asegúrate de que tu XML se llama así. Antes pusiste "activity_misiones_publicas"
         setContentView(R.layout.activity_misiones_publicas);
 
-        //etCodigoSala = findViewById(R.id.et_codigo_sala);
-        //btnUnirse = findViewById(R.id.btn_confirmar_union);
         btnHome = findViewById(R.id.btn_volver_home);
 
         // 2. Configurar los eventos de clic
