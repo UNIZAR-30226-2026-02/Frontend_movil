@@ -3,6 +3,7 @@ package com.example.secretpanda.ui.game.match;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -17,9 +18,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -28,6 +32,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
+import ua.naiksoftware.stomp.dto.StompCommand;
+import ua.naiksoftware.stomp.dto.StompHeader;
+import ua.naiksoftware.stomp.dto.StompMessage;
 
 public class PartidaActivity extends AppCompatActivity {
 
@@ -38,9 +45,15 @@ public class PartidaActivity extends AppCompatActivity {
     private TextView notificacionChat;
     private TextView tvMiRol;
     private android.widget.ImageView iconoBtnAlerta;
-    private String miRol = "Agente";
 
+    private final String AGENTE_STRING = "Agente de Campo";
+    private final String JEFE_STRING = "Jefe de Espionaje";
+
+    private String miRol = AGENTE_STRING;
     private android.widget.ImageView[] imagenesTablero;
+
+    private String palabraPista = "";
+    private int cantidadPista = 0;
 
     private StompClient stompClient;
     private int idPartidaActual;
@@ -48,6 +61,7 @@ public class PartidaActivity extends AppCompatActivity {
     private LinearLayout contenedorMensajesActual = null;
     private String miPropioIdGoogle = "";
 
+    private int idTurnoActual = -1; // Para saber en qué turno estamos votando
     private FrameLayout cartaActualmenteSeleccionada = null;
 
     @Override
@@ -73,8 +87,13 @@ public class PartidaActivity extends AppCompatActivity {
             finish(); // Cerramos la pantalla porque está rota
             return;
         }
-        //suscribirseAlEstadoDeLaPartida();
-        //obtenerEstadoCompletoDePartida();
+
+        String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
+        stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, url);
+
+        stompClient.connect();
+        suscribirseAlEstadoDeLaPartida();
+        obtenerEstadoCompletoDePartida();
         conectarWebSocket();
         suscribirseAlChat();
         btnAbandonar = findViewById(R.id.btn_abandonar);
@@ -91,8 +110,108 @@ public class PartidaActivity extends AppCompatActivity {
         //mostrarDialogoFinPartida("Victoria", "Has encontrado al asesino", 10000, 20);
         configurarBotones();
         configurarTablero();
+    }
 
-        aplicarRol();
+    // Centralizamos el pintado para no repetir código
+    private void pintarTablero(org.json.JSONArray cartasArray, org.json.JSONArray votosArray) {
+        runOnUiThread(() -> {
+            if (gridTablero == null) return;
+
+            gridTablero.removeAllViews();
+            imagenesTablero = new android.widget.ImageView[cartasArray.length()];
+
+            for (int i = 0; i < cartasArray.length(); i++) {
+                try {
+                    org.json.JSONObject cartaJson = cartasArray.getJSONObject(i);
+
+                    int idCarta = cartaJson.optInt("id_carta_tablero");
+                    String palabra = cartaJson.optString("palabra", "");
+                    String estado = cartaJson.optString("estado", "oculta");
+                    String tipo = cartaJson.optString("tipo", "");
+
+                    boolean estaRevelada = !"oculta".equalsIgnoreCase(estado);
+
+                    // --- 1. CONTAR VOTOS PARA ESTA CARTA ---
+                    int contadorVotos = 0;
+                    for (int v = 0; v < votosArray.length(); v++) {
+                        org.json.JSONObject votoJson = votosArray.getJSONObject(v);
+                        // Comprobamos si el voto (dependiendo de cómo lo serialice tu backend) apunta a esta carta
+                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta ||
+                                votoJson.optInt("idCartaTablero", -1) == idCarta) {
+                            contadorVotos++;
+                        }
+                    }
+
+                    // --- 2. CONFIGURAR CONTENEDOR ---
+                    android.widget.FrameLayout cartaContenedor = new android.widget.FrameLayout(PartidaActivity.this);
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                    params.width = GridLayout.LayoutParams.WRAP_CONTENT;
+                    params.height = dpToPx(80);
+                    params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+                    params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+                    params.setMargins(6, 6, 6, 6);
+                    params.setGravity(Gravity.FILL);
+                    cartaContenedor.setLayoutParams(params);
+
+                    android.widget.ImageView imagenCarta = new android.widget.ImageView(PartidaActivity.this);
+                    imagenCarta.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT));
+                    imagenCarta.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+
+                    TextView tvPalabra = new TextView(PartidaActivity.this);
+                    tvPalabra.setText(palabra);
+                    tvPalabra.setTextColor(Color.WHITE);
+                    tvPalabra.setGravity(Gravity.CENTER);
+                    tvPalabra.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                    tvPalabra.setTypeface(null, Typeface.BOLD);
+
+                    // --- 3. LÓGICA DE ESTADO ---
+                    if (estaRevelada) {
+                        if ("rojo".equalsIgnoreCase(tipo)) imagenCarta.setBackgroundColor(Color.parseColor("#D32F2F"));
+                        else if ("azul".equalsIgnoreCase(tipo)) imagenCarta.setBackgroundColor(Color.parseColor("#1976D2"));
+                        else if ("asesino".equalsIgnoreCase(tipo)) imagenCarta.setBackgroundColor(Color.BLACK);
+                        else imagenCarta.setBackgroundColor(Color.parseColor("#B0BEC5"));
+
+                        cartaContenedor.setEnabled(false);
+                    } else {
+                        imagenCarta.setBackgroundColor(Color.DKGRAY);
+
+                        // Al hacer clic, enviamos el voto al backend
+                        cartaContenedor.setOnClickListener(v -> enviarVoto(idCarta));
+                    }
+
+                    cartaContenedor.addView(imagenCarta);
+                    cartaContenedor.addView(tvPalabra);
+
+                    // --- 4. DIBUJAR BURBUJA DE VOTOS ---
+                    if (contadorVotos > 0 && !estaRevelada) {
+                        TextView tvVotos = new TextView(PartidaActivity.this);
+                        tvVotos.setText(String.valueOf(contadorVotos));
+                        tvVotos.setTextColor(Color.WHITE);
+                        tvVotos.setBackgroundColor(Color.parseColor("#AAFF9800")); // Naranja semitransparente
+                        tvVotos.setGravity(Gravity.CENTER);
+                        tvVotos.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+                        tvVotos.setTypeface(null, Typeface.BOLD);
+
+                        // Esquina superior derecha
+                        FrameLayout.LayoutParams votosParams = new FrameLayout.LayoutParams(dpToPx(24), dpToPx(24));
+                        votosParams.gravity = Gravity.TOP | Gravity.END;
+                        votosParams.setMargins(0, dpToPx(4), dpToPx(4), 0);
+                        tvVotos.setLayoutParams(votosParams);
+                        tvVotos.setBackgroundResource(android.R.drawable.presence_away); // Borde redondeado por defecto de Android
+
+                        cartaContenedor.addView(tvVotos);
+                    }
+
+                    imagenesTablero[i] = imagenCarta;
+                    gridTablero.addView(cartaContenedor);
+
+                } catch (Exception e) {
+                    android.util.Log.e("WS_TABLERO", "Error pintando la carta " + i, e);
+                }
+            }
+        });
     }
 
     private void suscribirseAlEstadoDeLaPartida() {
@@ -104,37 +223,73 @@ public class PartidaActivity extends AppCompatActivity {
                 String jsonCrudo = stompMessage.getPayload();
                 org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
 
-                // Pasamos los datos al hilo principal para poder cambiar la pantalla
                 runOnUiThread(() -> {
-                    // 1. LEER EL ESTADO GENERAL
                     String estado = json.optString("estado", "");
                     String turnoActual = json.optString("turno_actual", "");
-                    // boolean rojoGana = json.optBoolean("rojoGana", false); // Si lo necesitas luego
 
-                    // Aquí podrías cambiar un TextView que diga de quién es el turno
-                    // tvTurno.setText("Turno del equipo: " + turnoActual);
+                    // ¡AQUÍ ESTÁ LA LLAMADA!
+                    // Sustituye tu antigua comprobación por esta en AMBOS métodos:
+                    // 1. Extraemos el ID del turno (normalmente viene dentro de la pista o en la raíz)
+                    // Busca esta parte en tu PartidaActivity.java y sustitúyela:
 
-                    // 2. LEER EL TABLERO (Comprueba cómo se llama tu array en el JSON real, yo usaré "cartas")
-                    if (json.has("cartas")) { // ⚠️ CAMBIA "cartas" por el nombre real de tu array en el JSON
+                    if (json.has("pista_actual") && !json.isNull("pista_actual")) {
+                        JSONObject pistaObj = null;
                         try {
-                            org.json.JSONArray tableroArray = json.getJSONArray("cartas");
+                            pistaObj = json.getJSONObject("pista_actual");
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
 
-                            // Aquí iría tu lógica para pintar las cartas en el gridTablero
-                            // for (int i = 0; i < tableroArray.length(); i++) {
-                            //     JSONObject carta = tableroArray.getJSONObject(i);
-                            //     String tipo = carta.optString("tipo", "oculta");
-                            //     // pintarCarta(carta, i);
-                            // }
-                        } catch (Exception e) {
-                            android.util.Log.e("WS_TABLERO", "Error leyendo el array del tablero", e);
+                        // Guardamos el ID del turno para poder votar luego
+                        idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+
+                        // Extraemos los datos de la pista
+                         palabraPista = pistaObj.optString("palabra", "");
+                         cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0)); // Cubrimos ambas opciones
+
+                        // ¡Avisamos a los jugadores visualmente!
+                        runOnUiThread(() -> {
+                            // Puedes ponerlo en un TextView que tengas arriba en el tablero
+                            // tvPistaActual.setText("PISTA: " + palabraPista.toUpperCase() + " [" + cantidadPista + "]");
+
+                            android.widget.Toast.makeText(PartidaActivity.this,
+                                    "📢 Nueva pista recibida: " + palabraPista + " (" + cantidadPista + ")",
+                                    android.widget.Toast.LENGTH_LONG).show();
+
+                            android.util.Log.d("WS_PISTA", "Pista activa registrada, idTurno: " + idTurnoActual);
+                        });
+
+                    } else {
+                        // Si la pista viene null, leemos el turno general (si existe)
+                        idTurnoActual = json.optInt("id_turno", idTurnoActual);
+                    }
+
+// 2. Extraemos los votos actuales (si viene null, creamos un array vacío para evitar crashes)
+                    org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
+                    if (votosArray == null) votosArray = new org.json.JSONArray();
+
+// 3. Pasamos AMBOS arrays a nuestro método de pintar
+                    if (json.has("tablero")) {
+                        JSONObject tableroJson = null;
+                        try {
+                            tableroJson = json.getJSONObject("tablero");
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                        if (tableroJson.has("cartas")) {
+                            org.json.JSONArray tableroArray = null;
+                            try {
+                                tableroArray = tableroJson.getJSONArray("cartas");
+                            } catch (JSONException e) {
+                                throw new RuntimeException(e);
+                            }
+                            pintarTablero(tableroArray, votosArray); // ¡Importante pasar los votos aquí!
                         }
                     }
 
-                    // 3. DETECTAR EL FINAL DE LA MISIÓN
                     if ("FINALIZADA".equalsIgnoreCase(estado)) {
                         android.util.Log.d("WS_TABLERO", "🏁 ¡La partida ha terminado!");
-                        // Mostrar diálogo de victoria/derrota
-                        // Toast.makeText(PartidaActivity.this, "¡Partida finalizada!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(PartidaActivity.this, "¡Partida finalizada!", Toast.LENGTH_LONG).show();
                     }
                 });
 
@@ -145,10 +300,12 @@ public class PartidaActivity extends AppCompatActivity {
             android.util.Log.e("WS_TABLERO", "❌ Interferencia en el radar del tablero", throwable);
         });
     }
+
     private void obtenerEstadoCompletoDePartida() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        // Reemplaza esto por tu endpoint real que devuelva los datos de la partida
-        String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual;
+
+        // ⚠️ CORRECCIÓN: Añadimos "/estado" al final de la URL según tu JuegoController
+        String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/estado";
 
         com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
         String token = tokenManager.getToken();
@@ -170,18 +327,91 @@ public class PartidaActivity extends AppCompatActivity {
                     String jsonCrudo = response.body().string();
                     try {
                         org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
-                        // Aquí puedes extraer el array de "jugadores", de quién es el "turno_actual", etc.
-                        android.util.Log.d("API_PARTIDA", "✅ Datos completos recuperados: " + json.toString());
+                        android.util.Log.d("API_PARTIDA", "✅ Datos completos recuperados: " + jsonCrudo);
 
-                        // Si extraes datos para actualizar la interfaz, recuerda usar:
-                        // runOnUiThread(() -> { ... });
+                        // Busca esta parte en tu PartidaActivity.java y sustitúyela:
+
+                        if (json.has("pista_actual") && !json.isNull("pista_actual")) {
+                            org.json.JSONObject pistaObj = json.getJSONObject("pista_actual");
+
+                            // Guardamos el ID del turno para poder votar luego
+                            idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+
+                            // Extraemos los datos de la pista
+                            palabraPista = pistaObj.optString("palabra", "");
+                            cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0)); // Cubrimos ambas opciones
+
+                            // ¡Avisamos a los jugadores visualmente!
+                            runOnUiThread(() -> {
+                                // Puedes ponerlo en un TextView que tengas arriba en el tablero
+                                // tvPistaActual.setText("PISTA: " + palabraPista.toUpperCase() + " [" + cantidadPista + "]");
+
+                                android.widget.Toast.makeText(PartidaActivity.this,
+                                        "📢 Nueva pista recibida: " + palabraPista + " (" + cantidadPista + ")",
+                                        android.widget.Toast.LENGTH_LONG).show();
+
+                                android.util.Log.d("WS_PISTA", "Pista activa registrada, idTurno: " + idTurnoActual);
+                            });
+
+                        } else {
+                            // Si la pista viene null, leemos el turno general (si existe)
+                            idTurnoActual = json.optInt("id_turno", idTurnoActual);
+                        }
+
+// 2. Extraemos los votos actuales (si viene null, creamos un array vacío para evitar crashes)
+                        org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
+                        if (votosArray == null) votosArray = new org.json.JSONArray();
+
+// 3. Pasamos AMBOS arrays a nuestro método de pintar
+                        if (json.has("tablero")) {
+                            org.json.JSONObject tableroJson = json.getJSONObject("tablero");
+                            if (tableroJson.has("cartas")) {
+                                org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
+                                pintarTablero(tableroArray, votosArray); // ¡Importante pasar los votos aquí!
+                            }
+                        }
 
                     } catch (Exception e) {
                         android.util.Log.e("API_PARTIDA", "Error procesando JSON de la partida", e);
                     }
+                } else {
+                    android.util.Log.e("API_PARTIDA", "⚠️ Error del servidor: " + response.code());
                 }
             }
         });
+    }
+
+
+    private void enviarVoto(int idCartaTablero) {
+        // Seguridad: Lideres y Jefes no votan en el campo
+        if (JEFE_STRING.equalsIgnoreCase(miRol)) {
+            android.widget.Toast.makeText(this, "Solo los Agentes de campo pueden votar.", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (idTurnoActual == -1) {
+            android.widget.Toast.makeText(this, "Aún no hay una pista activa. Espera a tu Jefe.", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Creamos el JSON exacto que espera tu VotarPayload
+            org.json.JSONObject payload = new org.json.JSONObject();
+            payload.put("idCartaTablero", idCartaTablero);
+            payload.put("idTurno", idTurnoActual);
+
+            // La ruta mapeada en tu @MessageMapping
+            String destinoTopic = "/app/partidas/" + idPartidaActual + "/votar";
+
+            stompClient.send(destinoTopic, payload.toString()).subscribe(() -> {
+                android.util.Log.d("WS_VOTO", "Voto enviado correctamente a la carta: " + idCartaTablero);
+            }, throwable -> {
+                android.util.Log.e("WS_VOTO", "Error enviando el voto", throwable);
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void conectarWebSocket() {
         // Si ya está conectado, no hacemos nada
@@ -256,9 +486,9 @@ public class PartidaActivity extends AppCompatActivity {
     // MÉTODO PARA APLICAR EL ROL
     // ==========================================
     private void aplicarRol() {
-        if (miRol.equals("Jefe")) {
+        if (miRol.equals(JEFE_STRING)) {
             // Si es el Jefe:
-            tvMiRol.setText("Tu rol: Jefe de espionaje");
+            tvMiRol.setText("Tu rol: " + JEFE_STRING);
 
             // Le ponemos un icono de "Lápiz/Editar" porque él escribe la pista
             iconoBtnAlerta.setImageResource(R.drawable.ic_anadir_pista);
@@ -266,15 +496,15 @@ public class PartidaActivity extends AppCompatActivity {
             // Le damos permiso para abrir el cuadro de enviar pista
             btnAlerta.setOnClickListener(v -> mostrarDialogoPistaJefe());
 
-        } else if (miRol.equals("Agente")) {
+        } else if (miRol.equals(AGENTE_STRING)) {
             // Si es un Agente de Campo:
-            tvMiRol.setText("Tu rol: Agente de campo");
+            tvMiRol.setText("Tu rol: " + AGENTE_STRING);
 
             // Le ponemos un icono de "Información/Lupa" porque él busca las palabras
             iconoBtnAlerta.setImageResource(android.R.drawable.ic_menu_view); // O ic_dialog_info
 
             // El agente no envía pistas, así que le mostramos un mensaje distinto
-            btnAlerta.setOnClickListener(v -> android.widget.Toast.makeText(this, "Esperando a que el Jefe dé una pista...", android.widget.Toast.LENGTH_SHORT).show());
+            btnAlerta.setOnClickListener(v -> mostrarDialogoPistaJefe());
         }
     }
     private void configurarBotones() {
@@ -380,46 +610,56 @@ public class PartidaActivity extends AppCompatActivity {
 
         // 3. Lógica de cerrar la ventana
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
+        if(miRol.equals(JEFE_STRING)){
+            btnEnviar.setOnClickListener(v -> {
+                String palabraEscrita = inputPalabra.getText().toString().trim();
+                String numeroEscrito = inputNumero.getText().toString().trim();
 
-        // 4. Lógica de enviar la pista
-        btnEnviar.setOnClickListener(v -> {
-            String palabraEscrita = inputPalabra.getText().toString().trim();
-            String numeroEscrito = inputNumero.getText().toString().trim();
-
-            // Comprobamos que no haya dejado ningún hueco en blanco
-            if (!palabraEscrita.isEmpty() && !numeroEscrito.isEmpty()) {
+                // Comprobamos que no haya dejado ningún hueco en blanco
+                if (!palabraEscrita.isEmpty() && !numeroEscrito.isEmpty()) {
+                    // Dentro de btnEnviar.setOnClickListener...
+                    btnEnviar.setEnabled(false);
                     try {
-                        // 1. Empaquetamos la pista en un JSON como espera el servidor
                         JSONObject jsonPista = new JSONObject();
-                        jsonPista.put("palabra", palabraEscrita);
-                        jsonPista.put("numero", Integer.parseInt(numeroEscrito)); // Convertimos a número real
+                        jsonPista.put("palabraPista", palabraEscrita);
+                        jsonPista.put("pistaNumero", Integer.parseInt(numeroEscrito));
 
-                        // 2. Disparamos la pista por el canal de STOMP
-                        // (Asegúrate de que la ruta /app/partidas/... coincide con el @MessageMapping de tu backend)
                         String destino = "/app/partidas/" + idPartidaActual + "/pista";
-                        stompClient.send(destino, jsonPista.toString()).subscribe(() -> {
 
-                            // Si se envía bien, cerramos la ventana y avisamos
+                        // CREAMOS LAS CABECERAS
+                        List<StompHeader> headers = new ArrayList<>();
+                        headers.add(new StompHeader(StompHeader.DESTINATION, destino));
+                        headers.add(new StompHeader("content-type", "application/json")); // <--- ESTO ES LA CLAVE
+
+                        // ENVIAMOS UN STOMP_MESSAGE EN LUGAR DE UN SIMPLE STRING
+                        stompClient.send(new StompMessage(
+                                StompCommand.SEND,
+                                headers,
+                                jsonPista.toString()
+                        )).subscribe(() -> {
                             runOnUiThread(() -> {
                                 dialog.dismiss();
-                                Toast.makeText(PartidaActivity.this, "¡Pista transmitida con éxito!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(PartidaActivity.this, "Pista enviada", Toast.LENGTH_SHORT).show();
                             });
-
                         }, throwable -> {
-                            android.util.Log.e("WS_PISTA", "Error enviando la pista", throwable);
-                            runOnUiThread(() -> Toast.makeText(PartidaActivity.this, "Error de radio. La pista no llegó.", Toast.LENGTH_SHORT).show());
+                            Log.e("WS_ERROR", "Error al enviar", throwable);
                         });
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(this, "Error formateando la pista", Toast.LENGTH_SHORT).show();
                     }
 
-                dialog.dismiss(); // Cerramos el cuadro al enviar
-            } else {
-                android.widget.Toast.makeText(this, "Por favor, rellena la palabra y el número.", android.widget.Toast.LENGTH_SHORT).show();
-            }
-        });
+                    dialog.dismiss(); // Cerramos el cuadro al enviar
+                } else {
+                    android.widget.Toast.makeText(this, "Por favor, rellena la palabra y el número.", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else{
+            inputPalabra.setText(palabraPista);
+            inputNumero.setText(cantidadPista);
+        }
+        // 4. Lógica de enviar la pista
+
 
         dialog.show();
     }
@@ -454,7 +694,7 @@ public class PartidaActivity extends AppCompatActivity {
         View zonaDeEscribir = (View) inputMensaje.getParent();
 
         // 4. Lógica de roles
-        if (miRol.equals("Jefe")) {
+        if (miRol.equals(JEFE_STRING)) {
             zonaDeEscribir.setVisibility(View.GONE);
         } else {
             zonaDeEscribir.setVisibility(View.VISIBLE);
@@ -619,7 +859,7 @@ public class PartidaActivity extends AppCompatActivity {
                 boolean estaSeleccionada = (boolean) cartaContenedor.getTag();
 
                 // 1. Bloqueo al Jefe
-                if (miRol.equals("Jefe")) {
+                if (miRol.equals(JEFE_STRING)) {
                     Toast.makeText(this, "Como Jefe, no puedes seleccionar cartas.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -866,10 +1106,11 @@ public class PartidaActivity extends AppCompatActivity {
                             // Actualizamos el texto en la pantalla si tienes el TextView
                             if (tvMiRol != null) {
                                 if (miRol.equals("agente")) {
-                                    miRol = "Agente de Campo";
-                                } else if (miRol.equals("jefe")) {
-                                    miRol = "Jefe de Espionaje";
+                                    miRol = AGENTE_STRING;
+                                } else if (miRol.equals("lider")) {
+                                    miRol = JEFE_STRING;
                                 }
+                                aplicarRol();
                                 tvMiRol.setText("Tu rol: " + miRol);
                             }
                         });
