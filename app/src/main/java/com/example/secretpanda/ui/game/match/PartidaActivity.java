@@ -454,7 +454,7 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
 
-        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase();
+        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat";
 
         stompClient.topic(topicDestino).subscribe(stompMessage -> {
             String jsonCrudo = stompMessage.getPayload();
@@ -466,12 +466,16 @@ public class PartidaActivity extends AppCompatActivity {
                     String autor = msgJson.optString("tag", "Agente");
 
                     boolean esMio = (miPropioIdGoogle != null && miPropioIdGoogle.equals(idJugadorMensaje));
-                    if (esMio) autor = "Yo";
+                    if (esMio) {
+                        return; // <--- AÑADE ESTO: Si el mensaje es mío, lo ignoro porque ya lo pinté al pulsar el botón
+                    }
 
                     if (contenedorMensajesActual != null) {
                         agregarMensajeAlChat(contenedorMensajesActual, autor, textoDelMensaje, esMio);
                         contenedorMensajesActual.requestLayout();
                         contenedorMensajesActual.invalidate();
+                        android.widget.ScrollView scroll = findViewById(R.id.scroll_chat);
+                        if(scroll != null) scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
                     }
                 } catch (Exception e) {
                     android.util.Log.e("WS_CHAT", "Error desencriptando", e);
@@ -707,20 +711,32 @@ public class PartidaActivity extends AppCompatActivity {
             String textoEscrito = inputMensaje.getText().toString().trim();
 
             if (!textoEscrito.isEmpty()) {
-                // Lo pintamos en MI pantalla
+                // 1. Pintamos el mensaje en NUESTRA pantalla inmediatamente
+                agregarMensajeAlChat(this.contenedorMensajesActual, "Yo", textoEscrito, true);
+                inputMensaje.setText(""); // Vaciamos la caja de texto
 
-                //agregarMensajeAlChat(this.contenedorMensajesActual, "Yo", textoEscrito, true);
-
-                // Disparamos al servidor
+                // 2. Disparamos al servidor CON CABECERAS JSON
                 try {
                     JSONObject jsonMensaje = new JSONObject();
                     jsonMensaje.put("mensaje", textoEscrito);
-                    stompClient.send("/app/partidas/" + idPartidaActual + "/chat", jsonMensaje.toString()).subscribe();
+
+                    String destino = "/app/partidas/" + idPartidaActual + "/chat";
+
+                    java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
+                    headers.add(new ua.naiksoftware.stomp.dto.StompHeader(ua.naiksoftware.stomp.dto.StompHeader.DESTINATION, destino));
+                    headers.add(new ua.naiksoftware.stomp.dto.StompHeader("content-type", "application/json"));
+
+                    stompClient.send(new ua.naiksoftware.stomp.dto.StompMessage(
+                            ua.naiksoftware.stomp.dto.StompCommand.SEND,
+                            headers,
+                            jsonMensaje.toString()
+                    )).subscribe();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                inputMensaje.setText("");
+                // 3. Hacemos scroll hacia abajo
                 scrollChat.post(() -> scrollChat.fullScroll(View.FOCUS_DOWN));
             }
         });
@@ -732,6 +748,7 @@ public class PartidaActivity extends AppCompatActivity {
         // 7. Mostramos el diálogo (Y hemos borrado toda la morralla del AlertDialog)
         dialog.show();
     }
+
 
     /**
      * Este método "fabrica" un bloque de mensaje como si fuera un Lego
