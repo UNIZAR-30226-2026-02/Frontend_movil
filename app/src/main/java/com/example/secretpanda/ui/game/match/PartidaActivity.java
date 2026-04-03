@@ -233,7 +233,7 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void suscribirseAlEstadoDeLaPartida() {
-        String destinoTopic = "/topic/partidas/" + idPartidaActual + "/estado";
+        String destinoTopic = "/queue/partidas/" + idPartidaActual + "/estado";
         android.util.Log.d("WS_TABLERO", "📡 Conectando radar al canal: " + destinoTopic);
 
         stompClient.topic(destinoTopic).subscribe(stompMessage -> {
