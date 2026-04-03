@@ -88,7 +88,7 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
 
-        String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
+        /*String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
         stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, url);
 
         stompClient.connect();
@@ -109,7 +109,25 @@ public class PartidaActivity extends AppCompatActivity {
         //mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : la Muerte.", "Perdistes");
         //mostrarDialogoFinPartida("Victoria", "Has encontrado al asesino", 10000, 20);
         configurarBotones();
-        configurarTablero();
+        configurarTablero();*/
+
+        conectarWebSocket();
+
+        suscribirseAlEstadoDeLaPartida();
+        suscribirseAlChat();
+        escucharPistaDelJefe();
+
+        obtenerEstadoCompletoDePartida();
+
+        btnAbandonar = findViewById(R.id.btn_abandonar);
+        btnAlerta = findViewById(R.id.btn_alerta);
+        btnChat = findViewById(R.id.btn_chat);
+        gridTablero = findViewById(R.id.grid_tablero);
+        notificacionChat = findViewById(R.id.notificacion_chat);
+        tvMiRol = findViewById(R.id.tv_mi_rol);
+        iconoBtnAlerta = findViewById(R.id.icono_btn_alerta);
+
+        configurarBotones();
     }
 
     // Centralizamos el pintado para no repetir código
@@ -398,12 +416,18 @@ public class PartidaActivity extends AppCompatActivity {
             // Creamos el JSON exacto que espera tu VotarPayload
             org.json.JSONObject payload = new org.json.JSONObject();
             payload.put("idCartaTablero", idCartaTablero);
-            payload.put("idTurno", idTurnoActual);
 
             // La ruta mapeada en tu @MessageMapping
             String destinoTopic = "/app/partidas/" + idPartidaActual + "/votar";
-
-            stompClient.send(destinoTopic, payload.toString()).subscribe(() -> {
+            //cabeceras JSON
+            java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
+            headers.add(new ua.naiksoftware.stomp.dto.StompHeader(ua.naiksoftware.stomp.dto.StompHeader.DESTINATION, destinoTopic));
+            headers.add(new ua.naiksoftware.stomp.dto.StompHeader("content-type", "application/json"));
+            stompClient.send(new ua.naiksoftware.stomp.dto.StompMessage(
+                    ua.naiksoftware.stomp.dto.StompCommand.SEND,
+                    headers,
+                    payload.toString()
+            )).subscribe(() -> {
                 android.util.Log.d("WS_VOTO", "Voto enviado correctamente a la carta: " + idCartaTablero);
             }, throwable -> {
                 android.util.Log.e("WS_VOTO", "Error enviando el voto", throwable);
@@ -454,7 +478,7 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
 
-        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat";
+        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase();
 
         stompClient.topic(topicDestino).subscribe(stompMessage -> {
             String jsonCrudo = stompMessage.getPayload();
@@ -465,17 +489,26 @@ public class PartidaActivity extends AppCompatActivity {
                     String idJugadorMensaje = msgJson.optString("idJugador", msgJson.optString("id_jugador", ""));
                     String autor = msgJson.optString("tag", "Agente");
 
+                    boolean esValido = msgJson.optBoolean("esValido", msgJson.optBoolean("esVálido", true));
+                    if (!esValido) {
+                        return; // Si no es válido, cortamos aquí y no lo pintamos
+                    }
                     boolean esMio = (miPropioIdGoogle != null && miPropioIdGoogle.equals(idJugadorMensaje));
                     if (esMio) {
-                        return; // <--- AÑADE ESTO: Si el mensaje es mío, lo ignoro porque ya lo pinté al pulsar el botón
+                        return;
                     }
 
-                    if (contenedorMensajesActual != null) {
+                    if (contenedorMensajesActual != null && contenedorMensajesActual.isShown()) {
                         agregarMensajeAlChat(contenedorMensajesActual, autor, textoDelMensaje, esMio);
-                        contenedorMensajesActual.requestLayout();
-                        contenedorMensajesActual.invalidate();
+                        //contenedorMensajesActual.requestLayout();
+                        //contenedorMensajesActual.invalidate();
                         android.widget.ScrollView scroll = findViewById(R.id.scroll_chat);
                         if(scroll != null) scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
+                    }
+                    else {
+                        if (notificacionChat != null) {
+                            notificacionChat.setVisibility(View.VISIBLE);
+                        }
                     }
                 } catch (Exception e) {
                     android.util.Log.e("WS_CHAT", "Error desencriptando", e);
@@ -719,7 +752,7 @@ public class PartidaActivity extends AppCompatActivity {
                 try {
                     JSONObject jsonMensaje = new JSONObject();
                     jsonMensaje.put("mensaje", textoEscrito);
-
+                    jsonMensaje.put("id_jugador_partida", 1);
                     String destino = "/app/partidas/" + idPartidaActual + "/chat";
 
                     java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
@@ -1220,5 +1253,34 @@ public class PartidaActivity extends AppCompatActivity {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
+    }
+
+    private void escucharPistaDelJefe() {
+        if (stompClient == null) return;
+
+        // La ruta a la que el backend grita la pista a los agentes
+        String topicDestino = "/topic/partidas/" + idPartidaActual + "/pista";
+
+        stompClient.topic(topicDestino).subscribe(stompMessage -> {
+            String jsonCrudo = stompMessage.getPayload();
+            runOnUiThread(() -> {
+                try {
+                    JSONObject jsonPista = new JSONObject(jsonCrudo);
+
+                    palabraPista = jsonPista.optString("palabraPista", "");
+                    cantidadPista = jsonPista.optInt("pistaNumero", 0);
+
+                    // Mostramos la alerta gigante en la pantalla del Agente
+                    android.widget.Toast.makeText(PartidaActivity.this,
+                            " NUEVA PISTA DEL JEFE: " + palabraPista.toUpperCase() + " (" + cantidadPista + ")",
+                            android.widget.Toast.LENGTH_LONG).show();
+
+                } catch (Exception e) {
+                    android.util.Log.e("WS_PISTA", "Error al descifrar la pista del jefe", e);
+                }
+            });
+        }, throwable -> {
+            android.util.Log.e("WS_PISTA", "Error suscribiéndose a las pistas", throwable);
+        });
     }
 }
