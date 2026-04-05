@@ -1,5 +1,6 @@
 package com.example.secretpanda.ui.game.match;
 
+import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -45,7 +46,7 @@ public class PartidaActivity extends AppCompatActivity {
     private TextView notificacionChat;
     private TextView tvMiRol;
     private android.widget.ImageView iconoBtnAlerta;
-
+    private boolean hayPista = false;
     private final String AGENTE_STRING = "Agente de Campo";
     private final String JEFE_STRING = "Jefe de Espionaje";
 
@@ -55,6 +56,9 @@ public class PartidaActivity extends AppCompatActivity {
     private String palabraPista = "";
     private int cantidadPista = 0;
 
+    private List<JSONObject> historialChat = new ArrayList<>();
+    private String palabraPistaJefe = "";
+    private String numeroPistaJefe = "";
     private StompClient stompClient;
     private int idPartidaActual;
     private String miEquipo;
@@ -88,7 +92,7 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
 
-        String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
+        /*String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
         stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, url);
 
         stompClient.connect();
@@ -109,7 +113,25 @@ public class PartidaActivity extends AppCompatActivity {
         //mostrarDialogoResultadoVotacion("Carta más votada (1/3)", "La carta es : la Muerte.", "Perdistes");
         //mostrarDialogoFinPartida("Victoria", "Has encontrado al asesino", 10000, 20);
         configurarBotones();
-        configurarTablero();
+        configurarTablero();*/
+
+        conectarWebSocket();
+
+        suscribirseAlEstadoDeLaPartida();
+        suscribirseAlChat();
+        suscribirseAPista();
+
+        obtenerEstadoCompletoDePartida();
+
+        btnAbandonar = findViewById(R.id.btn_abandonar);
+        btnAlerta = findViewById(R.id.btn_alerta);
+        btnChat = findViewById(R.id.btn_chat);
+        gridTablero = findViewById(R.id.grid_tablero);
+        notificacionChat = findViewById(R.id.notificacion_chat);
+        tvMiRol = findViewById(R.id.tv_mi_rol);
+        iconoBtnAlerta = findViewById(R.id.icono_btn_alerta);
+
+        configurarBotones();
     }
 
     // Centralizamos el pintado para no repetir código
@@ -215,7 +237,7 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void suscribirseAlEstadoDeLaPartida() {
-        String destinoTopic = "/topic/partidas/" + idPartidaActual + "/estado";
+        String destinoTopic = "user/queue/partidas/" + idPartidaActual + "/estado";
         android.util.Log.d("WS_TABLERO", "📡 Conectando radar al canal: " + destinoTopic);
 
         stompClient.topic(destinoTopic).subscribe(stompMessage -> {
@@ -389,7 +411,7 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
 
-        if (idTurnoActual == -1) {
+        if (hayPista == false) {
             android.widget.Toast.makeText(this, "Aún no hay una pista activa. Espera a tu Jefe.", android.widget.Toast.LENGTH_SHORT).show();
             return;
         }
@@ -399,11 +421,17 @@ public class PartidaActivity extends AppCompatActivity {
             org.json.JSONObject payload = new org.json.JSONObject();
             payload.put("idCartaTablero", idCartaTablero);
             payload.put("idTurno", idTurnoActual);
-
             // La ruta mapeada en tu @MessageMapping
             String destinoTopic = "/app/partidas/" + idPartidaActual + "/votar";
-
-            stompClient.send(destinoTopic, payload.toString()).subscribe(() -> {
+            //cabeceras JSON
+            java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
+            headers.add(new ua.naiksoftware.stomp.dto.StompHeader(ua.naiksoftware.stomp.dto.StompHeader.DESTINATION, destinoTopic));
+            headers.add(new ua.naiksoftware.stomp.dto.StompHeader("content-type", "application/json"));
+            stompClient.send(new ua.naiksoftware.stomp.dto.StompMessage(
+                    ua.naiksoftware.stomp.dto.StompCommand.SEND,
+                    headers,
+                    payload.toString()
+            )).subscribe(() -> {
                 android.util.Log.d("WS_VOTO", "Voto enviado correctamente a la carta: " + idCartaTablero);
             }, throwable -> {
                 android.util.Log.e("WS_VOTO", "Error enviando el voto", throwable);
@@ -448,41 +476,37 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void suscribirseAlChat() {
-        // Validamos que tengamos la info necesaria
-        if (stompClient == null || !stompClient.isConnected() || miEquipo == null) {
-            android.util.Log.e("WS_CHAT", "No se puede suscribir al chat aún.");
-            return;
-        }
+        if (miEquipo == null) return;
 
-        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat";
+        String topicDestino = "/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase();
 
         stompClient.topic(topicDestino).subscribe(stompMessage -> {
             String jsonCrudo = stompMessage.getPayload();
             runOnUiThread(() -> {
+                // Dentro de suscribirseAlChat -> runOnUiThread
                 try {
-                    org.json.JSONObject msgJson = new org.json.JSONObject(jsonCrudo);
-                    String textoDelMensaje = msgJson.getString("mensaje");
-                    String idJugadorMensaje = msgJson.optString("idJugador", msgJson.optString("id_jugador", ""));
-                    String autor = msgJson.optString("tag", "Agente");
+                    JSONObject msgJson = new JSONObject(jsonCrudo);
 
-                    boolean esMio = (miPropioIdGoogle != null && miPropioIdGoogle.equals(idJugadorMensaje));
-                    if (esMio) {
-                        return; // <--- AÑADE ESTO: Si el mensaje es mío, lo ignoro porque ya lo pinté al pulsar el botón
+                    // USA ESTAS CLAVES (coinciden con tu log)
+                    String idJugadorMensaje = msgJson.getString("id_jugador"); // Antes quizás tenías idJugador
+                    String textoDelMensaje = msgJson.getString("mensaje");
+                    String autor = msgJson.getString("tag");
+
+                    historialChat.add(msgJson);
+                    // Filtro para no duplicar mi propio mensaje
+                    if (miPropioIdGoogle != null && miPropioIdGoogle.equals(idJugadorMensaje)) {
+                        return;
                     }
 
                     if (contenedorMensajesActual != null) {
-                        agregarMensajeAlChat(contenedorMensajesActual, autor, textoDelMensaje, esMio);
-                        contenedorMensajesActual.requestLayout();
-                        contenedorMensajesActual.invalidate();
-                        android.widget.ScrollView scroll = findViewById(R.id.scroll_chat);
-                        if(scroll != null) scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
+                        agregarMensajeAlChat(contenedorMensajesActual, autor, textoDelMensaje, false);
                     }
                 } catch (Exception e) {
-                    android.util.Log.e("WS_CHAT", "Error desencriptando", e);
+                    Log.e("CHAT_ERROR", "Error al leer: " + jsonCrudo, e);
                 }
             });
         }, throwable -> {
-            android.util.Log.e("WS_CHAT", "Error suscribiéndose al chat", throwable);
+            Log.e("WS_CHAT", "Error en suscripción", throwable);
         });
     }
 
@@ -625,8 +649,8 @@ public class PartidaActivity extends AppCompatActivity {
                     btnEnviar.setEnabled(false);
                     try {
                         JSONObject jsonPista = new JSONObject();
-                        jsonPista.put("palabraPista", palabraEscrita);
-                        jsonPista.put("pistaNumero", Integer.parseInt(numeroEscrito));
+                        jsonPista.put("palabra_pista", palabraEscrita);
+                        jsonPista.put("pista_numero", Integer.parseInt(numeroEscrito));
 
                         String destino = "/app/partidas/" + idPartidaActual + "/pista";
 
@@ -659,8 +683,8 @@ public class PartidaActivity extends AppCompatActivity {
                 }
             });
         } else{
-            inputPalabra.setText(palabraPista);
-            inputNumero.setText(cantidadPista);
+            inputPalabra.setText(palabraPistaJefe);
+            inputNumero.setText(numeroPistaJefe);
         }
         // 4. Lógica de enviar la pista
 
@@ -704,6 +728,22 @@ public class PartidaActivity extends AppCompatActivity {
             zonaDeEscribir.setVisibility(View.VISIBLE);
         }
 
+        for (int i = 0; i < historialChat.size(); i++) {
+            try {
+                android.util.Log.d("CHAT_DEBUG", "Dibujando mensaje número: " + i);
+                org.json.JSONObject msgJson = historialChat.get(i);
+                String idJugadorMensaje = msgJson.getString("id_jugador");
+                String texto = msgJson.getString("mensaje");
+                String autor = msgJson.optString("tag", "Jugador");
+
+                boolean esMio = idJugadorMensaje.equals(miPropioIdGoogle);
+
+                if (esMio) {
+                    autor = "Yo";
+                }
+                agregarMensajeAlChat(contenedorMensajesActual, autor, texto, esMio);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
         // 5. Botones y acciones
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
@@ -719,7 +759,7 @@ public class PartidaActivity extends AppCompatActivity {
                 try {
                     JSONObject jsonMensaje = new JSONObject();
                     jsonMensaje.put("mensaje", textoEscrito);
-
+                    //jsonMensaje.put("id_jugador_partida", 1);
                     String destino = "/app/partidas/" + idPartidaActual + "/chat";
 
                     java.util.List<ua.naiksoftware.stomp.dto.StompHeader> headers = new java.util.ArrayList<>();
@@ -743,7 +783,7 @@ public class PartidaActivity extends AppCompatActivity {
 
         // 6. ¡LLAMAMOS AL HISTORIAL!
         // Ahora contenedorMensajesActual apunta a la ventana visible de verdad.
-        cargarHistorialChat();
+        //cargarHistorialChat();
 
         // 7. Mostramos el diálogo (Y hemos borrado toda la morralla del AlertDialog)
         dialog.show();
@@ -1013,65 +1053,6 @@ public class PartidaActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void cargarHistorialChat() {
-        // Verificamos qué valores tienen las variables antes de disparar
-        android.util.Log.d("CHAT_DEBUG", "Cargando historial para Partida: " + idPartidaActual + " Equipo: " + miEquipo);
-
-        new Thread(() -> {
-            try {
-                String urlStr = "http://10.0.2.2:8080/app/partidas/" + idPartidaActual + "/chat";
-                java.net.URL url = new java.net.URL(urlStr);
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                com.example.secretpanda.data.TokenManager tm = new com.example.secretpanda.data.TokenManager(this);
-                conn.setRequestProperty("Authorization", "Bearer " + tm.getToken());
-
-                int responseCode = conn.getResponseCode();
-                android.util.Log.d("CHAT_DEBUG", "Código respuesta servidor: " + responseCode);
-
-                if (responseCode == 200) {
-                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) response.append(line);
-
-                    android.util.Log.d("CHAT_DEBUG", "JSON recibido: " + response.toString());
-
-                    org.json.JSONArray historialArray = new org.json.JSONArray(response.toString());
-
-                    runOnUiThread(() -> {
-                        if (contenedorMensajesActual != null) {
-                            contenedorMensajesActual.removeAllViews();
-                            for (int i = 0; i < historialArray.length(); i++) {
-                                try {
-                                    android.util.Log.d("CHAT_DEBUG", "Dibujando mensaje número: " + i);
-                                    org.json.JSONObject msgJson = historialArray.getJSONObject(i);
-                                    String miPropioId = "118253860678694957644"; // Usamos msgJson para leer los datos
-                                    String idJugadorMensaje = msgJson.getString("id_jugador");
-                                    String texto = msgJson.getString("mensaje");
-                                    String autor = msgJson.optString("tag", "Jugador");
-
-                                    boolean esMio = idJugadorMensaje.equals(miPropioId);
-
-                                    if (esMio) {
-                                        autor = "Yo";
-                                    }
-                                    agregarMensajeAlChat(contenedorMensajesActual, autor, texto, esMio);
-                                } catch (Exception e) { e.printStackTrace(); }
-                            }
-                        } else {
-                            android.util.Log.e("CHAT_DEBUG", "¡ERROR! contenedorMensajesActual es NULL");
-                        }
-                        contenedorMensajesActual.requestLayout();
-                        contenedorMensajesActual.invalidate();
-                        android.util.Log.d("CHAT_DEBUG", "Refresco de vista solicitado");
-                    });
-                }
-            } catch (Exception e) {
-                android.util.Log.e("CHAT_DEBUG", "Error fatal: " + e.getMessage());
-            }
-        }).start();
-    }
-
     // Llama a este método en tu onCreate()
     private void obtenerMiRolDelServidor() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
@@ -1220,5 +1201,31 @@ public class PartidaActivity extends AppCompatActivity {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
+    }
+
+    private void suscribirseAPista() {
+        String topicPista = "/topic/partidas/" + idPartidaActual + "/pista";
+
+        stompClient.topic(topicPista).subscribe(stompMessage -> {
+            String payload = stompMessage.getPayload();
+            runOnUiThread(() -> {
+                try {
+                    JSONObject json = new JSONObject(payload);
+
+                    // CAMBIA ESTAS LÍNEAS PARA COINCIDIR CON EL LOG:
+                    String palabra = json.getString("palabra_pista"); // Antes tenías palabraPista
+                    int cantidad = json.getInt("pista_numero");      // Antes tenías pistaNumero
+
+                    hayPista = true;
+                    // Opcional: si necesitas el equipo
+                    String equipoLider = json.optString("equipo_lider", "");
+                    numeroPistaJefe = String.valueOf(cantidad);
+                    palabraPistaJefe = palabra;
+
+                } catch (Exception e) {
+                    Log.e("WS_PISTA", "Error al leer el JSON de la pista: " + payload, e);
+                }
+            });
+        });
     }
 }
