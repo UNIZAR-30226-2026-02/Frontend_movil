@@ -49,8 +49,10 @@ public class PartidaActivity extends AppCompatActivity {
     private boolean hayPista = false;
     private final String AGENTE_STRING = "Agente de Campo";
     private final String JEFE_STRING = "Jefe de Espionaje";
-
+    private final String ROJO_STRING = "rojo";
+    private final String AZUL_STRING = "azul";
     private String miRol = AGENTE_STRING;
+    private View turnoColor;
     private android.widget.ImageView[] imagenesTablero;
 
     private String palabraPista = "";
@@ -91,6 +93,7 @@ public class PartidaActivity extends AppCompatActivity {
             finish(); // Cerramos la pantalla porque está rota
             return;
         }
+        turnoColor = findViewById(R.id.vista_turno_actual);
 
         /*String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
         stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, url);
@@ -247,8 +250,14 @@ public class PartidaActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     String estado = json.optString("estado", "");
-                    String turnoActual = json.optString("turno_actual", "");
+                    //idTurnoActual = json.optString("turno_actual", "");
+                    String equipoTurno = json.optString("equipo_turno_actual", "");
 
+                    if(equipoTurno.equals(ROJO_STRING)){
+                        turnoColor.setBackgroundColor(Integer.parseInt("#9B3838"));
+                    }else{
+                        turnoColor.setBackgroundColor(Integer.parseInt("#38567A"));
+                    }
                     // ¡AQUÍ ESTÁ LA LLAMADA!
                     // Sustituye tu antigua comprobación por esta en AMBOS métodos:
                     // 1. Extraemos el ID del turno (normalmente viene dentro de la pista o en la raíz)
@@ -420,7 +429,6 @@ public class PartidaActivity extends AppCompatActivity {
             // Creamos el JSON exacto que espera tu VotarPayload
             org.json.JSONObject payload = new org.json.JSONObject();
             payload.put("idCartaTablero", idCartaTablero);
-            payload.put("idTurno", idTurnoActual);
             // La ruta mapeada en tu @MessageMapping
             String destinoTopic = "/app/partidas/" + idPartidaActual + "/votar";
             //cabeceras JSON
@@ -990,6 +998,7 @@ public class PartidaActivity extends AppCompatActivity {
         android.widget.TextView tvResultado = dialog.findViewById(R.id.tv_resultado_carta);
         android.widget.TextView tvConsecuencia = dialog.findViewById(R.id.tv_consecuencia_turno);
         View vistaCarta = dialog.findViewById(R.id.vista_carta_votada);
+
 
         // Actualizamos los textos con los parámetros que hayamos recibido
         tvEstado.setText(estado);

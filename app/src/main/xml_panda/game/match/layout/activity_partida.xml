@@ -141,6 +141,7 @@
                     android:textStyle="bold|italic" />
 
                 <View
+                    android:id="@+id/vista_turno_actual"
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_marginStart="8dp"

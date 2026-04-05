@@ -29,6 +29,8 @@ import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.customization.PersonalizacionAdapter;
 import com.example.secretpanda.ui.game.match.PartidaActivity;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +69,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private int maxJugadores = 8;
     private boolean esLider = false;
     private boolean esPrivada = false;
-
+    private int jugadoresAzul = 0;
+    private int jugadoresRojo = 0;
     private Dialog dialogoCarga;
 
     private StompClient stompClient;
@@ -90,7 +93,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
         // Recuperamos el ID real de la partida que nos ha dado el Backend
         idPartida = getIntent().getIntExtra("ID_PARTIDA", -1);
-        Log.d("API_LOBBY", "🔍 Verificando ID na Sala de Espera: " + idPartida);
+        //Log.d("API_LOBBY", "🔍 Verificando ID na Sala de Espera: " + idPartida);
         // Leemos quién somos nosotros (para luego saber nuestro rol)
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         if(miPropioIdGoogle == null) miPropioIdGoogle = "TuNombreDeUsuario";
@@ -118,7 +121,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         } else {
             layoutCodigoEntero.setVisibility(View.VISIBLE);
             String codigoRecibido = getIntent().getStringExtra("CODIGO_PARTIDA");
-            tvCodigoPartida.setText(codigoRecibido != null ? codigoRecibido : generarCodigoAleatorio());
+            tvCodigoPartida.setText(codigoRecibido);
         }
 
 
@@ -218,7 +221,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                         if (json.has("tiempoTurno")) {
                             int nuevoTiempo = json.getInt("tiempoTurno");
                             // Sustituye "tvTiempoSala" por el nombre real de tu TextView en la clase
-                            // if (tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempo + "s");
+                            if (tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempo + "s");
                             android.util.Log.d("WS_LOBBY", "Tiempo actualizado por el líder a: " + nuevoTiempo);
                         }
 
@@ -226,7 +229,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
                         if (json.has("maxJugadores")) {
                             int nuevoMaximo = json.getInt("maxJugadores");
                             // Aquí actualizas tu variable local o la UI
-                            // maxJugadores = nuevoMaximo;
+                            maxJugadores = nuevoMaximo;
+                            int jugadoresTotales = jugadoresAzul + jugadoresRojo;
+                            tvContadorTotal.setText(jugadoresTotales + "/" + maxJugadores);
                             android.util.Log.d("WS_LOBBY", "Max jugadores actualizado a: " + nuevoMaximo);
                         }
 
@@ -430,6 +435,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
             else contadorRojo++;
         }
 
+        jugadoresAzul = contadorAzul;
+        jugadoresRojo = contadorRojo;
+
         if (tvContadorAzul != null) tvContadorAzul.setText("Azul: " + contadorAzul + "/" + (maxJugadores/2));
         if (tvContadorRojo != null) tvContadorRojo.setText("Rojo: " + contadorRojo + "/" + (maxJugadores/2));
         if (tvContadorTotal != null) tvContadorTotal.setText(lista.size() + "/" + maxJugadores);
@@ -555,24 +563,44 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void cambiarTemaEnServidor(int idTemaNuevo) {
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put("id_tema", idTemaNuevo);
 
+            stompClient.send("/app/partida/" + idPartida + "/tema", payload.toString()).subscribe();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // Tu método del tiempo se queda exactamente como lo hiciste (¡estaba perfecto!)
+    /**
+     * Envía la nueva configuración de tiempo al servidor por WebSocket.
+     * @param nuevoTiempo El tiempo seleccionado (ej: 30, 60, 90, 120)
+     */
     private void cambiarTiempoTurnoEnBackend(int nuevoTiempo) {
-        if (stompClient != null && stompClient.isConnected()) {
-            try {
-                org.json.JSONObject payload = new org.json.JSONObject();
-                payload.put("tiempoEspera", nuevoTiempo);
-                String destino = "/app/partida/" + idPartida + "/tiempoTurno";
+        if (stompClient == null || !stompClient.isConnected()) {
+            Toast.makeText(this, "Error: No hay conexión con el servidor", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                stompClient.send(destino, payload.toString()).subscribe(() -> {
-                    android.util.Log.d("WS_TIEMPO", "Tiempo actualizado a " + nuevoTiempo);
-                }, throwable -> {
-                    android.util.Log.e("WS_TIEMPO", "Error al enviar el nuevo tiempo", throwable);
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            JSONObject payload = new JSONObject();
+            // CUIDADO: La clave debe llamarse exactamente "tiempo_espera" como espera tu backend
+            payload.put("tiempo_espera", nuevoTiempo);
+
+            // OJO: Fíjate que es "/app/partida/" (en singular), tal como lo tienes en el LobbyController
+            String destino = "/app/partida/" + idPartida + "/tiempoTurno";
+
+            stompClient.send(destino, payload.toString()).subscribe(() -> {
+                Log.d("LOBBY_AJUSTES", "Cambio de tiempo enviado correctamente: " + nuevoTiempo);
+            }, throwable -> {
+                Log.e("LOBBY_AJUSTES", "Error enviando cambio de tiempo", throwable);
+            });
+
+        } catch (Exception e) {
+            Log.e("LOBBY_AJUSTES", "Error creando el JSON del tiempo", e);
         }
     }
 

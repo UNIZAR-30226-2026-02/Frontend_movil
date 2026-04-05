@@ -146,7 +146,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
 
                             android.util.Log.w("CREAR_PARTIDA", "ID extraído en Android: " + idPartidaCreada);
 
-                            String codigoPartida = jsonObject.optString("codigoPartida", "");
+                            String codigoPartida = jsonObject.optString("codigo_partida", "");
 
                             // 🎙️ MICRÓFONO OCULTO: Imprimimos el ID extraído
                             android.util.Log.w("CREAR_PARTIDA", "ID extraído en Android: " + idPartidaCreada);
