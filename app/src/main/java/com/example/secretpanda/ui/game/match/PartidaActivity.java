@@ -441,7 +441,7 @@ public class PartidaActivity extends AppCompatActivity {
 
                             // RELOJ INICIAL (Por si el WS tarda en llegar)
 
-                            int tiempoRestante = json.optInt("segundosRestantes", json.optInt("tiempo_restante", -1));
+                            int tiempoRestante = json.optInt("segundos_restantes", json.optInt("tiempo_restante", -1));
                             if (tiempoRestante != -1 && tvTimer != null) {
                                 int minutos = tiempoRestante / 60;
                                 int secs = tiempoRestante % 60;
@@ -489,7 +489,7 @@ public class PartidaActivity extends AppCompatActivity {
         try {
             // Creamos el JSON exacto que espera tu VotarPayload
             org.json.JSONObject payload = new org.json.JSONObject();
-            payload.put("idCartaTablero", idCartaTablero);
+            payload.put("id_carta_tablero", idCartaTablero);
             // La ruta mapeada en tu @MessageMapping
             String destinoTopic = "/app/partidas/" + idPartidaActual + "/votar";
             //cabeceras JSON
@@ -725,8 +725,8 @@ public class PartidaActivity extends AppCompatActivity {
                     try {
                         JSONObject jsonPista = new JSONObject();
                         jsonPista.put("id_jugador_partida", 1);
-                        jsonPista.put("palabraPista", palabraEscrita);
-                        jsonPista.put("pistaNumero", Integer.parseInt(numeroEscrito));
+                        jsonPista.put("palabra_pista", palabraEscrita);
+                        jsonPista.put("pista_numero", Integer.parseInt(numeroEscrito));
 
                         String destino = "/app/partidas/" + idPartidaActual + "/pista";
 
@@ -1100,7 +1100,7 @@ public class PartidaActivity extends AppCompatActivity {
                     try {
                         JSONObject jsonVoto = new JSONObject();
                         // i es la posición de la carta en el tablero (0 a 19)
-                        jsonVoto.put("posicionCarta", i2);
+                        jsonVoto.put("posicion_carta", i2);
 
                         // Disparamos el voto por el WebSocket
                         String destinoVoto = "/app/partidas/" + idPartidaActual + "/votar";
@@ -1308,7 +1308,7 @@ public class PartidaActivity extends AppCompatActivity {
 
                         // 1. Extraemos la nueva información (Ajusta los nombres a lo que envíe tu backend)
                         int votosActuales = carta.optInt("votos", 0);
-                        int votosNecesarios = carta.optInt("votosNecesarios", 1);
+                        int votosNecesarios = carta.optInt("votos_necesarios", 1);
                         boolean estaRevelada = carta.optBoolean("revelada", false);
                         String identidadCarta = carta.optString("identidad", "desconocida"); // Ej: "Rojo", "Azul", "Civil", "Asesino"
 
