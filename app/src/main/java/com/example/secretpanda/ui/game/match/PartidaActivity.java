@@ -383,8 +383,6 @@ public class PartidaActivity extends AppCompatActivity {
 
     private void obtenerEstadoCompletoDePartida() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-
-        // ⚠️ CORRECCIÓN: Añadimos "/estado" al final de la URL según tu JuegoController
         String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/estado";
 
         com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
@@ -398,7 +396,7 @@ public class PartidaActivity extends AppCompatActivity {
         client.newCall(requestBuilder.build()).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                android.util.Log.e("API_PARTIDA", "❌ Error al obtener el estado de la partida", e);
+                android.util.Log.e("API_PARTIDA", " Error al obtener el estado de la partida", e);
             }
 
             @Override
@@ -407,59 +405,69 @@ public class PartidaActivity extends AppCompatActivity {
                     String jsonCrudo = response.body().string();
                     try {
                         org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
-                        android.util.Log.d("API_PARTIDA", "✅ Datos completos recuperados: " + jsonCrudo);
 
-                        // Busca esta parte en tu PartidaActivity.java y sustitúyela:
+                        runOnUiThread(() -> {
 
-                        if (json.has("pista_actual") && !json.isNull("pista_actual")) {
-                            org.json.JSONObject pistaObj = json.getJSONObject("pista_actual");
+                            // GUARDAMOS EL TURNO Y PINTAMOS EL COLOR
+                            String equipoTurno = json.optString("equipo_turno_actual", "");
+                            equipoTurnoActual = equipoTurno;
 
-                            // Guardamos el ID del turno para poder votar luego
-                            idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
-
-                            // Extraemos los datos de la pista
-                            palabraPista = pistaObj.optString("palabra", "");
-                            cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0)); // Cubrimos ambas opciones
-
-                            // ¡Avisamos a los jugadores visualmente!
-                            runOnUiThread(() -> {
-                                // Puedes ponerlo en un TextView que tengas arriba en el tablero
-                                // tvPistaActual.setText("PISTA: " + palabraPista.toUpperCase() + " [" + cantidadPista + "]");
-
-                                android.widget.Toast.makeText(PartidaActivity.this,
-                                        "📢 Nueva pista recibida: " + palabraPista + " (" + cantidadPista + ")",
-                                        android.widget.Toast.LENGTH_LONG).show();
-
-                                android.util.Log.d("WS_PISTA", "Pista activa registrada, idTurno: " + idTurnoActual);
-                            });
-
-                        } else {
-                            // Si la pista viene null, leemos el turno general (si existe)
-                            idTurnoActual = json.optInt("id_turno", idTurnoActual);
-                        }
-
-// 2. Extraemos los votos actuales (si viene null, creamos un array vacío para evitar crashes)
-                        org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
-                        if (votosArray == null) votosArray = new org.json.JSONArray();
-
-                        int totalAgentes = json.optInt("total_agentes_equipo", 2);
-
-                        // 3. Pasamos los TRES argumentos a nuestro método de pintar
-                        if (json.has("tablero")) {
-                            org.json.JSONObject tableroJson = json.getJSONObject("tablero");
-                            if (tableroJson.has("cartas")) {
-                                org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
-
-
-                                pintarTablero(tableroArray, votosArray, totalAgentes);
+                            if (circuloTurno != null) {
+                                if (equipoTurno.equalsIgnoreCase("rojo")) {
+                                    circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
+                                } else if (equipoTurno.equalsIgnoreCase("azul")) {
+                                    circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
+                                } else {
+                                    circuloTurno.setBackgroundColor(Color.GRAY);
+                                }
                             }
-                        }
+
+
+                            // FASE Y PISTA ACTUAL
+                            if (json.has("pista_actual") && !json.isNull("pista_actual")) {
+                                try {
+                                    JSONObject pistaObj = json.getJSONObject("pista_actual");
+                                    idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+                                    palabraPista = pistaObj.optString("palabra", "");
+                                    cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0));
+
+                                    if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
+                                } catch (JSONException e) { e.printStackTrace(); }
+                            } else {
+                                idTurnoActual = json.optInt("id_turno", idTurnoActual);
+                                if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
+                            }
+
+
+                            // RELOJ INICIAL (Por si el WS tarda en llegar)
+
+                            int tiempoRestante = json.optInt("segundosRestantes", json.optInt("tiempo_restante", -1));
+                            if (tiempoRestante != -1 && tvTimer != null) {
+                                int minutos = tiempoRestante / 60;
+                                int secs = tiempoRestante % 60;
+                                tvTimer.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", minutos, secs));
+                            }
+
+
+                            // VOTOS Y TABLERO
+                            org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
+                            if (votosArray == null) votosArray = new org.json.JSONArray();
+                            int totalAgentes = json.optInt("total_agentes_equipo", 2);
+
+                            if (json.has("tablero")) {
+                                try {
+                                    JSONObject tableroJson = json.getJSONObject("tablero");
+                                    if (tableroJson.has("cartas")) {
+                                        org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
+                                        pintarTablero(tableroArray, votosArray, totalAgentes);
+                                    }
+                                } catch (JSONException e) { e.printStackTrace(); }
+                            }
+                        });
 
                     } catch (Exception e) {
-                        android.util.Log.e("API_PARTIDA", "Error procesando JSON de la partida", e);
+                        android.util.Log.e("API_PARTIDA", "Error procesando JSON", e);
                     }
-                } else {
-                    android.util.Log.e("API_PARTIDA", "⚠️ Error del servidor: " + response.code());
                 }
             }
         });
@@ -1358,19 +1366,19 @@ public class PartidaActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 try {
                     JSONObject json = new JSONObject(payload);
+                    palabraPista = json.optString("palabra_pista", json.optString("palabraPista", ""));
+                    cantidadPista = json.optInt("pista_numero", json.optInt("pistaNumero", 0));
 
-                    // CAMBIA ESTAS LÍNEAS PARA COINCIDIR CON EL LOG:
-                    String palabra = json.getString("palabra_pista"); // Antes tenías palabraPista
-                    int cantidad = json.getInt("pista_numero");      // Antes tenías pistaNumero
+                    //  ACTUALIZAR LA FASE EN LA CABECERA
+                    if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
 
-                    hayPista = true;
-                    // Opcional: si necesitas el equipo
-                    String equipoLider = json.optString("equipo_lider", "");
-                    numeroPistaJefe = String.valueOf(cantidad);
-                    palabraPistaJefe = palabra;
+                    // Mostrar alerta
+                    android.widget.Toast.makeText(PartidaActivity.this,
+                            "📢 Nueva pista: " + palabraPista + " (" + cantidadPista + ")",
+                            android.widget.Toast.LENGTH_LONG).show();
 
                 } catch (Exception e) {
-                    Log.e("WS_PISTA", "Error al leer el JSON de la pista: " + payload, e);
+                    Log.e("WS_PISTA", "Error al leer pista: " + payload, e);
                 }
             });
         });
@@ -1408,17 +1416,12 @@ public class PartidaActivity extends AppCompatActivity {
                 try {
                     int segundos = 0;
 
-
                     if (payload.contains("{")) {
                         JSONObject json = new JSONObject(payload);
-
-
-                        segundos = json.optInt("segundosRestantes", 0);
+                        segundos = json.optInt("segundosRestantes", json.optInt("tiempo", 0));
                     } else {
                         String numeroLimpio = payload.replaceAll("[^0-9]", "");
-                        if (!numeroLimpio.isEmpty()) {
-                            segundos = Integer.parseInt(numeroLimpio);
-                        }
+                        if (!numeroLimpio.isEmpty()) segundos = Integer.parseInt(numeroLimpio);
                     }
 
                     // Pintamos el reloj
@@ -1428,7 +1431,6 @@ public class PartidaActivity extends AppCompatActivity {
 
                         String tiempoFormateado = String.format(java.util.Locale.getDefault(), "%02d:%02d", minutos, secs);
                         tvTimer.setText(tiempoFormateado);
-
 
                         if (segundos <= 10) {
                             tvTimer.setTextColor(Color.parseColor("#FF5252")); // Rojo claro
