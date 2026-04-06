@@ -33,6 +33,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
     private TextView[] botonesTiempo;
     private TextView[] botonesJugadores;
 
+    private String nombreUsuario;
     private java.util.Map<String, Integer> misTematicasDisponibles = new java.util.HashMap<>();
 
     @Override
@@ -42,6 +43,8 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_configuracion_mision);
 
         esPrivada = getIntent().getBooleanExtra("ES_PRIVADA", false);
+
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
         // Si es privada, le ponemos el texto al título
         TextView txtTitulo = findViewById(R.id.txt_titulo_config);
@@ -160,7 +163,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                             intent.putExtra("ID_PARTIDA", idPartidaCreada);
                             intent.putExtra("CODIGO_PARTIDA", codigoPartida);
                             intent.putExtra("ES_LIDER", true);
-                            intent.putExtra("MI_NOMBRE_USUARIO", miTagReal);
+                            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
 
                             startActivity(intent);
                             finish();

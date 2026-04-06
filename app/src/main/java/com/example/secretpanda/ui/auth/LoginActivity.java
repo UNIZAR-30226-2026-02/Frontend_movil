@@ -143,7 +143,7 @@ public class LoginActivity extends AppCompatActivity {
 
                                     try {
                                         // 🕵️‍♂️ NUEVO: Extraemos el jugador y miramos si tiene partida activa
-                                        org.json.JSONObject jugadorJson = jsonObject.getJSONObject("Jugador");
+                                        org.json.JSONObject jugadorJson = jsonObject.getJSONObject("jugador");
                                         // optLong devuelve 0 si no existe el campo o es null
                                         long partidaActivaId = jugadorJson.optLong("partidaActivaId", 0);
 
@@ -151,11 +151,13 @@ public class LoginActivity extends AppCompatActivity {
                                         if (partidaActivaId > 0) {
                                             // 🔥 ¡Estaba en una partida! Lo reconectamos
                                             intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.game.match.PartidaActivity.class);
+                                            intent.putExtra("MI_NOMBRE_USUARIO", jugadorJson.optString("tag", ""));
                                             intent.putExtra("ID_PARTIDA", partidaActivaId);
                                             Toast.makeText(LoginActivity.this, "Reconectando a la partida...", Toast.LENGTH_SHORT).show();
                                         } else {
                                             // No estaba jugando -> A la Home
                                             intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
+                                            intent.putExtra("MI_NOMBRE_USUARIO", jugadorJson.optString("tag", ""));
                                             intent.putExtra("DESTINO", "HOME");
                                         }
                                         startActivity(intent);

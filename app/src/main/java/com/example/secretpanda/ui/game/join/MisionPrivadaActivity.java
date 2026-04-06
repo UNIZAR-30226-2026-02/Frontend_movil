@@ -21,11 +21,14 @@ public class MisionPrivadaActivity extends AppCompatActivity {
     private TextView btnUnirse;
     private FrameLayout btnHome;
 
+    private String nombreUsuario;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_unirse_privada);
 
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         // 1. Inicializar las vistas
         etCodigoSala = findViewById(R.id.et_codigo_sala);
         btnUnirse = findViewById(R.id.btn_confirmar_union);
@@ -111,6 +114,7 @@ public class MisionPrivadaActivity extends AppCompatActivity {
                             Intent intent = new Intent(MisionPrivadaActivity.this, com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity.class);
                             intent.putExtra("ID_PARTIDA", idPartidaReal);
                             intent.putExtra("CODIGO_PARTIDA", codigo);
+                            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                             startActivity(intent);
                             finish();
                         });

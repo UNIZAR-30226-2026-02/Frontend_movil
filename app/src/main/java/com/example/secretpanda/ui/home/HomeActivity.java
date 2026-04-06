@@ -32,6 +32,8 @@ public class HomeActivity extends AppCompatActivity {
     private Jugador jugadorActual;
     private ActivityResultLauncher<Intent> perfilLauncher;
 
+    private String nombreUsuario;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,20 +43,16 @@ public class HomeActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+
         setContentView(R.layout.home);
 
         // RECIBIR EL JUGADOR Y CAMBIAR EL SALUDO
         TextView textoSaludo = findViewById(R.id.texto_saludo_home);
 
-        jugadorActual = (Jugador) getIntent().getSerializableExtra("DATOS_JUGADOR");
-        String nombreMostrar = "Espía Secreto";
-
-        if (jugadorActual != null) {
-            nombreMostrar = jugadorActual.getTag(); // Sacamos el nombre real
-        }
 
         if (textoSaludo != null) {
-            textoSaludo.setText("Hola, " + nombreMostrar);
+            textoSaludo.setText("Hola, " + nombreUsuario);
         }
 
         // CAPTURAR BOTONES PRINCIPALES
@@ -95,6 +93,7 @@ public class HomeActivity extends AppCompatActivity {
 
         btnNuevaMision.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, CrearMisionOpcionesActivity.class);
+            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             startActivity(intent);
             overridePendingTransition(0, 0); // Evitamos la animación por defecto
         });
@@ -102,6 +101,7 @@ public class HomeActivity extends AppCompatActivity {
             btnUneteMision.setOnClickListener(v -> {
                 // Abrir la pantalla de Tienda
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, UnirseMisionActivity.class);
+                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                 startActivity(intent);
 
                 overridePendingTransition(0, 0);

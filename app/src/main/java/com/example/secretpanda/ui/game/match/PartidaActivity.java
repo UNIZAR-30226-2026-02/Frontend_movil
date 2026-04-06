@@ -52,7 +52,6 @@ public class PartidaActivity extends AppCompatActivity {
     private final String ROJO_STRING = "rojo";
     private final String AZUL_STRING = "azul";
     private String miRol = AGENTE_STRING;
-    private View turnoColor;
     private android.widget.ImageView[] imagenesTablero;
 
     private String palabraPista = "";
@@ -69,6 +68,14 @@ public class PartidaActivity extends AppCompatActivity {
 
     private int idTurnoActual = -1; // Para saber en qué turno estamos votando
     private FrameLayout cartaActualmenteSeleccionada = null;
+
+    private TextView tvTimer;         // id: tv_timer
+    private TextView tvFasePartida;   // id: tv_fase_partida
+    private View circuloTurno;        // id: circulo_turno
+    private TextView tvPuntosRojo;    // id: tv_puntos_rojo
+    private TextView tvPuntosAzul;    // id: tv_puntos_azul
+
+    private String equipoTurnoActual = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +100,6 @@ public class PartidaActivity extends AppCompatActivity {
             finish(); // Cerramos la pantalla porque está rota
             return;
         }
-        turnoColor = findViewById(R.id.vista_turno_actual);
 
         /*String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
         stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, url);
@@ -133,16 +139,22 @@ public class PartidaActivity extends AppCompatActivity {
         notificacionChat = findViewById(R.id.notificacion_chat);
         tvMiRol = findViewById(R.id.tv_mi_rol);
         iconoBtnAlerta = findViewById(R.id.icono_btn_alerta);
+        tvTimer = findViewById(R.id.tv_timer);
+        tvFasePartida = findViewById(R.id.tv_fase_partida);
+        circuloTurno = findViewById(R.id.circulo_turno);
+        tvPuntosRojo = findViewById(R.id.tv_puntos_rojo);
+        tvPuntosAzul = findViewById(R.id.tv_puntos_azul);
+        suscribirseAlTemporizador();
 
         configurarBotones();
     }
 
     // Centralizamos el pintado para no repetir código
-    private void pintarTablero(org.json.JSONArray cartasArray, org.json.JSONArray votosArray) {
+    private void pintarTablero(org.json.JSONArray cartasArray, org.json.JSONArray votosArray, int totalAgentes) {
         runOnUiThread(() -> {
             if (gridTablero == null) return;
-
             gridTablero.removeAllViews();
+            gridTablero.setColumnCount(4);
             imagenesTablero = new android.widget.ImageView[cartasArray.length()];
 
             for (int i = 0; i < cartasArray.length(); i++) {
@@ -153,82 +165,124 @@ public class PartidaActivity extends AppCompatActivity {
                     String palabra = cartaJson.optString("palabra", "");
                     String estado = cartaJson.optString("estado", "oculta");
                     String tipo = cartaJson.optString("tipo", "");
-
                     boolean estaRevelada = !"oculta".equalsIgnoreCase(estado);
 
-                    // --- 1. CONTAR VOTOS PARA ESTA CARTA ---
+
+                    // CONTAR VOTOS Y SABER SI YO HE VOTADO AQUÍ
+
                     int contadorVotos = 0;
+                    boolean heVotadoYo = false;
+
                     for (int v = 0; v < votosArray.length(); v++) {
                         org.json.JSONObject votoJson = votosArray.getJSONObject(v);
-                        // Comprobamos si el voto (dependiendo de cómo lo serialice tu backend) apunta a esta carta
-                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta ||
-                                votoJson.optInt("idCartaTablero", -1) == idCarta) {
+                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta || votoJson.optInt("idCartaTablero", -1) == idCarta) {
                             contadorVotos++;
+
+                            // Comprobamos si este voto es mío (el backend debe mandar el id_google o id_jugador en el voto)
+                            String idVotante = votoJson.optString("id_google", votoJson.optString("id_jugador", ""));
+                            if (miPropioIdGoogle.equals(idVotante)) {
+                                heVotadoYo = true;
+                            }
                         }
                     }
 
-                    // --- 2. CONFIGURAR CONTENEDOR ---
-                    android.widget.FrameLayout cartaContenedor = new android.widget.FrameLayout(PartidaActivity.this);
+
+                    //CONFIGURAR EL CONTENEDOR (BORDES)
+
+                    FrameLayout cartaContenedor = new FrameLayout(PartidaActivity.this);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-                    params.width = GridLayout.LayoutParams.WRAP_CONTENT;
-                    params.height = dpToPx(80);
+                    params.width = 0;
+                    params.height = dpToPx(85);
                     params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
                     params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-                    params.setMargins(6, 6, 6, 6);
-                    params.setGravity(Gravity.FILL);
+                    params.setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3));
                     cartaContenedor.setLayoutParams(params);
 
-                    android.widget.ImageView imagenCarta = new android.widget.ImageView(PartidaActivity.this);
-                    imagenCarta.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT));
-                    imagenCarta.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
 
+                    if (!estaRevelada && contadorVotos > 0) {
+                        // Si hay votos, borde grueso de 4dp
+                        cartaContenedor.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+                        if (heVotadoYo) {
+                            cartaContenedor.setBackgroundColor(Color.parseColor("#4CAF50")); // Borde VERDE (Mi voto)
+                        } else {
+                            cartaContenedor.setBackgroundColor(Color.parseColor("#FFC107")); // Borde AMARILLO (Voto de compañero)
+                        }
+                    } else {
+                        // Si no hay votos (o está revelada), borde fino negro normal de 1dp
+                        cartaContenedor.setPadding(dpToPx(1), dpToPx(1), dpToPx(1), dpToPx(1));
+                        cartaContenedor.setBackgroundColor(Color.BLACK);
+                    }
+
+                    // FONDO E IMAGEN
+                    FrameLayout fondoColor = new FrameLayout(PartidaActivity.this);
+                    fondoColor.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+                    android.widget.ImageView imagenCarta = new android.widget.ImageView(PartidaActivity.this);
+                    imagenCarta.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    imagenCarta.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                    imagenCarta.setImageResource(R.drawable.fondo_carta_gruesa);
+
+                    // TEXTO
                     TextView tvPalabra = new TextView(PartidaActivity.this);
                     tvPalabra.setText(palabra);
                     tvPalabra.setTextColor(Color.WHITE);
                     tvPalabra.setGravity(Gravity.CENTER);
                     tvPalabra.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
                     tvPalabra.setTypeface(null, Typeface.BOLD);
+                    tvPalabra.setShadowLayer(4f, 0f, 0f, Color.BLACK);
 
-                    // --- 3. LÓGICA DE ESTADO ---
+                    // REVELACIÓN Y CLICS SEGuROS
                     if (estaRevelada) {
-                        if ("rojo".equalsIgnoreCase(tipo)) imagenCarta.setBackgroundColor(Color.parseColor("#D32F2F"));
-                        else if ("azul".equalsIgnoreCase(tipo)) imagenCarta.setBackgroundColor(Color.parseColor("#1976D2"));
-                        else if ("asesino".equalsIgnoreCase(tipo)) imagenCarta.setBackgroundColor(Color.BLACK);
-                        else imagenCarta.setBackgroundColor(Color.parseColor("#B0BEC5"));
+                        if ("rojo".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.parseColor("#D32F2F"));
+                        else if ("azul".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.parseColor("#1976D2"));
+                        else if ("asesino".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.BLACK);
+                        else fondoColor.setBackgroundColor(Color.parseColor("#B0BEC5"));
 
+                        imagenCarta.setAlpha(0.25f);
                         cartaContenedor.setEnabled(false);
                     } else {
-                        imagenCarta.setBackgroundColor(Color.DKGRAY);
+                        fondoColor.setBackgroundColor(Color.parseColor("#546E7A"));
+                        imagenCarta.setAlpha(0.8f);
 
-                        // Al hacer clic, enviamos el voto al backend
-                        cartaContenedor.setOnClickListener(v -> enviarVoto(idCarta));
+
+                        cartaContenedor.setOnClickListener(v -> {
+
+                            if (JEFE_STRING.equalsIgnoreCase(miRol) ||
+                                    idTurnoActual == -1 ||
+                                    !miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
+
+                                mostrarPreviewCarta(palabra);
+                            } else {
+
+                                enviarVoto(idCarta);
+                            }
+                        });
                     }
 
-                    cartaContenedor.addView(imagenCarta);
-                    cartaContenedor.addView(tvPalabra);
+                    fondoColor.addView(imagenCarta);
+                    fondoColor.addView(tvPalabra);
 
-                    // --- 4. DIBUJAR BURBUJA DE VOTOS ---
+                    // BURBUJA DE VOTOS (Ej: 1/3)
                     if (contadorVotos > 0 && !estaRevelada) {
                         TextView tvVotos = new TextView(PartidaActivity.this);
-                        tvVotos.setText(String.valueOf(contadorVotos));
+                        // Ponemos formato "X/Y"
+                        tvVotos.setText(contadorVotos + "/" + totalAgentes);
                         tvVotos.setTextColor(Color.WHITE);
-                        tvVotos.setBackgroundColor(Color.parseColor("#AAFF9800")); // Naranja semitransparente
+                        tvVotos.setBackgroundColor(Color.parseColor("#AAFF9800"));
                         tvVotos.setGravity(Gravity.CENTER);
-                        tvVotos.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
                         tvVotos.setTypeface(null, Typeface.BOLD);
+                        tvVotos.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11); // Letra un poco más pequeña para que quepa
 
-                        // Esquina superior derecha
-                        FrameLayout.LayoutParams votosParams = new FrameLayout.LayoutParams(dpToPx(24), dpToPx(24));
+
+                        FrameLayout.LayoutParams votosParams = new FrameLayout.LayoutParams(dpToPx(35), dpToPx(24));
                         votosParams.gravity = Gravity.TOP | Gravity.END;
-                        votosParams.setMargins(0, dpToPx(4), dpToPx(4), 0);
                         tvVotos.setLayoutParams(votosParams);
-                        tvVotos.setBackgroundResource(android.R.drawable.presence_away); // Borde redondeado por defecto de Android
+                        tvVotos.setBackgroundResource(android.R.drawable.presence_away);
 
-                        cartaContenedor.addView(tvVotos);
+                        fondoColor.addView(tvVotos);
                     }
 
+                    cartaContenedor.addView(fondoColor);
                     imagenesTablero[i] = imagenCarta;
                     gridTablero.addView(cartaContenedor);
 
@@ -240,7 +294,7 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void suscribirseAlEstadoDeLaPartida() {
-        String destinoTopic = "user/queue/partidas/" + idPartidaActual + "/estado";
+        String destinoTopic = "/user/queue/partidas/" + idPartidaActual + "/estado";
         android.util.Log.d("WS_TABLERO", "📡 Conectando radar al canal: " + destinoTopic);
 
         stompClient.topic(destinoTopic).subscribe(stompMessage -> {
@@ -250,71 +304,66 @@ public class PartidaActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     String estado = json.optString("estado", "");
-                    //idTurnoActual = json.optString("turno_actual", "");
                     String equipoTurno = json.optString("equipo_turno_actual", "");
-
-                    if(equipoTurno.equals(ROJO_STRING)){
-                        turnoColor.setBackgroundColor(Integer.parseInt("#9B3838"));
-                    }else{
-                        turnoColor.setBackgroundColor(Integer.parseInt("#38567A"));
-                    }
-                    // ¡AQUÍ ESTÁ LA LLAMADA!
-                    // Sustituye tu antigua comprobación por esta en AMBOS métodos:
-                    // 1. Extraemos el ID del turno (normalmente viene dentro de la pista o en la raíz)
-                    // Busca esta parte en tu PartidaActivity.java y sustitúyela:
-
-                    if (json.has("pista_actual") && !json.isNull("pista_actual")) {
-                        JSONObject pistaObj = null;
-                        try {
-                            pistaObj = json.getJSONObject("pista_actual");
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
+                    equipoTurnoActual = equipoTurno;
+                    //  PINTAMOS EL CUADRADITO DEL TURNO (¡Corregido!)
+                    if (circuloTurno != null) {
+                        if (equipoTurno.equals(ROJO_STRING)) {
+                            // Usamos Color.parseColor para evitar crasheos con el '#'
+                            circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
+                        } else {
+                            circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
                         }
+                    }
 
-                        // Guardamos el ID del turno para poder votar luego
-                        idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+                    //   COMPROBAMOS LA FASE ACTUAL Y LAS PISTAS
+                    if (json.has("pista_actual") && !json.isNull("pista_actual")) {
+                        try {
+                            JSONObject pistaObj = json.getJSONObject("pista_actual");
 
-                        // Extraemos los datos de la pista
-                         palabraPista = pistaObj.optString("palabra", "");
-                         cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0)); // Cubrimos ambas opciones
+                            // Guardamos el ID del turno para poder votar luego
+                            idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+                            palabraPista = pistaObj.optString("palabra", "");
+                            cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0));
 
-                        // ¡Avisamos a los jugadores visualmente!
-                        runOnUiThread(() -> {
-                            // Puedes ponerlo en un TextView que tengas arriba en el tablero
-                            // tvPistaActual.setText("PISTA: " + palabraPista.toUpperCase() + " [" + cantidadPista + "]");
+                            // ACTUALIZAMOS EL TEXTO DE LA FASE
+                            if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
 
+                            // Avisamos a los agentes con un Toast
                             android.widget.Toast.makeText(PartidaActivity.this,
-                                    "📢 Nueva pista recibida: " + palabraPista + " (" + cantidadPista + ")",
+                                    "📢Nueva pista: " + palabraPista + " (" + cantidadPista + ")",
                                     android.widget.Toast.LENGTH_LONG).show();
 
-                            android.util.Log.d("WS_PISTA", "Pista activa registrada, idTurno: " + idTurnoActual);
-                        });
-
+                        } catch (JSONException e) {
+                            android.util.Log.e("WS_TABLERO", "Error leyendo la pista del JSON", e);
+                        }
                     } else {
                         // Si la pista viene null, leemos el turno general (si existe)
                         idTurnoActual = json.optInt("id_turno", idTurnoActual);
+
+                        // ACTUALIZAMOS EL TEXTO DE LA FASE
+                        if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
                     }
 
-// 2. Extraemos los votos actuales (si viene null, creamos un array vacío para evitar crashes)
+                    //  EXTRAEMOS LOS VOTOS
                     org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
                     if (votosArray == null) votosArray = new org.json.JSONArray();
 
-// 3. Pasamos AMBOS arrays a nuestro método de pintar
+
+                    int totalAgentes = json.optInt("total_agentes_equipo", 2);
+
+                    // EXTRAEMOS EL TABLERO Y PINTAMOS
                     if (json.has("tablero")) {
-                        JSONObject tableroJson = null;
                         try {
-                            tableroJson = json.getJSONObject("tablero");
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
-                        }
-                        if (tableroJson.has("cartas")) {
-                            org.json.JSONArray tableroArray = null;
-                            try {
-                                tableroArray = tableroJson.getJSONArray("cartas");
-                            } catch (JSONException e) {
-                                throw new RuntimeException(e);
+                            JSONObject tableroJson = json.getJSONObject("tablero");
+                            if (tableroJson.has("cartas")) {
+                                org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
+
+                                // 🔥 Le pasamos el totalAgentes a la función
+                                pintarTablero(tableroArray, votosArray, totalAgentes);
                             }
-                            pintarTablero(tableroArray, votosArray); // ¡Importante pasar los votos aquí!
+                        } catch (JSONException e) {
+                            android.util.Log.e("WS_TABLERO", "Error leyendo el tablero", e);
                         }
                     }
 
@@ -328,14 +377,12 @@ public class PartidaActivity extends AppCompatActivity {
                 android.util.Log.e("WS_TABLERO", "Error desencriptando el estado de la partida", e);
             }
         }, throwable -> {
-            android.util.Log.e("WS_TABLERO", "❌ Interferencia en el radar del tablero", throwable);
+            android.util.Log.e("WS_TABLERO", " Interferencia en el radar del tablero", throwable);
         });
     }
 
     private void obtenerEstadoCompletoDePartida() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-
-        // ⚠️ CORRECCIÓN: Añadimos "/estado" al final de la URL según tu JuegoController
         String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/estado";
 
         com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
@@ -349,7 +396,7 @@ public class PartidaActivity extends AppCompatActivity {
         client.newCall(requestBuilder.build()).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                android.util.Log.e("API_PARTIDA", "❌ Error al obtener el estado de la partida", e);
+                android.util.Log.e("API_PARTIDA", " Error al obtener el estado de la partida", e);
             }
 
             @Override
@@ -358,55 +405,69 @@ public class PartidaActivity extends AppCompatActivity {
                     String jsonCrudo = response.body().string();
                     try {
                         org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
-                        android.util.Log.d("API_PARTIDA", "✅ Datos completos recuperados: " + jsonCrudo);
 
-                        // Busca esta parte en tu PartidaActivity.java y sustitúyela:
+                        runOnUiThread(() -> {
 
-                        if (json.has("pista_actual") && !json.isNull("pista_actual")) {
-                            org.json.JSONObject pistaObj = json.getJSONObject("pista_actual");
+                            // GUARDAMOS EL TURNO Y PINTAMOS EL COLOR
+                            String equipoTurno = json.optString("equipo_turno_actual", "");
+                            equipoTurnoActual = equipoTurno;
 
-                            // Guardamos el ID del turno para poder votar luego
-                            idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
-
-                            // Extraemos los datos de la pista
-                            palabraPista = pistaObj.optString("palabra", "");
-                            cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0)); // Cubrimos ambas opciones
-
-                            // ¡Avisamos a los jugadores visualmente!
-                            runOnUiThread(() -> {
-                                // Puedes ponerlo en un TextView que tengas arriba en el tablero
-                                // tvPistaActual.setText("PISTA: " + palabraPista.toUpperCase() + " [" + cantidadPista + "]");
-
-                                android.widget.Toast.makeText(PartidaActivity.this,
-                                        "📢 Nueva pista recibida: " + palabraPista + " (" + cantidadPista + ")",
-                                        android.widget.Toast.LENGTH_LONG).show();
-
-                                android.util.Log.d("WS_PISTA", "Pista activa registrada, idTurno: " + idTurnoActual);
-                            });
-
-                        } else {
-                            // Si la pista viene null, leemos el turno general (si existe)
-                            idTurnoActual = json.optInt("id_turno", idTurnoActual);
-                        }
-
-// 2. Extraemos los votos actuales (si viene null, creamos un array vacío para evitar crashes)
-                        org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
-                        if (votosArray == null) votosArray = new org.json.JSONArray();
-
-// 3. Pasamos AMBOS arrays a nuestro método de pintar
-                        if (json.has("tablero")) {
-                            org.json.JSONObject tableroJson = json.getJSONObject("tablero");
-                            if (tableroJson.has("cartas")) {
-                                org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
-                                pintarTablero(tableroArray, votosArray); // ¡Importante pasar los votos aquí!
+                            if (circuloTurno != null) {
+                                if (equipoTurno.equalsIgnoreCase("rojo")) {
+                                    circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
+                                } else if (equipoTurno.equalsIgnoreCase("azul")) {
+                                    circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
+                                } else {
+                                    circuloTurno.setBackgroundColor(Color.GRAY);
+                                }
                             }
-                        }
+
+
+                            // FASE Y PISTA ACTUAL
+                            if (json.has("pista_actual") && !json.isNull("pista_actual")) {
+                                try {
+                                    JSONObject pistaObj = json.getJSONObject("pista_actual");
+                                    idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+                                    palabraPista = pistaObj.optString("palabra", "");
+                                    cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0));
+
+                                    if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
+                                } catch (JSONException e) { e.printStackTrace(); }
+                            } else {
+                                idTurnoActual = json.optInt("id_turno", idTurnoActual);
+                                if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
+                            }
+
+
+                            // RELOJ INICIAL (Por si el WS tarda en llegar)
+
+                            int tiempoRestante = json.optInt("segundos_restantes", json.optInt("tiempo_restante", -1));
+                            if (tiempoRestante != -1 && tvTimer != null) {
+                                int minutos = tiempoRestante / 60;
+                                int secs = tiempoRestante % 60;
+                                tvTimer.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", minutos, secs));
+                            }
+
+
+                            // VOTOS Y TABLERO
+                            org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
+                            if (votosArray == null) votosArray = new org.json.JSONArray();
+                            int totalAgentes = json.optInt("total_agentes_equipo", 2);
+
+                            if (json.has("tablero")) {
+                                try {
+                                    JSONObject tableroJson = json.getJSONObject("tablero");
+                                    if (tableroJson.has("cartas")) {
+                                        org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
+                                        pintarTablero(tableroArray, votosArray, totalAgentes);
+                                    }
+                                } catch (JSONException e) { e.printStackTrace(); }
+                            }
+                        });
 
                     } catch (Exception e) {
-                        android.util.Log.e("API_PARTIDA", "Error procesando JSON de la partida", e);
+                        android.util.Log.e("API_PARTIDA", "Error procesando JSON", e);
                     }
-                } else {
-                    android.util.Log.e("API_PARTIDA", "⚠️ Error del servidor: " + response.code());
                 }
             }
         });
@@ -428,7 +489,7 @@ public class PartidaActivity extends AppCompatActivity {
         try {
             // Creamos el JSON exacto que espera tu VotarPayload
             org.json.JSONObject payload = new org.json.JSONObject();
-            payload.put("idCartaTablero", idCartaTablero);
+            payload.put("id_carta_tablero", idCartaTablero);
             // La ruta mapeada en tu @MessageMapping
             String destinoTopic = "/app/partidas/" + idPartidaActual + "/votar";
             //cabeceras JSON
@@ -627,7 +688,6 @@ public class PartidaActivity extends AppCompatActivity {
 
     private void mostrarDialogoPistaJefe() {
         android.app.Dialog dialog = new android.app.Dialog(this);
-        // 1. Cargamos nuestro nuevo diseño
         dialog.setContentView(R.layout.dialog_anadir_pista);
 
         if (dialog.getWindow() != null) {
@@ -638,70 +698,98 @@ public class PartidaActivity extends AppCompatActivity {
             );
         }
 
-        // 2. Buscamos los elementos dentro del XML
+        // Buscamos los elementos dentro del XML
         View btnCerrar = dialog.findViewById(R.id.btn_cerrar_pista);
         View btnEnviar = dialog.findViewById(R.id.btn_enviar_pista);
         android.widget.EditText inputPalabra = dialog.findViewById(R.id.input_palabra_pista);
         android.widget.EditText inputNumero = dialog.findViewById(R.id.input_numero_pista);
 
-        // 3. Lógica de cerrar la ventana
+        TextView txtTitulo = dialog.findViewById(R.id.tv_titulo_pista);
+
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
-        if(miRol.equals(JEFE_STRING)){
+
+        if (miRol.equals(JEFE_STRING)&& miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
+            // VISTA: JEFE DE ESPIONAJE
+            btnEnviar.setVisibility(View.VISIBLE);
+            inputPalabra.setFocusableInTouchMode(true);
+            inputNumero.setFocusableInTouchMode(true);
+
+            if (txtTitulo != null) txtTitulo.setText("Añadir Pista");
+
             btnEnviar.setOnClickListener(v -> {
                 String palabraEscrita = inputPalabra.getText().toString().trim();
                 String numeroEscrito = inputNumero.getText().toString().trim();
 
-                // Comprobamos que no haya dejado ningún hueco en blanco
                 if (!palabraEscrita.isEmpty() && !numeroEscrito.isEmpty()) {
-                    // Dentro de btnEnviar.setOnClickListener...
                     btnEnviar.setEnabled(false);
                     try {
                         JSONObject jsonPista = new JSONObject();
+                        jsonPista.put("id_jugador_partida", 1);
                         jsonPista.put("palabra_pista", palabraEscrita);
                         jsonPista.put("pista_numero", Integer.parseInt(numeroEscrito));
 
                         String destino = "/app/partidas/" + idPartidaActual + "/pista";
 
-                        // CREAMOS LAS CABECERAS
                         List<StompHeader> headers = new ArrayList<>();
                         headers.add(new StompHeader(StompHeader.DESTINATION, destino));
-                        headers.add(new StompHeader("content-type", "application/json")); // <--- ESTO ES LA CLAVE
+                        headers.add(new StompHeader("content-type", "application/json"));
 
-                        // ENVIAMOS UN STOMP_MESSAGE EN LUGAR DE UN SIMPLE STRING
-                        stompClient.send(new StompMessage(
-                                StompCommand.SEND,
-                                headers,
-                                jsonPista.toString()
-                        )).subscribe(() -> {
-                            runOnUiThread(() -> {
-                                dialog.dismiss();
-                                Toast.makeText(PartidaActivity.this, "Pista enviada", Toast.LENGTH_SHORT).show();
-                            });
-                        }, throwable -> {
-                            Log.e("WS_ERROR", "Error al enviar", throwable);
-                        });
+                        stompClient.send(new StompMessage(StompCommand.SEND, headers, jsonPista.toString()))
+                                .subscribe(() -> {
+                                    runOnUiThread(() -> {
+                                        dialog.dismiss();
+                                        Toast.makeText(PartidaActivity.this, "Pista enviada", Toast.LENGTH_SHORT).show();
+                                    });
+                                }, throwable -> {
+                                    Log.e("WS_ERROR", "Error al enviar", throwable);
+                                    runOnUiThread(() -> btnEnviar.setEnabled(true));
+                                });
 
                     } catch (Exception e) {
                         e.printStackTrace();
+                        btnEnviar.setEnabled(true);
                     }
-
-                    dialog.dismiss(); // Cerramos el cuadro al enviar
                 } else {
-                    android.widget.Toast.makeText(this, "Por favor, rellena la palabra y el número.", android.widget.Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Por favor, rellena la palabra y el número.", Toast.LENGTH_SHORT).show();
                 }
             });
-        } else{
-            inputPalabra.setText(palabraPistaJefe);
-            inputNumero.setText(numeroPistaJefe);
-        }
-        // 4. Lógica de enviar la pista
 
+        } else {
+            // VISTA: AGENTE DE CAMPO
+
+            // Ocultar el botón azul de enviar
+            btnEnviar.setVisibility(View.GONE);
+
+            // Cambiar el texto del título principal
+            if (txtTitulo != null) txtTitulo.setText("Pista Actual");
+
+            // Bloquear los teclados
+            inputPalabra.setFocusable(false);
+            inputPalabra.setFocusableInTouchMode(false);
+            inputPalabra.setClickable(false);
+            inputPalabra.setCursorVisible(false);
+
+            inputNumero.setFocusable(false);
+            inputNumero.setFocusableInTouchMode(false);
+            inputNumero.setClickable(false);
+            inputNumero.setCursorVisible(false);
+
+            //Mostrar la información recibida del Jefe
+            if (cantidadPista > 0) {
+                inputPalabra.setText(palabraPista);
+                inputNumero.setText(String.valueOf(cantidadPista));
+            } else {
+                // Si abren la lupa y el jefe aún no ha mandado nada
+                inputPalabra.setText("Esperando al jefe...");
+                inputNumero.setText("-");
+            }
+        }
 
         dialog.show();
     }
 
     // NUEVO MÉTODO MÁGICO
-    // NUEVO MÉTODO MÁGICO (ARREGLADO 🐼🔧)
+    // NUEVO MÉTODO MÁGICO (ARREGLADO )
     private void mostrarDialogoChat() {
         // 1. Creamos el diálogo base
         android.app.Dialog dialog = new android.app.Dialog(this);
@@ -798,61 +886,116 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
 
+
+    /*private void agregarMensajeAlChat(LinearLayout contenedor, String remitente, String texto, boolean esMio) {
+
+        // Creamos la caja del mensaje (El globo)
+        LinearLayout globoMensaje = new LinearLayout(this);
+        globoMensaje.setOrientation(LinearLayout.VERTICAL);
+        // Ajustamos el padding para que parezca más un chat moderno
+        globoMensaje.setPadding(dpToPx(12), dpToPx(8), dpToPx(12), dpToPx(10));
+
+        // y no ocupe toda la pantalla de lado a lado.
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.bottomMargin = dpToPx(12);
+
+        int colorNombre;
+        int colorTexto;
+
+        if (esMio) {
+            params.gravity = Gravity.END;
+            // Damos un margen izquierdo grande para que los textos largos no peguen con el otro lado
+            params.setMarginStart(dpToPx(60));
+            params.setMarginEnd(dpToPx(8));
+            globoMensaje.setBackgroundResource(R.drawable.fondo_mensaje_mio);
+
+            colorNombre = Color.parseColor("#004D40"); // Un verde muy oscuro y elegante para tu nombre
+            colorTexto = Color.BLACK;
+            remitente = "Tú"; // Forzamos que ponga "Tú" para que sea más inmersivo
+        } else {
+            params.gravity = Gravity.START;
+            params.setMarginStart(dpToPx(8));
+            params.setMarginEnd(dpToPx(60)); // Damos margen derecho para que no cruce toda la pantalla
+            globoMensaje.setBackgroundResource(R.drawable.fondo_mensaje_otro);
+
+            colorNombre = Color.parseColor("#FFD54F"); // Un tono dorado/amarillo que resalta sobre fondo oscuro
+            colorTexto = Color.WHITE;
+        }
+
+        // Aplicamos la configuración de diseño al globo
+        globoMensaje.setLayoutParams(params);
+
+        // 2. Estilo del Nombre del Remitente (Más pequeñito y en negrita)
+        TextView tvRemitente = new TextView(this);
+        tvRemitente.setText(remitente);
+        tvRemitente.setTextColor(colorNombre);
+        tvRemitente.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        tvRemitente.setTypeface(null, Typeface.BOLD);
+        tvRemitente.setPadding(0, 0, 0, dpToPx(2)); // Mini separación entre el nombre y el mensaje
+
+        // 3. Estilo del Texto del mensaje (Más grande para leer bien)
+        TextView tvTexto = new TextView(this);
+        tvTexto.setText(texto);
+        tvTexto.setTextColor(colorTexto);
+        tvTexto.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        // Protegemos la vista: si alguien escribe un testamento, el texto saltará de línea
+        tvTexto.setMaxWidth(dpToPx(250));
+
+        // 4. Lo empaquetamos todo en el globo
+        globoMensaje.addView(tvRemitente);
+        globoMensaje.addView(tvTexto);
+
+        // 5. Lo mandamos a la pantalla
+        contenedor.addView(globoMensaje);
+    }*/
+
     /**
-     * Este método "fabrica" un bloque de mensaje como si fuera un Lego
-     * y lo mete en el chat. Dependiendo de si es tuyo o no, cambia los colores y márgenes.
+     * Inyecta el XML 'item_mensaje_chat' en el contenedor y lo rellena con los datos.
      */
     private void agregarMensajeAlChat(LinearLayout contenedor, String remitente, String texto, boolean esMio) {
 
 
-        // Creamos la caja del mensaje
-        LinearLayout globoMensaje = new LinearLayout(this);
-        globoMensaje.setOrientation(LinearLayout.VERTICAL);
-        globoMensaje.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
+        View vistaMensaje = getLayoutInflater().inflate(R.layout.item_mensaje_chat, contenedor, false);
 
-        // Configuramos sus márgenes
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        params.bottomMargin = dpToPx(16);
+        //Buscamos las piezas por su ID dentro de esa vista
+        LinearLayout globoMensaje = vistaMensaje.findViewById(R.id.globo_mensaje);
+        TextView tvRemitente = vistaMensaje.findViewById(R.id.tv_remitente);
+        TextView tvTexto = vistaMensaje.findViewById(R.id.tv_texto_mensaje);
 
-        int colorTexto;
+        // Escribimos los textos
+        tvRemitente.setText(remitente);
+        tvTexto.setText(texto);
+
+        // 4. Modificamos colores y posición dependiendo de si es nuestro o no
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) globoMensaje.getLayoutParams();
 
         if (esMio) {
-            // Si es mío: margen a la izquierda y color clarito
-            params.setMarginStart(dpToPx(40));
-            params.setMarginEnd(0);
+            // ALINEAR A LA DERECHA
+            params.gravity = Gravity.END;
+            params.setMarginStart(dpToPx(60));
+            params.setMarginEnd(dpToPx(8));
             globoMensaje.setBackgroundResource(R.drawable.fondo_mensaje_mio);
-            colorTexto = Color.BLACK;
+
+            tvRemitente.setTextColor(Color.parseColor("#004D40")); // Verde oscuro
+            tvTexto.setTextColor(Color.BLACK);
+            tvRemitente.setText("Tú"); // Forzamos el nombre "Tú"
         } else {
-            // Si es de otro: margen a la derecha y color oscuro
-            params.setMarginStart(0);
-            params.setMarginEnd(dpToPx(40));
+            // alinear a la izquierda
+            params.gravity = Gravity.START;
+            params.setMarginStart(dpToPx(8));
+            params.setMarginEnd(dpToPx(60));
             globoMensaje.setBackgroundResource(R.drawable.fondo_mensaje_otro);
-            colorTexto = Color.WHITE;
+
+            tvRemitente.setTextColor(Color.parseColor("#FFD54F")); // Dorado/Amarillo
+            tvTexto.setTextColor(Color.WHITE);
         }
 
+        // Aplicamos la posición y lo metemos a la pantalla
         globoMensaje.setLayoutParams(params);
-
-        // Creamos el nombre del remitente
-        TextView tvRemitente = new TextView(this);
-        tvRemitente.setText(remitente);
-        tvRemitente.setTextColor(colorTexto);
-        tvRemitente.setTypeface(Typeface.SERIF, Typeface.BOLD_ITALIC);
-
-        // Creamos el texto del mensaje
-        TextView tvTexto = new TextView(this);
-        tvTexto.setText(texto);
-        tvTexto.setTextColor(colorTexto);
-        tvTexto.setTypeface(Typeface.SERIF, Typeface.ITALIC);
-
-        // Lo empaquetamos todo
-        globoMensaje.addView(tvRemitente);
-        globoMensaje.addView(tvTexto);
-
-        // Lo mandamos a la pantalla
-        contenedor.addView(globoMensaje);
+        contenedor.addView(vistaMensaje);
     }
 
     private void configurarTablero() {
@@ -954,7 +1097,7 @@ public class PartidaActivity extends AppCompatActivity {
                     try {
                         JSONObject jsonVoto = new JSONObject();
                         // i es la posición de la carta en el tablero (0 a 19)
-                        jsonVoto.put("posicionCarta", i2);
+                        jsonVoto.put("posicion_carta", i2);
 
                         // Disparamos el voto por el WebSocket
                         String destinoVoto = "/app/partidas/" + idPartidaActual + "/votar";
@@ -1162,7 +1305,7 @@ public class PartidaActivity extends AppCompatActivity {
 
                         // 1. Extraemos la nueva información (Ajusta los nombres a lo que envíe tu backend)
                         int votosActuales = carta.optInt("votos", 0);
-                        int votosNecesarios = carta.optInt("votosNecesarios", 1);
+                        int votosNecesarios = carta.optInt("votos_necesarios", 1);
                         boolean estaRevelada = carta.optBoolean("revelada", false);
                         String identidadCarta = carta.optString("identidad", "desconocida"); // Ej: "Rojo", "Azul", "Civil", "Asesino"
 
@@ -1220,19 +1363,80 @@ public class PartidaActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 try {
                     JSONObject json = new JSONObject(payload);
+                    palabraPista = json.optString("palabra_pista", json.optString("palabraPista", ""));
+                    cantidadPista = json.optInt("pista_numero", json.optInt("pistaNumero", 0));
 
-                    // CAMBIA ESTAS LÍNEAS PARA COINCIDIR CON EL LOG:
-                    String palabra = json.getString("palabra_pista"); // Antes tenías palabraPista
-                    int cantidad = json.getInt("pista_numero");      // Antes tenías pistaNumero
+                    //  ACTUALIZAR LA FASE EN LA CABECERA
+                    if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
 
-                    hayPista = true;
-                    // Opcional: si necesitas el equipo
-                    String equipoLider = json.optString("equipo_lider", "");
-                    numeroPistaJefe = String.valueOf(cantidad);
-                    palabraPistaJefe = palabra;
+                    // Mostrar alerta
+                    android.widget.Toast.makeText(PartidaActivity.this,
+                            "📢 Nueva pista: " + palabraPista + " (" + cantidadPista + ")",
+                            android.widget.Toast.LENGTH_LONG).show();
 
                 } catch (Exception e) {
-                    Log.e("WS_PISTA", "Error al leer el JSON de la pista: " + payload, e);
+                    Log.e("WS_PISTA", "Error al leer pista: " + payload, e);
+                }
+            });
+        });
+    }
+
+    private void mostrarPreviewCarta(String palabra) {
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.dialog_preview_carta);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
+
+        View btnCerrar = dialog.findViewById(R.id.btn_cerrar_preview);
+        TextView tvPalabra = dialog.findViewById(R.id.tv_palabra_preview);
+
+        if (tvPalabra != null) tvPalabra.setText(palabra);
+
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+    private void suscribirseAlTemporizador() {
+        if (stompClient == null) return;
+        String topicTemporizador = "/topic/partidas/" + idPartidaActual + "/temporizador";
+
+        stompClient.topic(topicTemporizador).subscribe(stompMessage -> {
+            String payload = stompMessage.getPayload();
+
+            runOnUiThread(() -> {
+                try {
+                    int segundos = 0;
+
+                    if (payload.contains("{")) {
+                        JSONObject json = new JSONObject(payload);
+                        segundos = json.optInt("segundos_restantes", json.optInt("tiempo", 0));
+                    } else {
+                        String numeroLimpio = payload.replaceAll("[^0-9]", "");
+                        if (!numeroLimpio.isEmpty()) segundos = Integer.parseInt(numeroLimpio);
+                    }
+
+                    // Pintamos el reloj
+                    if (tvTimer != null) {
+                        int minutos = segundos / 60;
+                        int secs = segundos % 60;
+
+                        String tiempoFormateado = String.format(java.util.Locale.getDefault(), "%02d:%02d", minutos, secs);
+                        tvTimer.setText(tiempoFormateado);
+
+                        if (segundos <= 10) {
+                            tvTimer.setTextColor(Color.parseColor("#FF5252")); // Rojo claro
+                        } else {
+                            tvTimer.setTextColor(Color.WHITE);
+                        }
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("WS_TEMP", "Error procesando temporizador", e);
                 }
             });
         });

@@ -13,10 +13,14 @@ public class UnirseMisionActivity extends AppCompatActivity {
     private LinearLayout tarjetaPrivada, tarjetaPublica;
     private FrameLayout btnHome;
 
+    private String nombreUsuario;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_unirse_mision);
+
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
         // 1. Inicializar los componentes
         btnHome = findViewById(R.id.btn_volver_home);
@@ -38,6 +42,7 @@ public class UnirseMisionActivity extends AppCompatActivity {
         // Clic en Misión Privada
         tarjetaPrivada.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(UnirseMisionActivity.this, MisionPrivadaActivity.class);
+            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             startActivity(intent);
 
             // Opcional: Anula la animación por defecto de Android para que parezca
@@ -49,6 +54,7 @@ public class UnirseMisionActivity extends AppCompatActivity {
         // Clic en Misión Pública
         tarjetaPublica.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(UnirseMisionActivity.this, MisionPublicaActivity.class);
+            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             startActivity(intent);
 
             // Opcional: Anula la animación por defecto de Android para que parezca

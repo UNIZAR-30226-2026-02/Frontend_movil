@@ -10,6 +10,7 @@ import com.example.secretpanda.R;
 
 public class CrearMisionOpcionesActivity extends AppCompatActivity {
 
+    private String nombreUsuario;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,11 +21,14 @@ public class CrearMisionOpcionesActivity extends AppCompatActivity {
         LinearLayout btnPrivada = findViewById(R.id.tarjeta_crear_privada);
         LinearLayout btnPublica = findViewById(R.id.tarjeta_crear_publica);
 
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+
         btnVolver.setOnClickListener(v -> finish());
 
         // Si es privada, le pasamos "esPrivada" = true a la siguiente pantalla
         btnPrivada.setOnClickListener(v -> {
             Intent intent = new Intent(this, ConfiguracionMisionActivity.class);
+            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             intent.putExtra("ES_PRIVADA", true);
             startActivity(intent);
         });
@@ -32,6 +36,7 @@ public class CrearMisionOpcionesActivity extends AppCompatActivity {
         // Si es pública, le pasamos "esPrivada" = false
         btnPublica.setOnClickListener(v -> {
             Intent intent = new Intent(this, ConfiguracionMisionActivity.class);
+            intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             intent.putExtra("ES_PRIVADA", false);
             startActivity(intent);
         });

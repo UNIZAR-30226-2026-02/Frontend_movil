@@ -50,6 +50,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
     private String tematicaFiltroActual = "Todas las temáticas";
     private List<String> misTemasAdquiridos = new ArrayList<>();
 
+    private String nombreUsuario;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +62,8 @@ public class MisionPublicaActivity extends AppCompatActivity {
         btnCerrar = findViewById(R.id.btn_volver_home);
         btnSelectorTematicas = findViewById(R.id.btn_selector_tematicas);
         tvTematicaActual = findViewById(R.id.tv_tematica_actual);
+
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
         if (btnCerrar != null) btnCerrar.setOnClickListener(v -> finish());
         if (btnSelectorTematicas != null) btnSelectorTematicas.setOnClickListener(v -> mostrarDialogoFiltro());
@@ -137,7 +140,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
                                 intent.putExtra("ES_PRIVADA", false);
                                 intent.putExtra("MAX_JUGADORES", partida.getMaxJugadores());
                                 intent.putExtra("TIEMPO_TURNO", partida.getTiempo());
-
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                 startActivity(intent);
                             });
                         } else {

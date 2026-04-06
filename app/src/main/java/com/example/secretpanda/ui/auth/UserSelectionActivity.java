@@ -13,13 +13,17 @@ import com.example.secretpanda.ui.home.HomeActivity;
 
 public class UserSelectionActivity extends AppCompatActivity {
 
+    private String nombreUsuario;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.eleccion_nombre_usuario);
 
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+
         EditText inputUsuario = findViewById(R.id.inputUsuario);
         Button btnAceptar = findViewById(R.id.btnAceptar);
+
 
         btnAceptar.setOnClickListener(v -> {
             String username = inputUsuario.getText().toString().trim();
@@ -78,6 +82,7 @@ public class UserSelectionActivity extends AppCompatActivity {
                             // Saltamos a la Home
                             runOnUiThread(() -> {
                                 android.content.Intent intent = new android.content.Intent(UserSelectionActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                 intent.putExtra("DESTINO", "HOME");
                                 startActivity(intent);
                                 finish();

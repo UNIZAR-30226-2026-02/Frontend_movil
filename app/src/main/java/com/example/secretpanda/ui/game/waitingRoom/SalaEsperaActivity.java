@@ -96,7 +96,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         //Log.d("API_LOBBY", "🔍 Verificando ID na Sala de Espera: " + idPartida);
         // Leemos quién somos nosotros (para luego saber nuestro rol)
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
-        if(miPropioIdGoogle == null) miPropioIdGoogle = "TuNombreDeUsuario";
+        Toast.makeText(this, "Bienvenido " + miPropioIdGoogle, Toast.LENGTH_SHORT).show();
 
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
@@ -257,7 +257,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                 listaJugadores.add(jugadorActualizado);
 
                                 if (tag.equals(miPropioIdGoogle)) {
-                                    estoyEnEquipoAzul = "AZUL".equalsIgnoreCase(equipo);
+                                    estoyEnEquipoAzul = "azul".equalsIgnoreCase(equipo);
                                     jugadorLocal = jugadorActualizado;
                                     actualizarBotonesEquipo();
                                 }
