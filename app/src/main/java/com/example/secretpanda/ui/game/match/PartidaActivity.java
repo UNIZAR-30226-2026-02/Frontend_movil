@@ -1418,7 +1418,7 @@ public class PartidaActivity extends AppCompatActivity {
 
                     if (payload.contains("{")) {
                         JSONObject json = new JSONObject(payload);
-                        segundos = json.optInt("segundosRestantes", json.optInt("tiempo", 0));
+                        segundos = json.optInt("segundos_restantes", json.optInt("tiempo", 0));
                     } else {
                         String numeroLimpio = payload.replaceAll("[^0-9]", "");
                         if (!numeroLimpio.isEmpty()) segundos = Integer.parseInt(numeroLimpio);
