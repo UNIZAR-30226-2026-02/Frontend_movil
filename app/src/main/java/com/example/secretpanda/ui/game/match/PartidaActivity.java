@@ -52,7 +52,6 @@ public class PartidaActivity extends AppCompatActivity {
     private final String ROJO_STRING = "rojo";
     private final String AZUL_STRING = "azul";
     private String miRol = AGENTE_STRING;
-    private View turnoColor;
     private android.widget.ImageView[] imagenesTablero;
 
     private String palabraPista = "";
@@ -70,9 +69,11 @@ public class PartidaActivity extends AppCompatActivity {
     private int idTurnoActual = -1; // Para saber en qué turno estamos votando
     private FrameLayout cartaActualmenteSeleccionada = null;
 
-    private TextView tvTemporizador;
-    private TextView tvFase;
-    private View viewTurnoColor;
+    private TextView tvTimer;         // id: tv_timer
+    private TextView tvFasePartida;   // id: tv_fase_partida
+    private View circuloTurno;        // id: circulo_turno
+    private TextView tvPuntosRojo;    // id: tv_puntos_rojo
+    private TextView tvPuntosAzul;    // id: tv_puntos_azul
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +98,6 @@ public class PartidaActivity extends AppCompatActivity {
             finish(); // Cerramos la pantalla porque está rota
             return;
         }
-        turnoColor = findViewById(R.id.vista_turno_actual);
 
         /*String url = "ws://10.0.2.2:8080/ws/websocket"; // Ajusta a la URL real de tu backend
         stompClient = ua.naiksoftware.stomp.Stomp.over(ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP, url);
@@ -138,9 +138,11 @@ public class PartidaActivity extends AppCompatActivity {
         notificacionChat = findViewById(R.id.notificacion_chat);
         tvMiRol = findViewById(R.id.tv_mi_rol);
         iconoBtnAlerta = findViewById(R.id.icono_btn_alerta);
-        tvTemporizador = findViewById(R.id.tv_temporizador);
-        tvFase = findViewById(R.id.tv_fase);
-        viewTurnoColor = findViewById(R.id.view_turno_color);
+        tvTimer = findViewById(R.id.tv_timer);
+        tvFasePartida = findViewById(R.id.tv_fase_partida);
+        circuloTurno = findViewById(R.id.circulo_turno);
+        tvPuntosRojo = findViewById(R.id.tv_puntos_rojo);
+        tvPuntosAzul = findViewById(R.id.tv_puntos_azul);
 
         configurarBotones();
     }
@@ -286,12 +288,12 @@ public class PartidaActivity extends AppCompatActivity {
                     String equipoTurno = json.optString("equipo_turno_actual", "");
 
                     //  PINTAMOS EL CUADRADITO DEL TURNO (¡Corregido!)
-                    if (viewTurnoColor != null) {
+                    if (circuloTurno != null) {
                         if (equipoTurno.equals(ROJO_STRING)) {
                             // Usamos Color.parseColor para evitar crasheos con el '#'
-                            viewTurnoColor.setBackgroundColor(Color.parseColor("#9B3838"));
+                            circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
                         } else {
-                            viewTurnoColor.setBackgroundColor(Color.parseColor("#38567A"));
+                            circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
                         }
                     }
 
@@ -306,7 +308,7 @@ public class PartidaActivity extends AppCompatActivity {
                             cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0));
 
                             // ACTUALIZAMOS EL TEXTO DE LA FASE
-                            if (tvFase != null) tvFase.setText("Fase: Agentes votando");
+                            if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
 
                             // Avisamos a los agentes con un Toast
                             android.widget.Toast.makeText(PartidaActivity.this,
@@ -321,7 +323,7 @@ public class PartidaActivity extends AppCompatActivity {
                         idTurnoActual = json.optInt("id_turno", idTurnoActual);
 
                         // ACTUALIZAMOS EL TEXTO DE LA FASE
-                        if (tvFase != null) tvFase.setText("Fase: El Jefe piensa...");
+                        if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
                     }
 
                     //  EXTRAEMOS LOS VOTOS
@@ -1368,42 +1370,29 @@ public class PartidaActivity extends AppCompatActivity {
         dialog.show();
     }
     private void suscribirseAlTemporizador() {
-        if (stompClient == null || !stompClient.isConnected()) return;
-
-
+        if (stompClient == null) return;
         String topicTemporizador = "/topic/partidas/" + idPartidaActual + "/temporizador";
 
         stompClient.topic(topicTemporizador).subscribe(stompMessage -> {
             String payload = stompMessage.getPayload();
             runOnUiThread(() -> {
                 try {
-                    int segundosRestantes;
-                    try {
-                        // Intentamos leerlo como JSON
-                        org.json.JSONObject json = new org.json.JSONObject(payload);
-                        segundosRestantes = json.optInt("tiempo", json.optInt("segundos", 0));
-                    } catch (org.json.JSONException e) {
-                        // Si da error, es que el backend mandó el número directamente
-                        segundosRestantes = Integer.parseInt(payload.trim());
+                    // El servidor puede mandar "60" o {"tiempo": 60}
+                    int segundos;
+                    if (payload.startsWith("{")) {
+                        segundos = new JSONObject(payload).optInt("tiempo", 0);
+                    } else {
+                        segundos = Integer.parseInt(payload.trim());
                     }
 
-                    // Formateamos los segundos
-                    int minutos = segundosRestantes / 60;
-                    int segundos = segundosRestantes % 60;
-                    String tiempoFormateado = String.format(java.util.Locale.getDefault(), "⏳ %02d:%02d", minutos, segundos);
-
-                    if (tvTemporizador != null) {
-                        tvTemporizador.setText(tiempoFormateado);
-                        // Letras rojas si quedan 10s o menos
-                        if (segundosRestantes <= 10) tvTemporizador.setTextColor(Color.RED);
-                        else tvTemporizador.setTextColor(Color.WHITE);
+                    if (tvTimer != null) {
+                        tvTimer.setText(String.valueOf(segundos));
+                        // Si quieres que cambie de color al final
+                        if (segundos <= 5) tvTimer.setTextColor(Color.RED);
+                        else tvTimer.setTextColor(Color.WHITE);
                     }
-                } catch (Exception e) {
-                    android.util.Log.e("WS_TEMP", "Error procesando temporizador", e);
-                }
+                } catch (Exception e) { e.printStackTrace(); }
             });
-        }, throwable -> {
-            android.util.Log.e("WS_TEMP", "Error al suscribirse al temporizador", throwable);
         });
     }
 }

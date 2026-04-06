@@ -47,6 +47,7 @@
                     android:layout_height="16dp"
                     android:background="#9B3838" />
                 <TextView
+                    android:id="@+id/tv_puntos_rojo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
@@ -68,6 +69,7 @@
                     android:layout_height="16dp"
                     android:background="#38567A" />
                 <TextView
+                    android:id="@+id/tv_puntos_azul"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
@@ -93,10 +95,11 @@
                     android:src="@android:drawable/ic_menu_recent_history"
                     app:tint="#000000" />
                 <TextView
+                    android:id="@+id/tv_timer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="1:20"
+                    android:text="00:00"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -141,7 +144,7 @@
                     android:textStyle="bold|italic" />
 
                 <View
-                    android:id="@+id/vista_turno_actual"
+                    android:id="@+id/circulo_turno"
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_marginStart="8dp"
@@ -150,6 +153,7 @@
         </RelativeLayout>
 
         <TextView
+            android:id="@+id/tv_fase_partida"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -157,7 +161,7 @@
             android:fontFamily="serif"
             android:paddingHorizontal="12dp"
             android:paddingVertical="6dp"
-            android:text="Fase de Votación"
+            android:text="Esperando conexión..."
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold|italic" />
@@ -174,60 +178,6 @@
         android:background="@drawable/fondo_gris_claro_redondeado"
         android:padding="8dp">
 
-        <LinearLayout
-            android:id="@+id/panel_info_superior"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:background="#22000000"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:id="@+id/tv_temporizador"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="⏳ 00:00"
-                android:textColor="#000000"
-                android:textStyle="bold"
-                android:textSize="18sp"/>
-
-            <TextView
-                android:id="@+id/tv_fase"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Fase: -"
-                android:textStyle="italic"
-                android:textColor="#333333"
-                android:textSize="14sp"/>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="end|center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Turno:"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    android:layout_marginEnd="6dp"
-                    android:textSize="14sp"/>
-
-                <View
-                    android:id="@+id/view_turno_color"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:background="#777777" />
-            </LinearLayout>
-        </LinearLayout>
         <GridLayout
             android:id="@+id/grid_tablero"
             android:layout_width="match_parent"
