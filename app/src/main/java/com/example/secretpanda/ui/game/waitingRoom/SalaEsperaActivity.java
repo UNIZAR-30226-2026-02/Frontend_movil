@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -74,6 +75,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private Dialog dialogoCarga;
 
     private StompClient stompClient;
+
+    // Lista de temas del usuario.
+    private List<Tema> temasDisponibles = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +173,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 btnIniciarPartida.setEnabled(false);
             }
         } else {
-            if (btnConfiguracion != null) {
+            // Solo muestra el botón de configuración si la partida es privada y es el creador.
+            // En caso contrario, no se pueden modificar los ajustes del lobby.
+            if (btnConfiguracion != null && esPrivada) {
                 btnConfiguracion.setVisibility(View.VISIBLE);
                 btnConfiguracion.setOnClickListener(v -> mostrarDialogoAjustes());
             }
@@ -188,7 +194,19 @@ public class SalaEsperaActivity extends AppCompatActivity {
         conectarWebSocketLobby();
         cargarLobbyInicial();
 
-        findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
+        //findViewById(R.id.btn_tematicas).setOnClickListener(v -> mostrarDialogoEstrella());
+
+        // Método que detecta si el usuario pulsa la flecha hacia atrás del móvil en vez
+        // del diálogo de abandonar. Si es así, se le aplica la misma lógica que si le
+        // diera a ese botón.
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // Mostrar el diálogo de confirmación
+                mostrarDialogoAbandonar();
+            }
+        });
+
     }
 
 
@@ -218,16 +236,15 @@ public class SalaEsperaActivity extends AppCompatActivity {
                     try {
                         // --- A) Actualizar Tiempo ---
                         // Asegúrate de usar el nombre exacto de la variable que manda tu backend en el JSON (ej: tiempoTurno)
-                        if (json.has("tiempoTurno")) {
-                            int nuevoTiempo = json.getInt("tiempoTurno");
+                            int nuevoTiempo = json.getInt("tiempo_espera");
                             // Sustituye "tvTiempoSala" por el nombre real de tu TextView en la clase
                             if (tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempo + "s");
                             android.util.Log.d("WS_LOBBY", "Tiempo actualizado por el líder a: " + nuevoTiempo);
-                        }
+
 
                         // --- B) Actualizar Max Jugadores ---
-                        if (json.has("maxJugadores")) {
-                            int nuevoMaximo = json.getInt("maxJugadores");
+                        if (json.has("max_jugadores")) {
+                            int nuevoMaximo = json.getInt("max_jugadores");
                             // Aquí actualizas tu variable local o la UI
                             maxJugadores = nuevoMaximo;
                             int jugadoresTotales = jugadoresAzul + jugadoresRojo;
@@ -377,7 +394,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
         } else if (totalJugadores < maxJugadores) {
             mostrarDialogoConfirmacion();
         } else {
-            mandarOrdenDeInicio();
+            //mandarOrdenDeInicio();
+            iniciarPartidaHTTP();
         }
     }
 
@@ -513,7 +531,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
             // ─── ⏱️ BOTONES DE TIEMPO ───
             TextView[] botonesTiempo = {
                     dialog.findViewById(R.id.btn_tiempo_30), dialog.findViewById(R.id.btn_tiempo_60),
-                    dialog.findViewById(R.id.btn_tiempo_80), dialog.findViewById(R.id.btn_tiempo_120)
+                    dialog.findViewById(R.id.btn_tiempo_90), dialog.findViewById(R.id.btn_tiempo_120)
             };
             String tiempoActualStr = tvTiempoSala.getText().toString();
             for (TextView btn : botonesTiempo) {
@@ -533,7 +551,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
 
         // ─── 👥 BOTONES DE JUGADORES ───
-        TextView[] botonesJugadores = {
+        /*TextView[] botonesJugadores = {
                 dialog.findViewById(R.id.btn_jugadores_4), dialog.findViewById(R.id.btn_jugadores_6),
                 dialog.findViewById(R.id.btn_jugadores_8), dialog.findViewById(R.id.btn_jugadores_10),
                 dialog.findViewById(R.id.btn_jugadores_12), dialog.findViewById(R.id.btn_jugadores_14),
@@ -559,7 +577,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 // 🟢 NUEVO: Avisamos al backend del cambio de JUGADORES
                 cambiarMaxJugadoresEnBackend(nuevosJugadoresNum);
             });
-        }
+        }*/
+
         dialog.show();
     }
 
@@ -605,12 +624,12 @@ public class SalaEsperaActivity extends AppCompatActivity {
     }
 
     // 🟢 NUEVO MÉTODO PARA ENVIAR LOS JUGADORES
-    private void cambiarMaxJugadoresEnBackend(int nuevosJugadores) {
+    /*private void cambiarMaxJugadoresEnBackend(int nuevosJugadores) {
         if (stompClient != null && stompClient.isConnected()) {
             try {
                 org.json.JSONObject payload = new org.json.JSONObject();
                 // Asegúrate de que este nombre coincide con el record del backend
-                payload.put("maxJugadores", nuevosJugadores);
+                payload.put("max_jugadores", nuevosJugadores);
 
                 // La nueva ruta que añadiremos al LobbyController de Spring Boot
                 String destino = "/app/partida/" + idPartida + "/maxJugadores";
@@ -626,7 +645,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "El radar WebSocket no está conectado", Toast.LENGTH_SHORT).show();
         }
-    }
+    }*/
+
     private void seleccionarBoton(TextView seleccionado, TextView[] grupo) {
         for (TextView btn : grupo) {
             if (btn != null) {
@@ -894,4 +914,57 @@ public class SalaEsperaActivity extends AppCompatActivity {
             }
         });
     }
+
+    /*private void cargarTemasDesdeServidor() {
+        String url = "http://10.0.2.2:8080/api/jugadores/temas"; // Ajusta según tu BASE_URL
+        String token = TokenManager.getInstance(this).getToken();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer " + token)
+                .get()
+                .build();
+
+        OkHttpClient client;
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("API_TEMAS", "Error al obtener temas", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonData = response.body().string();
+                        org.json.JSONArray array = new org.json.JSONArray(jsonData);
+                        temasDisponibles.clear();
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            temasDisponibles.add(new Tema(obj.getInt("id_tema"), obj.getString("nombre")));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+    */
+    // Clase interna para gestionar los temas de cartas del usuario.
+    private static class Tema {
+        int id;
+        String nombre;
+
+        Tema(int id, String nombre) {
+            this.id = id;
+            this.nombre = nombre;
+        }
+
+        @Override
+        public String toString() {
+            return nombre; // Esto es lo que el Spinner mostrará por defecto
+        }
+    }
+
 }

@@ -27,7 +27,11 @@
         android:textSize="18sp"
         android:layout_marginBottom="8dp"/>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#A0A0A0" android:layout_marginBottom="16dp"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#A0A0A0"
+        android:layout_marginBottom="16dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,13 +59,13 @@
             android:text="60s" />
 
         <TextView
-            android:id="@+id/btn_tiempo_80"
+            android:id="@+id/btn_tiempo_90"
             android:layout_width="50dp"
             android:layout_height="60dp"
             android:layout_margin="8dp"
             android:background="@drawable/fondo_boton_mision"
             android:gravity="center"
-            android:text="80s" />
+            android:text="90s" />
 
         <TextView
             android:id="@+id/btn_tiempo_120"
@@ -71,96 +75,47 @@
             android:background="@drawable/fondo_boton_mision"
             android:gravity="center"
             android:text="120s" />
+
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Maximo Jugadores"
+        android:text="Temática"
+        android:textColor="#000000"
         android:textAlignment="center"
         android:textSize="18sp"
         android:layout_marginBottom="8dp"/>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#A0A0A0" android:layout_marginBottom="16dp"/>
-
-    <GridLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:columnCount="4"
-        android:layout_marginBottom="24dp">
-
-        <TextView
-            android:id="@+id/btn_jugadores_4"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_carta_seleccionada"
-            android:gravity="center"
-            android:text="4" />
-
-        <TextView
-            android:id="@+id/btn_jugadores_6"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_boton_mision"
-            android:gravity="center"
-            android:text="6" />
-
-        <TextView
-            android:id="@+id/btn_jugadores_8"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_boton_mision"
-            android:gravity="center"
-            android:text="8" />
-
-        <TextView
-            android:id="@+id/btn_jugadores_10"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_boton_mision"
-            android:gravity="center"
-            android:text="10" />
-
-        <TextView
-            android:id="@+id/btn_jugadores_12"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_boton_mision"
-            android:gravity="center"
-            android:text="12" />
-
-        <TextView
-            android:id="@+id/btn_jugadores_14"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_boton_mision"
-            android:gravity="center"
-            android:text="14" />
-
-        <TextView
-            android:id="@+id/btn_jugadores_16"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/fondo_boton_mision"
-            android:gravity="center"
-            android:text="16" />
-    </GridLayout>
-
-    <TextView
-        android:id="@+id/tv_advertencia_sala"
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No puedes cambiar la capacidad de la sala porque ya hay dentro demasiados jugadores"
-        android:textAlignment="center"
-        android:textStyle="bold|italic"
-        android:textColor="#000000" />
+        android:layout_height="1dp"
+        android:background="#A0A0A0"
+        android:layout_marginBottom="16dp"/>
 
+    <LinearLayout
+        android:id="@+id/btn_desplegable_tematica_crear"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/fondo_input_codigo"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="32dp">
+
+        <TextView
+            android:id="@+id/txt_tematica_elegida_crear"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Selecciona temática..."
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold|italic"/>
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/arrow_down_float"
+            app:tint="#000000" />
+    </LinearLayout>
 </LinearLayout>

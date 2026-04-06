@@ -58,8 +58,6 @@ public class PartidaActivity extends AppCompatActivity {
     private int cantidadPista = 0;
 
     private List<JSONObject> historialChat = new ArrayList<>();
-    private String palabraPistaJefe = "";
-    private String numeroPistaJefe = "";
     private StompClient stompClient;
     private int idPartidaActual;
     private String miEquipo;
@@ -323,8 +321,8 @@ public class PartidaActivity extends AppCompatActivity {
 
                             // Guardamos el ID del turno para poder votar luego
                             idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
-                            palabraPista = pistaObj.optString("palabra", "");
-                            cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0));
+                            palabraPista = pistaObj.optString("palabra_pista", "");
+                            cantidadPista = pistaObj.optInt("pista_numero", pistaObj.optInt("numero", 0));
 
                             // ACTUALIZAMOS EL TEXTO DE LA FASE
                             if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
@@ -708,7 +706,7 @@ public class PartidaActivity extends AppCompatActivity {
 
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        if (miRol.equals(JEFE_STRING)&& miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
+        if (miRol.equals(JEFE_STRING) && miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
             // VISTA: JEFE DE ESPIONAJE
             btnEnviar.setVisibility(View.VISIBLE);
             inputPalabra.setFocusableInTouchMode(true);

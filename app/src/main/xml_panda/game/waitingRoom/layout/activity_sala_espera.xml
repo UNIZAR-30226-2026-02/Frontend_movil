@@ -275,18 +275,5 @@
             android:textSize="20sp"
             android:textStyle="bold|italic" />
 
-        <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/fondo_boton_circular">
-            <ImageButton
-                android:id="@+id/btn_tematicas"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:background="@drawable/fondo_boton_circular"
-                android:src="@drawable/ic_estrella"
-                android:padding="12dp"
-                android:scaleType="centerInside" />
-        </FrameLayout>
     </LinearLayout>
 </LinearLayout>
