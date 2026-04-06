@@ -150,15 +150,11 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     // Centralizamos el pintado para no repetir código
-    private void pintarTablero(org.json.JSONArray cartasArray, org.json.JSONArray votosArray) {
+    private void pintarTablero(org.json.JSONArray cartasArray, org.json.JSONArray votosArray, int totalAgentes) {
         runOnUiThread(() -> {
             if (gridTablero == null) return;
-
             gridTablero.removeAllViews();
-
-
             gridTablero.setColumnCount(4);
-
             imagenesTablero = new android.widget.ImageView[cartasArray.length()];
 
             for (int i = 0; i < cartasArray.length(); i++) {
@@ -169,95 +165,116 @@ public class PartidaActivity extends AppCompatActivity {
                     String palabra = cartaJson.optString("palabra", "");
                     String estado = cartaJson.optString("estado", "oculta");
                     String tipo = cartaJson.optString("tipo", "");
-
                     boolean estaRevelada = !"oculta".equalsIgnoreCase(estado);
 
 
+                    // CONTAR VOTOS Y SABER SI YO HE VOTADO AQUÍ
+
                     int contadorVotos = 0;
+                    boolean heVotadoYo = false;
+
                     for (int v = 0; v < votosArray.length(); v++) {
                         org.json.JSONObject votoJson = votosArray.getJSONObject(v);
-                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta ||
-                                votoJson.optInt("idCartaTablero", -1) == idCarta) {
+                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta || votoJson.optInt("idCartaTablero", -1) == idCarta) {
                             contadorVotos++;
+
+                            // Comprobamos si este voto es mío (el backend debe mandar el id_google o id_jugador en el voto)
+                            String idVotante = votoJson.optString("id_google", votoJson.optString("id_jugador", ""));
+                            if (miPropioIdGoogle.equals(idVotante)) {
+                                heVotadoYo = true;
+                            }
                         }
                     }
 
 
+                    //CONFIGURAR EL CONTENEDOR (BORDES)
+
                     FrameLayout cartaContenedor = new FrameLayout(PartidaActivity.this);
                     GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-
-                    // La magia de la distribución: width 0 y weight 1 reparte las 4 columnas perfectamente
                     params.width = 0;
-                    params.height = dpToPx(85); // Altura fija para todas
+                    params.height = dpToPx(85);
                     params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
                     params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
                     params.setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3));
                     cartaContenedor.setLayoutParams(params);
 
-                    // El borde negro lo hacemos dándole fondo negro y padding de 1dp
-                    cartaContenedor.setBackgroundColor(Color.BLACK);
-                    cartaContenedor.setPadding(dpToPx(1), dpToPx(1), dpToPx(1), dpToPx(1));
 
+                    if (!estaRevelada && contadorVotos > 0) {
+                        // Si hay votos, borde grueso de 4dp
+                        cartaContenedor.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+                        if (heVotadoYo) {
+                            cartaContenedor.setBackgroundColor(Color.parseColor("#4CAF50")); // Borde VERDE (Mi voto)
+                        } else {
+                            cartaContenedor.setBackgroundColor(Color.parseColor("#FFC107")); // Borde AMARILLO (Voto de compañero)
+                        }
+                    } else {
+                        // Si no hay votos (o está revelada), borde fino negro normal de 1dp
+                        cartaContenedor.setPadding(dpToPx(1), dpToPx(1), dpToPx(1), dpToPx(1));
+                        cartaContenedor.setBackgroundColor(Color.BLACK);
+                    }
 
+                    // FONDO E IMAGEN
                     FrameLayout fondoColor = new FrameLayout(PartidaActivity.this);
                     fondoColor.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
 
                     android.widget.ImageView imagenCarta = new android.widget.ImageView(PartidaActivity.this);
                     imagenCarta.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                     imagenCarta.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
-                    imagenCarta.setImageResource(R.drawable.fondo_carta_gruesa); // Placeholder de tu proyecto
+                    imagenCarta.setImageResource(R.drawable.fondo_carta_gruesa);
 
-
+                    // TEXTO
                     TextView tvPalabra = new TextView(PartidaActivity.this);
                     tvPalabra.setText(palabra);
                     tvPalabra.setTextColor(Color.WHITE);
                     tvPalabra.setGravity(Gravity.CENTER);
                     tvPalabra.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
                     tvPalabra.setTypeface(null, Typeface.BOLD);
-                    // Le ponemos una sombra negra fuerte para que se lea sobre CUALQUIER imagen
                     tvPalabra.setShadowLayer(4f, 0f, 0f, Color.BLACK);
 
-
+                    // REVELACIÓN Y CLICS SEGuROS
                     if (estaRevelada) {
                         if ("rojo".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.parseColor("#D32F2F"));
                         else if ("azul".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.parseColor("#1976D2"));
                         else if ("asesino".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.BLACK);
                         else fondoColor.setBackgroundColor(Color.parseColor("#B0BEC5"));
 
-                        // Hacemos la imagen translúcida para que se vea el color del equipo
                         imagenCarta.setAlpha(0.25f);
                         cartaContenedor.setEnabled(false);
                     } else {
-                        // Si está oculta, fondo gris estándar
                         fondoColor.setBackgroundColor(Color.parseColor("#546E7A"));
                         imagenCarta.setAlpha(0.8f);
 
+
                         cartaContenedor.setOnClickListener(v -> {
-                            // Si el Jefe pincha, o si el Agente pincha sin haber pista activa (idTurnoActual == -1)
-                            if (JEFE_STRING.equalsIgnoreCase(miRol) || idTurnoActual == -1) {
+
+                            if (JEFE_STRING.equalsIgnoreCase(miRol) ||
+                                    idTurnoActual == -1 ||
+                                    !miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
+
                                 mostrarPreviewCarta(palabra);
                             } else {
-                                // Si es un Agente y hay una pista activa, vota
+
                                 enviarVoto(idCarta);
                             }
                         });
                     }
 
-
                     fondoColor.addView(imagenCarta);
                     fondoColor.addView(tvPalabra);
 
-                    // Añadimos burbuja de votos si las hay
+                    // BURBUJA DE VOTOS (Ej: 1/3)
                     if (contadorVotos > 0 && !estaRevelada) {
                         TextView tvVotos = new TextView(PartidaActivity.this);
-                        tvVotos.setText(String.valueOf(contadorVotos));
+                        // Ponemos formato "X/Y"
+                        tvVotos.setText(contadorVotos + "/" + totalAgentes);
                         tvVotos.setTextColor(Color.WHITE);
                         tvVotos.setBackgroundColor(Color.parseColor("#AAFF9800"));
                         tvVotos.setGravity(Gravity.CENTER);
                         tvVotos.setTypeface(null, Typeface.BOLD);
+                        tvVotos.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11); // Letra un poco más pequeña para que quepa
 
-                        FrameLayout.LayoutParams votosParams = new FrameLayout.LayoutParams(dpToPx(24), dpToPx(24));
+
+                        FrameLayout.LayoutParams votosParams = new FrameLayout.LayoutParams(dpToPx(35), dpToPx(24));
                         votosParams.gravity = Gravity.TOP | Gravity.END;
                         tvVotos.setLayoutParams(votosParams);
                         tvVotos.setBackgroundResource(android.R.drawable.presence_away);
@@ -332,13 +349,18 @@ public class PartidaActivity extends AppCompatActivity {
                     org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
                     if (votosArray == null) votosArray = new org.json.JSONArray();
 
-                    // 4. EXTRAEMOS EL TABLERO Y PINTAMOS
+
+                    int totalAgentes = json.optInt("total_agentes_equipo", 2);
+
+                    // EXTRAEMOS EL TABLERO Y PINTAMOS
                     if (json.has("tablero")) {
                         try {
                             JSONObject tableroJson = json.getJSONObject("tablero");
                             if (tableroJson.has("cartas")) {
                                 org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
-                                pintarTablero(tableroArray, votosArray);
+
+                                // 🔥 Le pasamos el totalAgentes a la función
+                                pintarTablero(tableroArray, votosArray, totalAgentes);
                             }
                         } catch (JSONException e) {
                             android.util.Log.e("WS_TABLERO", "Error leyendo el tablero", e);
@@ -420,12 +442,16 @@ public class PartidaActivity extends AppCompatActivity {
                         org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
                         if (votosArray == null) votosArray = new org.json.JSONArray();
 
-// 3. Pasamos AMBOS arrays a nuestro método de pintar
+                        int totalAgentes = json.optInt("total_agentes_equipo", 2);
+
+                        // 3. Pasamos los TRES argumentos a nuestro método de pintar
                         if (json.has("tablero")) {
                             org.json.JSONObject tableroJson = json.getJSONObject("tablero");
                             if (tableroJson.has("cartas")) {
                                 org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
-                                pintarTablero(tableroArray, votosArray); // ¡Importante pasar los votos aquí!
+
+
+                                pintarTablero(tableroArray, votosArray, totalAgentes);
                             }
                         }
 
