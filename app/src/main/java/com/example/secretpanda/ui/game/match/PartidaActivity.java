@@ -127,7 +127,6 @@ public class PartidaActivity extends AppCompatActivity {
         suscribirseAlEstadoDeLaPartida();
         suscribirseAlChat();
         suscribirseAPista();
-        suscribirseAlTemporizador();
 
         obtenerEstadoCompletoDePartida();
 
@@ -143,6 +142,7 @@ public class PartidaActivity extends AppCompatActivity {
         circuloTurno = findViewById(R.id.circulo_turno);
         tvPuntosRojo = findViewById(R.id.tv_puntos_rojo);
         tvPuntosAzul = findViewById(R.id.tv_puntos_azul);
+        suscribirseAlTemporizador();
 
         configurarBotones();
     }
@@ -1375,23 +1375,42 @@ public class PartidaActivity extends AppCompatActivity {
 
         stompClient.topic(topicTemporizador).subscribe(stompMessage -> {
             String payload = stompMessage.getPayload();
+
             runOnUiThread(() -> {
                 try {
-                    // El servidor puede mandar "60" o {"tiempo": 60}
-                    int segundos;
-                    if (payload.startsWith("{")) {
-                        segundos = new JSONObject(payload).optInt("tiempo", 0);
+                    int segundos = 0;
+
+
+                    if (payload.contains("{")) {
+                        JSONObject json = new JSONObject(payload);
+
+
+                        segundos = json.optInt("segundosRestantes", 0);
                     } else {
-                        segundos = Integer.parseInt(payload.trim());
+                        String numeroLimpio = payload.replaceAll("[^0-9]", "");
+                        if (!numeroLimpio.isEmpty()) {
+                            segundos = Integer.parseInt(numeroLimpio);
+                        }
                     }
 
+                    // Pintamos el reloj
                     if (tvTimer != null) {
-                        tvTimer.setText(String.valueOf(segundos));
-                        // Si quieres que cambie de color al final
-                        if (segundos <= 5) tvTimer.setTextColor(Color.RED);
-                        else tvTimer.setTextColor(Color.WHITE);
+                        int minutos = segundos / 60;
+                        int secs = segundos % 60;
+
+                        String tiempoFormateado = String.format(java.util.Locale.getDefault(), "%02d:%02d", minutos, secs);
+                        tvTimer.setText(tiempoFormateado);
+
+
+                        if (segundos <= 10) {
+                            tvTimer.setTextColor(Color.parseColor("#FF5252")); // Rojo claro
+                        } else {
+                            tvTimer.setTextColor(Color.WHITE);
+                        }
                     }
-                } catch (Exception e) { e.printStackTrace(); }
+                } catch (Exception e) {
+                    android.util.Log.e("WS_TEMP", "Error procesando temporizador", e);
+                }
             });
         });
     }
