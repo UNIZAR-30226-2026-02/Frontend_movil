@@ -75,6 +75,8 @@ public class PartidaActivity extends AppCompatActivity {
     private TextView tvPuntosRojo;    // id: tv_puntos_rojo
     private TextView tvPuntosAzul;    // id: tv_puntos_azul
 
+    private String equipoTurnoActual = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -286,7 +288,7 @@ public class PartidaActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     String estado = json.optString("estado", "");
                     String equipoTurno = json.optString("equipo_turno_actual", "");
-
+                    equipoTurnoActual = equipoTurno;
                     //  PINTAMOS EL CUADRADITO DEL TURNO (¡Corregido!)
                     if (circuloTurno != null) {
                         if (equipoTurno.equals(ROJO_STRING)) {
@@ -672,7 +674,7 @@ public class PartidaActivity extends AppCompatActivity {
 
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        if (miRol.equals(JEFE_STRING)) {
+        if (miRol.equals(JEFE_STRING)&& miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
             // VISTA: JEFE DE ESPIONAJE
             btnEnviar.setVisibility(View.VISIBLE);
             inputPalabra.setFocusableInTouchMode(true);
