@@ -75,6 +75,8 @@ public class PartidaActivity extends AppCompatActivity {
 
     private String equipoTurnoActual = "";
 
+    private View circuloMiEquipo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -142,6 +144,16 @@ public class PartidaActivity extends AppCompatActivity {
         circuloTurno = findViewById(R.id.circulo_turno);
         tvPuntosRojo = findViewById(R.id.tv_puntos_rojo);
         tvPuntosAzul = findViewById(R.id.tv_puntos_azul);
+
+        circuloMiEquipo = findViewById(R.id.circulo_mi_equipo);
+
+        if (circuloMiEquipo != null) {
+            if ("rojo".equalsIgnoreCase(miEquipo)) {
+                circuloMiEquipo.setBackgroundColor(Color.parseColor("#9B3838")); // Rojo
+            } else {
+                circuloMiEquipo.setBackgroundColor(Color.parseColor("#38567A")); // Azul
+            }
+        }
         suscribirseAlTemporizador();
 
         configurarBotones();
