@@ -93,7 +93,7 @@ public class PerfilActivity extends AppCompatActivity {
 
         ImageView btnCerrar = findViewById(R.id.btn_cerrar_perfil);
         btnCerrarSesion = findViewById(R.id.btn_cerrar_sesion);
-
+        cargarDatosPerfil();
         btnCerrar.setOnClickListener(v -> finish());
 
         tabDatos.setOnClickListener(v -> {
@@ -284,12 +284,7 @@ public class PerfilActivity extends AppCompatActivity {
         if (txtMioVictorias != null) txtMioVictorias.setText(String.valueOf(victorias));
         if (txtMioDerrotas != null) txtMioDerrotas.setText(String.valueOf(derrotas));
         if (txtMioWinrate != null) txtMioWinrate.setText(String.format("%.1f%%", winrate));
-        int misBalas = com.example.secretpanda.data.model.GestorEstadisticas.getInstance().getJugadorActual().getBalas();
 
-        TextView txtMisBalas = findViewById(R.id.texto_mis_balas);
-        if (txtMisBalas != null) {
-            txtMisBalas.setText(String.valueOf(misBalas));
-        }
     }
 
     private void cargarDatosPerfil() {

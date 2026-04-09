@@ -3,12 +3,14 @@ package com.example.secretpanda.ui.home.achivements;
 import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,11 +18,21 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
-import com.example.secretpanda.data.model.GestorEstadisticas;
+import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Logro;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class LogrosActivity extends AppCompatActivity {
 
@@ -41,6 +53,7 @@ public class LogrosActivity extends AppCompatActivity {
         btnCerrar = findViewById(R.id.btn_cerrar_logros);
 
         recyclerLogros.setLayoutManager(new LinearLayoutManager(this));
+        recyclerMedallas.setLayoutManager(new LinearLayoutManager(this));
 
         btnCerrar.setOnClickListener(v -> finish());
 
@@ -58,27 +71,84 @@ public class LogrosActivity extends AppCompatActivity {
             animarAltura(tabLogros, tabLogros.getHeight(), 40);
         });
 
+        // Llamamos al servidor al iniciar
         cargarDatosReales();
     }
 
     // ==========================================
-    // CONEXIÓN CON LA BASE DE DATOS (Simulada)
+    // CONEXIÓN CON LA BASE DE DATOS (Real)
     // ==========================================
     private void cargarDatosReales() {
-        GestorEstadisticas.getInstance().recalcularProgresos();
-        List<Logro> todos = GestorEstadisticas.getInstance().getTodosLosLogros();
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/jugadores/logros";
+        String token = new TokenManager(this).getToken();
 
-        List<Logro> listaLogros = new ArrayList<>();
-        List<Logro> listaMedallas = new ArrayList<>();
-
-        // Separamos según el TIPO que viene de PostgreSQL
-        for (Logro l : todos) {
-            if (l.getTipo().equals("logro")) listaLogros.add(l);
-            else if (l.getTipo().equals("medalla")) listaMedallas.add(l);
+        if (token == null) {
+            Toast.makeText(this, "Error de sesión", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        recyclerLogros.setAdapter(new LogrosAdapter(listaLogros));
-        recyclerMedallas.setAdapter(new MedallasAdapter(listaMedallas));
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                runOnUiThread(() -> {
+                    Log.e("API_LOGROS", "Fallo red: " + e.getMessage());
+                    Toast.makeText(LogrosActivity.this, "Error conectando al servidor", Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonData = response.body().string();
+                        JSONArray array = new JSONArray(jsonData);
+
+                        List<Logro> listaLogros = new ArrayList<>();
+                        List<Logro> listaMedallas = new ArrayList<>();
+
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+
+                            // Mapeamos los datos del JSON al objeto Logro
+                            // Asegúrate de que tu modelo Logro tenga estos constructores o setters
+                            Logro item = new Logro();
+                            item.setNombre(obj.optString("nombre", ""));
+                            item.setProgresoActual(obj.optInt("progreso_actual", 0));
+                            item.setValorObjetivo(obj.optInt("progreso_max", 1));
+                            item.setCompletado(obj.optBoolean("completado", false));
+                            item.setBalasRecompensa(obj.optInt("balas_recompensa", 0));
+
+                            // Separamos en la lista que toca según el boolean "es_logro"
+                            boolean esLogro = obj.optBoolean("es_logro", true);
+
+                            if (esLogro) {
+                                item.setTipo("logro");
+                                listaLogros.add(item);
+                            } else {
+                                item.setTipo("medalla");
+                                listaMedallas.add(item);
+                            }
+                        }
+
+                        // Actualizamos los adaptadores en el hilo principal
+                        runOnUiThread(() -> {
+                            recyclerLogros.setAdapter(new LogrosAdapter(listaLogros));
+                            recyclerMedallas.setAdapter(new MedallasAdapter(listaMedallas));
+                        });
+
+                    } catch (Exception e) {
+                        Log.e("API_LOGROS", "Error parseando el JSON: ", e);
+                    }
+                }
+            }
+        });
     }
 
     private void animarAltura(TextView vista, int altoInicialPx, int altoFinalDp) {
@@ -96,9 +166,9 @@ public class LogrosActivity extends AppCompatActivity {
         animator.start();
     }
 
-    // =================================================================
-    // ADAPTADORES CONECTADOS A LOS MODELOS REALES
-    // =================================================================
+
+    // ADAPTADORES
+
     private class LogrosAdapter extends RecyclerView.Adapter<LogrosAdapter.ViewHolder> {
         private List<Logro> items;
         LogrosAdapter(List<Logro> items) { this.items = items; }
