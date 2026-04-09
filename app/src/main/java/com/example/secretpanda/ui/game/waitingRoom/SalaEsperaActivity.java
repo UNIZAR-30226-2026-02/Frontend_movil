@@ -77,7 +77,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private StompClient stompClient;
 
     // Lista de temas del usuario.
-    private List<Tema> temasDisponibles = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +99,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
         //Log.d("API_LOBBY", "🔍 Verificando ID na Sala de Espera: " + idPartida);
         // Leemos quién somos nosotros (para luego saber nuestro rol)
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
-        Toast.makeText(this, "Bienvenido " + miPropioIdGoogle, Toast.LENGTH_SHORT).show();
 
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
@@ -127,10 +125,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
             String codigoRecibido = getIntent().getStringExtra("CODIGO_PARTIDA");
             tvCodigoPartida.setText(codigoRecibido);
         }
-
-
-        // BOTONES DE CAMBIO DE EQUIPO (RF-21)
-
 
         // Ejemplo para el botón del Equipo Azul
         btnUnirseAzul.setOnClickListener(v -> {
@@ -915,56 +909,5 @@ public class SalaEsperaActivity extends AppCompatActivity {
         });
     }
 
-    /*private void cargarTemasDesdeServidor() {
-        String url = "http://10.0.2.2:8080/api/jugadores/temas"; // Ajusta según tu BASE_URL
-        String token = TokenManager.getInstance(this).getToken();
-
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", "Bearer " + token)
-                .get()
-                .build();
-
-        OkHttpClient client;
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e("API_TEMAS", "Error al obtener temas", e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String jsonData = response.body().string();
-                        org.json.JSONArray array = new org.json.JSONArray(jsonData);
-                        temasDisponibles.clear();
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject obj = array.getJSONObject(i);
-                            temasDisponibles.add(new Tema(obj.getInt("id_tema"), obj.getString("nombre")));
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-    }
-    */
-    // Clase interna para gestionar los temas de cartas del usuario.
-    private static class Tema {
-        int id;
-        String nombre;
-
-        Tema(int id, String nombre) {
-            this.id = id;
-            this.nombre = nombre;
-        }
-
-        @Override
-        public String toString() {
-            return nombre; // Esto es lo que el Spinner mostrará por defecto
-        }
-    }
 
 }

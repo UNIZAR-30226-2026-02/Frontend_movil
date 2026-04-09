@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private GoogleSignInClient mGoogleSignInClient;
     private Button btnLogin;
+    private String nombreUsuario;
     // Este es el "receptor" que espera a que el usuario elija su cuenta de Google
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -131,6 +132,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (esNuevo) {
                                 // ES NUEVO -> A elegir nombre (Registro)
                                 Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.auth.UserSelectionActivity.class);
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                 intent.putExtra("ID_GOOGLE", tokenFinal);
                                 startActivity(intent);
                                 finish();
@@ -146,6 +148,8 @@ public class LoginActivity extends AppCompatActivity {
                                         org.json.JSONObject jugadorJson = jsonObject.getJSONObject("jugador");
                                         // optLong devuelve 0 si no existe el campo o es null
                                         long partidaActivaId = jugadorJson.optLong("partidaActivaId", 0);
+                                        nombreUsuario = jugadorJson.optString("tag", "");
+
 
                                         Intent intent;
                                         if (partidaActivaId > 0) {
@@ -166,6 +170,7 @@ public class LoginActivity extends AppCompatActivity {
                                     } catch (org.json.JSONException e) {
                                         // Si por lo que sea el backend no mandó el objeto Jugador, vamos a la Home por defecto
                                         Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
+                                        intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                         intent.putExtra("DESTINO", "HOME");
                                         startActivity(intent);
                                         finish();

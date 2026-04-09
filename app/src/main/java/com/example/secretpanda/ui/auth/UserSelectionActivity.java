@@ -19,7 +19,6 @@ public class UserSelectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.eleccion_nombre_usuario);
 
-        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
         EditText inputUsuario = findViewById(R.id.inputUsuario);
         Button btnAceptar = findViewById(R.id.btnAceptar);
@@ -27,7 +26,7 @@ public class UserSelectionActivity extends AppCompatActivity {
 
         btnAceptar.setOnClickListener(v -> {
             String username = inputUsuario.getText().toString().trim();
-
+            nombreUsuario = username;
             if (username.length() < 4) {
                 Toast.makeText(this, "El nombre debe tener al menos 4 caracteres", Toast.LENGTH_SHORT).show();
                 return;

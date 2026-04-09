@@ -13,10 +13,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.data.model.GestorEstadisticas;
 import com.example.secretpanda.ui.auth.LoginActivity;
 import java.util.List;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class PerfilActivity extends AppCompatActivity {
 
@@ -33,6 +37,9 @@ public class PerfilActivity extends AppCompatActivity {
     private LinearLayout layoutListaAmigosContenedor;
     private TextView btnGestionarSolicitudes;
     private AmigoAdapter adaptador;
+
+    private String nombreImagen;
+    private String tagActual;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +97,7 @@ public class PerfilActivity extends AppCompatActivity {
         btnCerrar.setOnClickListener(v -> finish());
 
         tabDatos.setOnClickListener(v -> {
+            cargarDatosPerfil();
             layoutAmigos.setVisibility(View.GONE);
             layoutDatos.setVisibility(View.VISIBLE);
             tabDatos.setBackgroundResource(R.drawable.tab_selected);
@@ -155,6 +163,7 @@ public class PerfilActivity extends AppCompatActivity {
         btnGuardar.setOnClickListener(v -> {
             String nuevoNombre = inputNombre.getText().toString().trim();
             if (!nuevoNombre.isEmpty()) {
+                actualizarPerfilServidor(nuevoNombre, "foto_perfil");
                 textoNombreDatos.setText(nuevoNombre);
                 Intent intentDeVuelta = new Intent();
                 intentDeVuelta.putExtra("NOMBRE_ACTUALIZADO", nuevoNombre);
@@ -187,9 +196,19 @@ public class PerfilActivity extends AppCompatActivity {
         for (int i = 0; i < 60; i++) misImagenes.add(R.mipmap.ic_launcher);
 
         ImagenPerfilAdapter adaptador = new ImagenPerfilAdapter(misImagenes, recursoImagen -> {
+            // 1. Cambiamos la imagen visualmente
             imagenPerfilActual.setImageResource(recursoImagen);
+
+            // 2. Obtenemos el nombre del recurso (ej: de R.drawable.avatar_1 a "avatar_1")
+            nombreImagen = getResources().getResourceEntryName(recursoImagen);
+
+            // 3. Obtenemos el tag actual que haya en el TextView
+            tagActual = textoNombreDatos.getText().toString();
+
+            // 4. ¡ENVIAMOS AL BACKEND!
+            actualizarPerfilServidor(tagActual, nombreImagen);
+
             dialog.dismiss();
-            android.widget.Toast.makeText(this, "Imagen seleccionada", android.widget.Toast.LENGTH_SHORT).show();
         });
         recyclerImagenes.setAdapter(adaptador);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
@@ -271,5 +290,140 @@ public class PerfilActivity extends AppCompatActivity {
         if (txtMisBalas != null) {
             txtMisBalas.setText(String.valueOf(misBalas));
         }
+    }
+
+    private void cargarDatosPerfil() {
+        OkHttpClient client = new OkHttpClient();
+
+        // URL del endpoint (ajusta la IP si es necesario)
+        String url = "http://10.0.2.2:8080/api/jugadores";
+
+        // Obtenemos el token para la autenticación
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        if (jwt == null || jwt.isEmpty()) {
+            return; // O redirigir al Login
+        }
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> {
+                    android.util.Log.e("API_PERFIL", "Error: " + e.getMessage());
+                });
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONObject obj = new org.json.JSONObject(jsonData);
+
+                        // Extraemos los datos del JSON
+                        tagActual = obj.getString("tag");
+                        nombreImagen = obj.optString("fotoPerfil", ""); // Nombre del recurso o URL
+                        int balas = obj.getInt("balas");
+                        int victorias = obj.getInt("victorias");
+                        int derrotas = obj.getInt("derrotas");
+                        // int aciertos = obj.getInt("numAciertos"); // Por si los necesitas luego
+
+                        // Calculamos datos derivados
+                        int totalPartidas = victorias + derrotas;
+                        float winrate = totalPartidas > 0 ? ((float) victorias / totalPartidas) * 100 : 0f;
+
+                        // Actualizamos la UI en el hilo principal
+                        runOnUiThread(() -> {
+                            // 1. Nombre y Balas
+                            if (textoNombreDatos != null) textoNombreDatos.setText(tagActual);
+
+                            // Buscamos los TextViews de estadísticas (usando los IDs de tu XML)
+                            TextView txtPartidas = findViewById(R.id.stat_mio_partidas);
+                            TextView txtVictorias = findViewById(R.id.stat_mio_victorias);
+                            TextView txtDerrotas = findViewById(R.id.stat_mio_derrotas);
+                            TextView txtWinrate = findViewById(R.id.stat_mio_winrate);
+                            TextView txtBalas = findViewById(R.id.texto_mis_balas); // Asegúrate de que este ID existe
+
+                            if (txtPartidas != null) txtPartidas.setText(String.valueOf(totalPartidas));
+                            if (txtVictorias != null) txtVictorias.setText(String.valueOf(victorias));
+                            if (txtDerrotas != null) txtDerrotas.setText(String.valueOf(derrotas));
+                            if (txtWinrate != null) txtWinrate.setText(String.format("%.1f%%", winrate));
+                            if (txtBalas != null) txtBalas.setText(String.valueOf(balas));
+
+                            // 2. Actualizar la foto de perfil si el servidor devuelve un nombre de recurso
+                            if (!nombreImagen.isEmpty()) {
+                                int resId = getResources().getIdentifier(nombreImagen, "drawable", getPackageName());
+                                if (resId != 0) {
+                                    ImageView imgPerfil = findViewById(R.id.icono_perfil_datos);
+                                    if (imgPerfil != null) imgPerfil.setImageResource(resId);
+                                }
+                            }
+                        });
+
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("API_PERFIL", "Error parseando perfil", e);
+                    }
+                }
+            }
+        });
+    }
+
+    private void actualizarPerfilServidor(String nuevoTag, String nombreImagen) {
+        OkHttpClient client = new OkHttpClient();
+        final String url = "http://10.0.2.2:8080/api/jugadores";
+
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        // 1. Creamos el cuerpo de la petición en formato JSON
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
+        try {
+            jsonBody.put("tag", nuevoTag);
+            jsonBody.put("fotoPerfil", nombreImagen);
+        } catch (org.json.JSONException e) {
+            e.printStackTrace();
+        }
+
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(
+                jsonBody.toString(),
+                okhttp3.MediaType.parse("application/json; charset=utf-8")
+        );
+
+        // 2. Construimos la petición PUT
+        Request request = new Request.Builder()
+                .url(url)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() ->
+                        android.widget.Toast.makeText(PerfilActivity.this, "Error de red al guardar", android.widget.Toast.LENGTH_SHORT).show()
+                );
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful()) {
+                    runOnUiThread(() ->
+                            android.widget.Toast.makeText(PerfilActivity.this, "Perfil actualizado correctamente", android.widget.Toast.LENGTH_SHORT).show()
+                    );
+                } else {
+                    // Si el código es 400, probablemente el "tag" ya existe o es inválido
+                    runOnUiThread(() ->
+                            android.widget.Toast.makeText(PerfilActivity.this, "Error: El nombre ya está en uso", android.widget.Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+        });
     }
 }

@@ -71,9 +71,11 @@ public class Jugador implements Serializable {
 
     public int getVictorias() { return victorias; }
     public void sumarVictoria() { this.victorias++; }
+    public void setVictorias(int victorias){ this.victorias = victorias;}
 
     public int getNumAciertos() { return numAciertos; }
     public void sumarAcierto() { this.numAciertos++; }
+    public void setNumAciertos(int numAciertos) { this.numAciertos = numAciertos;}
 
     public int getNumFallos() { return numFallos; }
     public void sumarFallo() { this.numFallos++; }
@@ -85,4 +87,5 @@ public class Jugador implements Serializable {
     public void sumarPuntosPartida(int puntos) { this.puntosPartidaActual += puntos; }
     public boolean isEsEquipoAzul() { return esEquipoAzul; }
     public void setEsEquipoAzul(boolean esEquipoAzul) { this.esEquipoAzul = esEquipoAzul; }
+
 }

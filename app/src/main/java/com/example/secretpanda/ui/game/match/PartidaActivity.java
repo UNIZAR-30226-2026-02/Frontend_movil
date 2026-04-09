@@ -77,6 +77,12 @@ public class PartidaActivity extends AppCompatActivity {
 
     private View circuloMiEquipo;
 
+    // [CORRECCIÓN 1] Nueva variable para rastrear la fase del turno (equivalente a faseTurno en JSX)
+    private String faseTurno = "";
+
+    // [CORRECCIÓN 2] Nueva variable para saber si el agente ya votó en esta ronda (equivalente a miVotoEnviado en JSX)
+    private boolean miVotoEnviado = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +98,6 @@ public class PartidaActivity extends AppCompatActivity {
             miEquipo = "rojo"; // Por seguridad
         }
         obtenerMiRolDelServidor();
-
 
         // Si el ID es -1, significa que hubo un error al pasar los datos
         if (idPartidaActual == -1) {
@@ -241,7 +246,7 @@ public class PartidaActivity extends AppCompatActivity {
                     tvPalabra.setTypeface(null, Typeface.BOLD);
                     tvPalabra.setShadowLayer(4f, 0f, 0f, Color.BLACK);
 
-                    // REVELACIÓN Y CLICS SEGuROS
+                    // REVELACIÓN Y CLICS SEGUROS
                     if (estaRevelada) {
                         if ("rojo".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.parseColor("#D32F2F"));
                         else if ("azul".equalsIgnoreCase(tipo)) fondoColor.setBackgroundColor(Color.parseColor("#1976D2"));
@@ -254,17 +259,20 @@ public class PartidaActivity extends AppCompatActivity {
                         fondoColor.setBackgroundColor(Color.parseColor("#546E7A"));
                         imagenCarta.setAlpha(0.8f);
 
-
                         cartaContenedor.setOnClickListener(v -> {
 
+                            // [CORRECCIÓN 3] La lógica de clic usa ahora puedoVotar(), equivalente a la web.
+                            // Se mantiene el preview para el jefe y para quien no puede votar.
                             if (JEFE_STRING.equalsIgnoreCase(miRol) ||
-                                    idTurnoActual == -1 ||
                                     !miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
-
+                                // El jefe siempre ve el preview; agentes sin turno también
                                 mostrarPreviewCarta(palabra);
-                            } else {
-
+                            } else if (puedoVotar()) {
+                                // Solo votan agentes en su turno, en fase "votando", sin voto previo y con pista
                                 enviarVoto(idCarta);
+                            } else {
+                                // Agente en su turno pero sin pista aún o ya votó
+                                mostrarPreviewCarta(palabra);
                             }
                         });
                     }
@@ -303,6 +311,104 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
+    // [CORRECCIÓN 4] Nuevo método centralizado equivalente a "puedoVotar" en JSX.
+    // Condiciones: soy agente + es mi turno + fase "votando" + hay pista activa + no voté ya.
+    private boolean puedoVotar() {
+        return !JEFE_STRING.equalsIgnoreCase(miRol)
+                && miEquipo.equalsIgnoreCase(equipoTurnoActual)
+                && "votando".equalsIgnoreCase(faseTurno)
+                && hayPista
+                && !miVotoEnviado;
+    }
+
+    // [CORRECCIÓN 5] Método centralizado para aplicar el estado del tablero recibido del backend,
+    // equivalente a aplicarEstadoTablero() en JSX. Gestiona pista, fase, turno y reset de estado local.
+    private void aplicarEstadoDesdeJson(org.json.JSONObject json) {
+        // Turno actual
+        String equipoTurno = json.optString("equipo_turno_actual", equipoTurnoActual);
+        equipoTurnoActual = equipoTurno;
+
+        // Pintamos el indicador de turno
+        if (circuloTurno != null) {
+            if (equipoTurno.equals(ROJO_STRING)) {
+                circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
+            } else {
+                circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
+            }
+        }
+
+        // [CORRECCIÓN 1] Leer y guardar la fase del turno
+        if (json.has("fase_turno")) {
+            faseTurno = json.optString("fase_turno", "");
+            android.util.Log.d("WS_TABLERO", "Fase turno recibida: " + faseTurno);
+        }
+
+        // Manejo de pista_actual: equivalente al bloque if/else de aplicarEstadoTablero en JSX
+        if (json.has("pista_actual") && !json.isNull("pista_actual")) {
+            try {
+                JSONObject pistaObj = json.getJSONObject("pista_actual");
+                idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
+                palabraPista = pistaObj.optString("palabra_pista", pistaObj.optString("palabra", ""));
+                cantidadPista = pistaObj.optInt("pista_numero", pistaObj.optInt("numero", pistaObj.optInt("cantidad", 0)));
+
+                // [CORRECCIÓN 2] Hay pista activa → los agentes pueden intentar votar
+                hayPista = true;
+
+                if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
+
+                android.widget.Toast.makeText(PartidaActivity.this,
+                        "📢Nueva pista: " + palabraPista + " (" + cantidadPista + ")",
+                        android.widget.Toast.LENGTH_LONG).show();
+
+            } catch (JSONException e) {
+                android.util.Log.e("WS_TABLERO", "Error leyendo la pista del JSON", e);
+            }
+        } else {
+            // [CORRECCIÓN 2] Sin pista activa → limpiar todo el estado local del agente,
+            // igual que hace la web cuando pista_actual es null.
+            idTurnoActual = json.optInt("id_turno", -1);
+            hayPista = false;
+            miVotoEnviado = false;
+            cartaActualmenteSeleccionada = null;
+
+            if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
+        }
+
+        // [CORRECCIÓN 6] Reset condicional al recibir actualización de estado por WebSocket:
+        // si no hay votos, es una nueva ronda → resetear para permitir votar de nuevo.
+        // Equivalente al bloque de hayVotos en la web.
+        org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
+        if (votosArray == null) votosArray = new org.json.JSONArray();
+        boolean hayVotos = votosArray.length() > 0;
+        if (!hayVotos) {
+            miVotoEnviado = false;
+            cartaActualmenteSeleccionada = null;
+        }
+
+        int totalAgentes = json.optInt("total_agentes_equipo", 2);
+
+        // Pintar el tablero
+        if (json.has("tablero")) {
+            try {
+                JSONObject tableroJson = json.getJSONObject("tablero");
+                if (tableroJson.has("cartas")) {
+                    org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
+                    pintarTablero(tableroArray, votosArray, totalAgentes);
+                }
+            } catch (JSONException e) {
+                android.util.Log.e("WS_TABLERO", "Error leyendo el tablero", e);
+            }
+        }
+
+        // [CORRECCIÓN 7] Navegar a la pantalla de fin de partida si la partida terminó,
+        // equivalente a navigate(`/fin-partida/${idPartida}`) en JSX.
+        String estado = json.optString("estado", "");
+        if ("finalizada".equalsIgnoreCase(estado)) {
+            android.util.Log.d("WS_TABLERO", "🏁 ¡La partida ha terminado!");
+            finish();
+        }
+    }
+
     private void suscribirseAlEstadoDeLaPartida() {
         String destinoTopic = "/user/queue/partidas/" + idPartidaActual + "/estado";
         android.util.Log.d("WS_TABLERO", "📡 Conectando radar al canal: " + destinoTopic);
@@ -312,76 +418,8 @@ public class PartidaActivity extends AppCompatActivity {
                 String jsonCrudo = stompMessage.getPayload();
                 org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
 
-                runOnUiThread(() -> {
-                    String estado = json.optString("estado", "");
-                    String equipoTurno = json.optString("equipo_turno_actual", "");
-                    equipoTurnoActual = equipoTurno;
-                    //  PINTAMOS EL CUADRADITO DEL TURNO (¡Corregido!)
-                    if (circuloTurno != null) {
-                        if (equipoTurno.equals(ROJO_STRING)) {
-                            // Usamos Color.parseColor para evitar crasheos con el '#'
-                            circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
-                        } else {
-                            circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
-                        }
-                    }
-
-                    //   COMPROBAMOS LA FASE ACTUAL Y LAS PISTAS
-                    if (json.has("pista_actual") && !json.isNull("pista_actual")) {
-                        try {
-                            JSONObject pistaObj = json.getJSONObject("pista_actual");
-
-                            // Guardamos el ID del turno para poder votar luego
-                            idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
-                            palabraPista = pistaObj.optString("palabra_pista", "");
-                            cantidadPista = pistaObj.optInt("pista_numero", pistaObj.optInt("numero", 0));
-
-                            // ACTUALIZAMOS EL TEXTO DE LA FASE
-                            if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
-
-                            // Avisamos a los agentes con un Toast
-                            android.widget.Toast.makeText(PartidaActivity.this,
-                                    "📢Nueva pista: " + palabraPista + " (" + cantidadPista + ")",
-                                    android.widget.Toast.LENGTH_LONG).show();
-
-                        } catch (JSONException e) {
-                            android.util.Log.e("WS_TABLERO", "Error leyendo la pista del JSON", e);
-                        }
-                    } else {
-                        // Si la pista viene null, leemos el turno general (si existe)
-                        idTurnoActual = json.optInt("id_turno", idTurnoActual);
-
-                        // ACTUALIZAMOS EL TEXTO DE LA FASE
-                        if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
-                    }
-
-                    //  EXTRAEMOS LOS VOTOS
-                    org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
-                    if (votosArray == null) votosArray = new org.json.JSONArray();
-
-
-                    int totalAgentes = json.optInt("total_agentes_equipo", 2);
-
-                    // EXTRAEMOS EL TABLERO Y PINTAMOS
-                    if (json.has("tablero")) {
-                        try {
-                            JSONObject tableroJson = json.getJSONObject("tablero");
-                            if (tableroJson.has("cartas")) {
-                                org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
-
-                                // 🔥 Le pasamos el totalAgentes a la función
-                                pintarTablero(tableroArray, votosArray, totalAgentes);
-                            }
-                        } catch (JSONException e) {
-                            android.util.Log.e("WS_TABLERO", "Error leyendo el tablero", e);
-                        }
-                    }
-
-                    if ("FINALIZADA".equalsIgnoreCase(estado)) {
-                        android.util.Log.d("WS_TABLERO", "🏁 ¡La partida ha terminado!");
-                        Toast.makeText(PartidaActivity.this, "¡Partida finalizada!", Toast.LENGTH_LONG).show();
-                    }
-                });
+                // [CORRECCIÓN 5] Usamos el método centralizado en lugar de lógica duplicada
+                runOnUiThread(() -> aplicarEstadoDesdeJson(json));
 
             } catch (Exception e) {
                 android.util.Log.e("WS_TABLERO", "Error desencriptando el estado de la partida", e);
@@ -417,61 +455,15 @@ public class PartidaActivity extends AppCompatActivity {
                         org.json.JSONObject json = new org.json.JSONObject(jsonCrudo);
 
                         runOnUiThread(() -> {
-
-                            // GUARDAMOS EL TURNO Y PINTAMOS EL COLOR
-                            String equipoTurno = json.optString("equipo_turno_actual", "");
-                            equipoTurnoActual = equipoTurno;
-
-                            if (circuloTurno != null) {
-                                if (equipoTurno.equalsIgnoreCase("rojo")) {
-                                    circuloTurno.setBackgroundColor(Color.parseColor("#9B3838"));
-                                } else if (equipoTurno.equalsIgnoreCase("azul")) {
-                                    circuloTurno.setBackgroundColor(Color.parseColor("#38567A"));
-                                } else {
-                                    circuloTurno.setBackgroundColor(Color.GRAY);
-                                }
-                            }
-
-
-                            // FASE Y PISTA ACTUAL
-                            if (json.has("pista_actual") && !json.isNull("pista_actual")) {
-                                try {
-                                    JSONObject pistaObj = json.getJSONObject("pista_actual");
-                                    idTurnoActual = pistaObj.optInt("id_turno", idTurnoActual);
-                                    palabraPista = pistaObj.optString("palabra", "");
-                                    cantidadPista = pistaObj.optInt("cantidad", pistaObj.optInt("numero", 0));
-
-                                    if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");
-                                } catch (JSONException e) { e.printStackTrace(); }
-                            } else {
-                                idTurnoActual = json.optInt("id_turno", idTurnoActual);
-                                if (tvFasePartida != null) tvFasePartida.setText("Fase: El Jefe piensa...");
-                            }
-
+                            // [CORRECCIÓN 5] Usamos el método centralizado también para el estado inicial REST
+                            aplicarEstadoDesdeJson(json);
 
                             // RELOJ INICIAL (Por si el WS tarda en llegar)
-
                             int tiempoRestante = json.optInt("segundos_restantes", json.optInt("tiempo_restante", -1));
                             if (tiempoRestante != -1 && tvTimer != null) {
                                 int minutos = tiempoRestante / 60;
                                 int secs = tiempoRestante % 60;
                                 tvTimer.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", minutos, secs));
-                            }
-
-
-                            // VOTOS Y TABLERO
-                            org.json.JSONArray votosArray = json.optJSONArray("votos_turno_actual");
-                            if (votosArray == null) votosArray = new org.json.JSONArray();
-                            int totalAgentes = json.optInt("total_agentes_equipo", 2);
-
-                            if (json.has("tablero")) {
-                                try {
-                                    JSONObject tableroJson = json.getJSONObject("tablero");
-                                    if (tableroJson.has("cartas")) {
-                                        org.json.JSONArray tableroArray = tableroJson.getJSONArray("cartas");
-                                        pintarTablero(tableroArray, votosArray, totalAgentes);
-                                    }
-                                } catch (JSONException e) { e.printStackTrace(); }
                             }
                         });
 
@@ -491,8 +483,15 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
 
-        if (hayPista == false) {
-            android.widget.Toast.makeText(this, "Aún no hay una pista activa. Espera a tu Jefe.", android.widget.Toast.LENGTH_SHORT).show();
+        // [CORRECCIÓN 4] Usamos puedoVotar() en lugar de solo hayPista
+        if (!puedoVotar()) {
+            if (!hayPista) {
+                android.widget.Toast.makeText(this, "Aún no hay una pista activa. Espera a tu Jefe.", android.widget.Toast.LENGTH_SHORT).show();
+            } else if (miVotoEnviado) {
+                android.widget.Toast.makeText(this, "Ya has votado en esta ronda.", android.widget.Toast.LENGTH_SHORT).show();
+            } else if (!"votando".equalsIgnoreCase(faseTurno)) {
+                android.widget.Toast.makeText(this, "Aún no es el momento de votar.", android.widget.Toast.LENGTH_SHORT).show();
+            }
             return;
         }
 
@@ -511,7 +510,11 @@ public class PartidaActivity extends AppCompatActivity {
                     headers,
                     payload.toString()
             )).subscribe(() -> {
-                android.util.Log.d("WS_VOTO", "Voto enviado correctamente a la carta: " + idCartaTablero);
+                runOnUiThread(() -> {
+                    // [CORRECCIÓN 2] Marcar que ya votamos, igual que setMiVotoEnviado(true) en JSX
+                    miVotoEnviado = true;
+                    android.util.Log.d("WS_VOTO", "Voto enviado correctamente a la carta: " + idCartaTablero);
+                });
             }, throwable -> {
                 android.util.Log.e("WS_VOTO", "Error enviando el voto", throwable);
             });
@@ -1375,6 +1378,12 @@ public class PartidaActivity extends AppCompatActivity {
                     JSONObject json = new JSONObject(payload);
                     palabraPista = json.optString("palabra_pista", json.optString("palabraPista", ""));
                     cantidadPista = json.optInt("pista_numero", json.optInt("pistaNumero", 0));
+
+                    // [CORRECCIÓN 2] Al recibir una nueva pista por WS, activar hayPista
+                    // y resetear estado de voto, igual que hace la web en el subscribe de /pista.
+                    hayPista = true;
+                    miVotoEnviado = false;
+                    cartaActualmenteSeleccionada = null;
 
                     //  ACTUALIZAR LA FASE EN LA CABECERA
                     if (tvFasePartida != null) tvFasePartida.setText("Fase: Agentes votando");

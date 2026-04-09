@@ -3,6 +3,7 @@ package com.example.secretpanda.ui.home;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -14,8 +15,11 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.home.classification.ClasificacionActivity; // Importamos la nueva pantalla
 
@@ -25,6 +29,12 @@ import com.example.secretpanda.ui.customization.PersonalizacionActivity;
 import com.example.secretpanda.ui.shop.TiendaActivity;
 import com.example.secretpanda.ui.game.join.UnirseMisionActivity;
 import com.example.secretpanda.ui.game.createMatch.CrearMisionOpcionesActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -219,6 +229,17 @@ public class HomeActivity extends AppCompatActivity {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_historial, null);
         AlertDialog dialog = crearDialogoBase(dialogView);
 
+        // 1. Configurar RecyclerView (Asegúrate de tener un RecyclerView con este ID en dialog_historial.xml)
+        RecyclerView recycler = dialogView.findViewById(R.id.recycler_historial);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+
+        // Creamos el adaptador (necesitarás crear esta clase HistorialAdapter similar a las anteriores)
+        HistorialAdapter adapter = new HistorialAdapter(new ArrayList<>());
+        recycler.setAdapter(adapter);
+
+        // 2. CARGA AUTOMÁTICA: Llamamos al servidor nada más abrir
+        cargarHistorialServidor(adapter);
+
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_popup);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
@@ -247,4 +268,61 @@ public class HomeActivity extends AppCompatActivity {
             txtBalasHome.setText(String.valueOf(misBalas));
         }
     }
+    private void cargarHistorialServidor(HistorialAdapter adapter) {
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/jugadores/historial";
+
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null) return;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> Log.e("API_HISTORIAL", "Error al cargar historial"));
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONArray array = new org.json.JSONArray(jsonData);
+                        List<PartidaHistorial> lista = new java.util.ArrayList<>();
+
+                        for (int i = 0; i < array.length(); i++) {
+                            org.json.JSONObject obj = array.getJSONObject(i);
+                            PartidaHistorial ph = new PartidaHistorial();
+                            ph.id_partida = obj.getInt("id_partida");
+                            ph.codigo_partida = obj.getString("codigo_partida");
+                            ph.fechaFin = obj.optString("fechaFin", "---");
+                            ph.equipo = obj.getString("equipo");
+                            ph.rol = obj.getString("rol");
+                            ph.rojoGana = obj.getBoolean("rojoGana");
+                            ph.abandono = obj.getBoolean("abandono");
+
+                            // Solo procesamos aciertos/fallos si es agente (RF-4)
+                            if (ph.rol.equalsIgnoreCase("agente")) {
+                                ph.numAciertos = obj.optInt("numAciertos", 0);
+                                ph.numFallos = obj.optInt("numFallos", 0);
+                            }
+                            lista.add(ph);
+                        }
+
+                        runOnUiThread(() -> adapter.setLista(lista));
+
+                    } catch (org.json.JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
 }

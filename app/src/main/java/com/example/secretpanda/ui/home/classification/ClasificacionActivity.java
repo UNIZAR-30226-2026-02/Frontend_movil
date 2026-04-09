@@ -2,6 +2,7 @@ package com.example.secretpanda.ui.home.classification; // Asegúrate de que tu 
 
 import android.animation.ValueAnimator;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -14,6 +15,10 @@ import com.example.secretpanda.data.model.Jugador;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import ua.naiksoftware.stomp.StompClient;
+
 public class ClasificacionActivity extends AppCompatActivity {
 
     private TextView tabAmigos, tabGlobal;
@@ -23,6 +28,9 @@ public class ClasificacionActivity extends AppCompatActivity {
     // Nuestras dos listas separadas
     private List<Jugador> listaGlobalFalsa = new ArrayList<>();
     private List<Jugador> listaAmigosFalsa = new ArrayList<>();
+
+    private StompClient stompClient;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,14 +48,16 @@ public class ClasificacionActivity extends AppCompatActivity {
         // 1. Configurar la lista (RecyclerView)
         listaClasificacion.setLayoutManager(new LinearLayoutManager(this));
 
+        suscribirseRankingGlobalWS();
+        suscribirseActualizacionesAmigos();
         // Generamos los datos falsos y los cargamos
-        generarDatosFalsos();
+        cargarRankingAmigos();
         adapter = new ClasificacionAdapter(listaAmigosFalsa); // Empezamos en Amigos
         listaClasificacion.setAdapter(adapter);
 
         // 2. Comportamiento de los botones
-        tabAmigos.setOnClickListener(v -> cambiarPestana(tabAmigos, tabGlobal, listaAmigosFalsa));
-        tabGlobal.setOnClickListener(v -> cambiarPestana(tabGlobal, tabAmigos, listaGlobalFalsa));
+        tabAmigos.setOnClickListener(v -> {cargarRankingAmigos(); cambiarPestana(tabAmigos, tabGlobal, listaAmigosFalsa);});
+        tabGlobal.setOnClickListener(v -> {cargarRankingGlobal(); cambiarPestana(tabGlobal, tabAmigos, listaGlobalFalsa);});
 
         // 3. Botón para salir
         btnCerrar.setOnClickListener(v -> finish()); // Cierra esta pantalla y vuelve al Home
@@ -113,7 +123,223 @@ public class ClasificacionActivity extends AppCompatActivity {
         listaGlobalFalsa.sort((a, b) -> Integer.compare(b.getVictorias(), a.getVictorias()));
         listaAmigosFalsa.sort((a, b) -> Integer.compare(b.getVictorias(), a.getVictorias()));
     }
+    private void cargarRankingGlobal() {
+        OkHttpClient client = new OkHttpClient();
 
+        // Sustituye con tu IP de servidor (ej: http://10.0.2.2:8080 si usas emulador)
+        String url = "http://10.0.2.2:8080/api/leaderboard/global";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get() // Es una petición GET
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> {
+                    android.util.Log.e("API_RANKING", "Error conectando: " + e.getMessage());
+                    android.widget.Toast.makeText(ClasificacionActivity.this, "Error de red", android.widget.Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(jsonData);
+                        List<Jugador> listaNueva = new java.util.ArrayList<>();
+
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            org.json.JSONObject obj = jsonArray.getJSONObject(i);
+
+                            // Extraemos los datos según tu especificación
+                            String tag = obj.getString("tag");
+                            String foto = obj.optString("foto_perfil", "");
+                            int victorias = obj.getInt("victorias");
+                            // int aciertos = obj.getInt("num_aciertos"); // Por si lo usas luego
+
+                            // Creamos el objeto Jugador (asumiendo que tiene estos campos o usando tu helper)
+                            Jugador j = new Jugador(tag);
+                            // IMPORTANTE: Asegúrate de que tu clase Jugador tenga estos setters
+                            j.setVictorias(victorias);
+                            j.setFotoPerfil(foto);
+
+                            listaNueva.add(j);
+                        }
+
+                        // Actualizamos la interfaz en el hilo principal
+                        runOnUiThread(() -> {
+                            listaNueva.sort((a, b) -> Integer.compare(b.getVictorias(), a.getVictorias()));
+                            listaGlobalFalsa = listaNueva; // Guardamos los datos reales
+                            // Si estamos en la pestaña global, actualizamos el adapter
+                            adapter.setListaJugadores(listaGlobalFalsa);
+                        });
+
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("API_RANKING", "Error parseando JSON", e);
+                    }
+                }
+            }
+        });
+    }
+
+    private void cargarRankingAmigos() {
+        OkHttpClient client = new OkHttpClient();
+
+        // Sustituye con tu IP de servidor (ej: http://10.0.2.2:8080 si usas emulador)
+        String url = "http://10.0.2.2:8080/api/leaderboard/amigos";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get() // Es una petición GET
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> {
+                    android.util.Log.e("API_RANKING", "Error conectando: " + e.getMessage());
+                    android.widget.Toast.makeText(ClasificacionActivity.this, "Error de red", android.widget.Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(jsonData);
+                        List<Jugador> listaNueva = new java.util.ArrayList<>();
+
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            org.json.JSONObject obj = jsonArray.getJSONObject(i);
+
+                            // Extraemos los datos según tu especificación
+                            String tag = obj.getString("tag");
+                            String foto = obj.optString("foto_perfil", "");
+                            int victorias = obj.getInt("victorias");
+                            // int aciertos = obj.getInt("num_aciertos"); // Por si lo usas luego
+
+                            // Creamos el objeto Jugador (asumiendo que tiene estos campos o usando tu helper)
+                            Jugador j = new Jugador(tag);
+                            // IMPORTANTE: Asegúrate de que tu clase Jugador tenga estos setters
+                            j.setVictorias(victorias);
+                            j.setFotoPerfil(foto);
+
+                            listaNueva.add(j);
+                        }
+
+                        // Actualizamos la interfaz en el hilo principal
+                        runOnUiThread(() -> {
+                            listaNueva.sort((a, b) -> Integer.compare(b.getVictorias(), a.getVictorias()));
+                            listaAmigosFalsa = listaNueva; // Guardamos los datos reales
+                            // Si estamos en la pestaña global, actualizamos el adapter
+                            adapter.setListaJugadores(listaAmigosFalsa);
+                        });
+
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("API_RANKING", "Error parseando JSON", e);
+                    }
+                }
+            }
+        });
+    }
+
+    private void suscribirseActualizacionesAmigos() {
+        // Verificamos que el cliente WebSocket esté listo
+        if (stompClient == null || !stompClient.isConnected()) {
+            android.util.Log.e("WS_RANKING", "El StompClient no está conectado");
+            return;
+        }
+
+        // Nos suscribimos al canal personal del usuario
+        stompClient.topic("/user/queue/leaderboard/amigos").subscribe(topicMessage -> {
+            String jsonPayload = topicMessage.getPayload();
+
+            try {
+                org.json.JSONArray jsonArray = new org.json.JSONArray(jsonPayload);
+                List<Jugador> listaActualizada = new java.util.ArrayList<>();
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    org.json.JSONObject obj = jsonArray.getJSONObject(i);
+
+                    String tag = obj.getString("tag");
+                    String foto = obj.optString("foto_perfil", "");
+                    int victorias = obj.getInt("victorias");
+                    int numAciertos = obj.getInt("num_aciertos");
+
+                    Jugador j = new Jugador(tag);
+                    j.setVictorias(victorias);
+                    j.setFotoPerfil(foto);
+                    j.setNumAciertos(numAciertos);
+
+                    listaActualizada.add(j);
+                }
+
+                // Actualizamos la interfaz en el hilo principal
+                runOnUiThread(() -> {
+                    // Actualizamos nuestra variable de datos
+                    listaActualizada.sort((a, b) -> Integer.compare(b.getVictorias(), a.getVictorias()));
+                    listaAmigosFalsa = listaActualizada;
+                    adapter.setListaJugadores(listaAmigosFalsa);
+                });
+
+            } catch (org.json.JSONException e) {
+                android.util.Log.e("WS_RANKING", "Error parseando la actualización en tiempo real", e);
+            }
+        }, throwable -> {
+            android.util.Log.e("WS_RANKING", "Error en la suscripción WebSocket de amigos", throwable);
+        });
+    }
+
+    private void suscribirseRankingGlobalWS() {
+        if (stompClient == null || !stompClient.isConnected()) {
+            Log.e("WS_GLOBAL", "StompClient no conectado, no se puede suscribir al ranking global");
+            return;
+        }
+
+        // Suscripción al tópico público de la clasificación global
+        stompClient.topic("/topic/leaderboard/global").subscribe(topicMessage -> {
+            String jsonPayload = topicMessage.getPayload();
+
+            try {
+                org.json.JSONArray jsonArray = new org.json.JSONArray(jsonPayload);
+                List<Jugador> listaNuevaGlobal = new java.util.ArrayList<>();
+
+                // Procesamos el Top 10 que envía el servidor
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    org.json.JSONObject obj = jsonArray.getJSONObject(i);
+
+                    String tag = obj.getString("tag");
+                    String foto = obj.optString("foto_perfil", "");
+                    int victorias = obj.getInt("victorias");
+                    int numAciertos = obj.getInt("num_aciertos");
+
+                    Jugador j = new Jugador(tag);
+                    j.setVictorias(victorias);
+                    j.setFotoPerfil(foto);
+                    j.setNumAciertos(numAciertos);
+
+                    listaNuevaGlobal.add(j);
+                }
+
+                // Actualizamos la UI
+                runOnUiThread(() -> {
+                    listaNuevaGlobal.sort((a, b) -> Integer.compare(b.getVictorias(), a.getVictorias()));
+                    listaGlobalFalsa = listaNuevaGlobal;
+                    adapter.setListaJugadores(listaGlobalFalsa);
+
+                });
+
+            } catch (org.json.JSONException e) {
+                Log.e("WS_GLOBAL", "Error al parsear el ranking global", e);
+            }
+        }, throwable -> {
+            Log.e("WS_GLOBAL", "Error en la suscripción al ranking global", throwable);
+        });
+    }
     // Pequeño ayudante para no escribir tanto
     private Jugador crearJugador(String nombre, int victorias) {
         Jugador j = new Jugador(nombre);
@@ -122,6 +348,7 @@ public class ClasificacionActivity extends AppCompatActivity {
         for(int i=0; i<victorias; i++) j.sumarVictoria();
         return j;
     }
+
 
     public static class SolicitudAdapter {
     }
