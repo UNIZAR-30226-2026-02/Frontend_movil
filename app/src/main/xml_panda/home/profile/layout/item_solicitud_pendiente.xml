@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="Usuario"
-        android:textColor="#AAAAAA"
+        android:textColor="#000000"
         android:textSize="16sp"
         android:textStyle="italic" />
 
