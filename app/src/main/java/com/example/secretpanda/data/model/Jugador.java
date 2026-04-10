@@ -88,4 +88,6 @@ public class Jugador implements Serializable {
     public boolean isEsEquipoAzul() { return esEquipoAzul; }
     public void setEsEquipoAzul(boolean esEquipoAzul) { this.esEquipoAzul = esEquipoAzul; }
 
+
+
 }

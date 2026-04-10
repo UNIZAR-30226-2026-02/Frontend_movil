@@ -84,7 +84,7 @@ public class HomeActivity extends AppCompatActivity {
 
                         if (nombreActualizado != null) {
                             // Lo guardamos en nuestro objeto
-                            jugadorActual.setTag(nombreActualizado);
+                            nombreUsuario = nombreActualizado;
                             textoSaludo.setText("Hola, " + nombreActualizado);
                         }
                     }
@@ -95,8 +95,7 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, PerfilActivity.class);
 
             // PASAMOS SOLO EL STRING (EL NOMBRE)
-            intent.putExtra("NOMBRE_JUGADOR", jugadorActual.getTag());
-
+            intent.putExtra("NOMBRE_JUGADOR", nombreUsuario);
             // Abrimos la pantalla
             perfilLauncher.launch(intent);
         });
@@ -128,12 +127,7 @@ public class HomeActivity extends AppCompatActivity {
         }
 
 
-        if (btnPerfil != null) {
-            btnPerfil.setOnClickListener(v -> {
-                Intent intent = new Intent(HomeActivity.this, PerfilActivity.class);
-                startActivity(intent);
-            });
-        }
+
         // Buscar el botón de la tienda en la barra inferior
         View btnNavTienda = findViewById(R.id.nav_tienda);
 
