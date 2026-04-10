@@ -84,7 +84,7 @@ public class HomeActivity extends AppCompatActivity {
 
                         if (nombreActualizado != null) {
                             // Lo guardamos en nuestro objeto
-                            jugadorActual.setTag(nombreActualizado);
+                            nombreUsuario = nombreActualizado;
                             textoSaludo.setText("Hola, " + nombreActualizado);
                         }
                     }
@@ -95,8 +95,7 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, PerfilActivity.class);
 
             // PASAMOS SOLO EL STRING (EL NOMBRE)
-            intent.putExtra("NOMBRE_JUGADOR", jugadorActual.getTag());
-
+            intent.putExtra("NOMBRE_JUGADOR", nombreUsuario);
             // Abrimos la pantalla
             perfilLauncher.launch(intent);
         });
@@ -128,12 +127,7 @@ public class HomeActivity extends AppCompatActivity {
         }
 
 
-        if (btnPerfil != null) {
-            btnPerfil.setOnClickListener(v -> {
-                Intent intent = new Intent(HomeActivity.this, PerfilActivity.class);
-                startActivity(intent);
-            });
-        }
+
         // Buscar el botón de la tienda en la barra inferior
         View btnNavTienda = findViewById(R.id.nav_tienda);
 
@@ -325,16 +319,16 @@ public class HomeActivity extends AppCompatActivity {
                             PartidaHistorial ph = new PartidaHistorial();
                             ph.id_partida = obj.getInt("id_partida");
                             ph.codigo_partida = obj.getString("codigo_partida");
-                            ph.fechaFin = obj.optString("fechaFin", "---");
+                            ph.fechaFin = obj.optString("fecha_fin", "---");
                             ph.equipo = obj.getString("equipo");
                             ph.rol = obj.getString("rol");
-                            ph.rojoGana = obj.getBoolean("rojoGana");
+                            ph.rojoGana = obj.getBoolean("rojo_gana");
                             ph.abandono = obj.getBoolean("abandono");
 
                             // Solo procesamos aciertos/fallos si es agente (RF-4)
                             if (ph.rol.equalsIgnoreCase("agente")) {
-                                ph.numAciertos = obj.optInt("numAciertos", 0);
-                                ph.numFallos = obj.optInt("numFallos", 0);
+                                ph.numAciertos = obj.optInt("num_aciertos", 0);
+                                ph.numFallos = obj.optInt("num_fallos", 0);
                             }
                             lista.add(ph);
                         }

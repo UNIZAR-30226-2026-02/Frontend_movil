@@ -3,6 +3,7 @@ package com.example.secretpanda.ui.home.profile;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -17,6 +18,8 @@ import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.data.model.GestorEstadisticas;
 import com.example.secretpanda.ui.auth.LoginActivity;
+import com.example.secretpanda.ui.home.GestorImagenes;
+
 import java.util.List;
 
 import okhttp3.OkHttpClient;
@@ -39,8 +42,9 @@ public class PerfilActivity extends AppCompatActivity {
     private AmigoAdapter adaptador;
 
     private List<Jugador> misAmigos;
-    private String nombreImagen;
-    private String tagActual;
+    private String nombreImagen="";
+    private ImageView fotoPerfil;
+    private String tagActual= "Espía Secreto";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +56,12 @@ public class PerfilActivity extends AppCompatActivity {
         layoutListaAmigosContenedor = findViewById(R.id.layout_lista_amigos_contenedor);
         btnGestionarSolicitudes = findViewById(R.id.btn_gestionar_solicitudes);
         layoutDetalleAmigo = findViewById(R.id.layout_detalle_amigo);
+        textoNombreDatos = findViewById(R.id.texto_nombre_datos);
+
+        fotoPerfil = findViewById(R.id.icono_perfil_datos);
+
+        cargarDatosPerfil();
+
 
         btnGestionarSolicitudes.setOnClickListener(v -> {
             Intent intent = new Intent(PerfilActivity.this, SolicitudesActivity.class);
@@ -81,7 +91,6 @@ public class PerfilActivity extends AppCompatActivity {
         tabAmigos = findViewById(R.id.tab_amigos);
         tabDatos = findViewById(R.id.tab_datos);
 
-        textoNombreDatos = findViewById(R.id.texto_nombre_datos);
 
         String nombreRecibido = getIntent().getStringExtra("NOMBRE_JUGADOR");
         if (nombreRecibido != null && !nombreRecibido.isEmpty()) {
@@ -92,7 +101,6 @@ public class PerfilActivity extends AppCompatActivity {
 
         ImageView btnCerrar = findViewById(R.id.btn_cerrar_perfil);
         btnCerrarSesion = findViewById(R.id.btn_cerrar_sesion);
-        cargarDatosPerfil();
         btnCerrar.setOnClickListener(v -> finish());
 
         tabDatos.setOnClickListener(v -> {
@@ -146,16 +154,11 @@ public class PerfilActivity extends AppCompatActivity {
 
     private void cargarAmigosServidor() {
         OkHttpClient client = new OkHttpClient();
-        // Sustituye por la IP de tu servidor si es necesario
         String url = "http://10.0.2.2:8080/api/amigos/";
 
-        // Recuperamos el token JWT
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
-        if (jwt == null || jwt.isEmpty()) {
-            android.util.Log.e("API_AMIGOS", "No hay token disponible");
-            return;
-        }
+        if (jwt == null || jwt.isEmpty()) return;
 
         Request request = new Request.Builder()
                 .url(url)
@@ -165,32 +168,25 @@ public class PerfilActivity extends AppCompatActivity {
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                runOnUiThread(() -> {
-                    android.widget.Toast.makeText(PerfilActivity.this, "Error de red al cargar amigos", android.widget.Toast.LENGTH_SHORT).show();
-                });
+            public void onFailure( okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> android.widget.Toast.makeText(PerfilActivity.this, "Error de red al cargar amigos", android.widget.Toast.LENGTH_SHORT).show());
             }
 
             @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+            public void onResponse( okhttp3.Call call,okhttp3.Response response) throws java.io.IOException {
                 if (response.isSuccessful() && response.body() != null) {
-                    String jsonData = response.body().string();
                     try {
-                        org.json.JSONArray jsonArray = new org.json.JSONArray(jsonData);
-
-                        // IMPORTANTE: Asegúrate de usar la clase correcta aquí (Jugador o Amigo)
-                        // según lo que espere tu AmigoAdapter.
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(response.body().string());
                         List<Jugador> listaAmigosReales = new java.util.ArrayList<>();
 
                         for (int i = 0; i < jsonArray.length(); i++) {
                             org.json.JSONObject obj = jsonArray.getJSONObject(i);
 
                             String tag = obj.getString("tag");
-                            String fotoPerfil = obj.optString("foto_perfil", "");
-                            int victorias = obj.getInt("victorias");
-                            int numAciertos = obj.getInt("num_aciertos");
+                            String fotoPerfil = obj.optString("foto_perfil", obj.optString("foto_perfil", ""));
+                            int victorias = obj.optInt("victorias", 0);
+                            int numAciertos = obj.optInt("num_aciertos", obj.optInt("num_aciertos", 0));
 
-                            // Instanciamos el objeto con los datos del RF-24 y RF-25
                             Jugador amigo = new Jugador(tag);
                             amigo.setFotoPerfil(fotoPerfil);
                             amigo.setVictorias(victorias);
@@ -198,15 +194,18 @@ public class PerfilActivity extends AppCompatActivity {
 
                             listaAmigosReales.add(amigo);
                         }
-                        misAmigos = listaAmigosReales;
+
+                        runOnUiThread(() -> {
+                            misAmigos = listaAmigosReales;
+                            if (adaptador != null) {
+                                adaptador.setListaAmigos(misAmigos);
+                                adaptador.notifyDataSetChanged();
+                            }
+                        });
 
                     } catch (org.json.JSONException e) {
-                        android.util.Log.e("API_AMIGOS", "Error parseando el JSON de amigos", e);
+                        android.util.Log.e("API_AMIGOS", "Error parseando amigos", e);
                     }
-                } else {
-                    runOnUiThread(() -> {
-                        android.widget.Toast.makeText(PerfilActivity.this, "Error del servidor: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
-                    });
                 }
             }
         });
@@ -227,22 +226,14 @@ public class PerfilActivity extends AppCompatActivity {
         ImageView btnCambiarFoto = dialogView.findViewById(R.id.btn_cambiar_foto);
         android.widget.EditText inputNombre = dialogView.findViewById(R.id.input_editar_nombre);
 
-        inputNombre.setText(textoNombreDatos.getText().toString());
-
+        inputNombre.setText(tagActual);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
         btnCambiarFoto.setOnClickListener(v -> mostrarDialogoElegirImagen(btnCambiarFoto));
 
         btnGuardar.setOnClickListener(v -> {
             String nuevoNombre = inputNombre.getText().toString().trim();
             if (!nuevoNombre.isEmpty()) {
-                tagActual = nuevoNombre;
-                actualizarPerfilServidor(tagActual, nombreImagen);
-                textoNombreDatos.setText(nuevoNombre);
-                Intent intentDeVuelta = new Intent();
-                intentDeVuelta.putExtra("NOMBRE_ACTUALIZADO", nuevoNombre);
-                setResult(RESULT_OK, intentDeVuelta);
-
-                android.widget.Toast.makeText(this, "Perfil actualizado", android.widget.Toast.LENGTH_SHORT).show();
+                actualizarPerfilServidor(nuevoNombre, nombreImagen);
                 dialog.dismiss();
             } else {
                 inputNombre.setError("El nombre no puede estar vacío");
@@ -291,56 +282,37 @@ public class PerfilActivity extends AppCompatActivity {
             textoNombreAmigo.setText(amigo.getTag());
         }
 
-        // ===============================================
-        // MAGIA: ESTADÍSTICAS MATEMÁTICAS DEL AMIGO
-        // ===============================================
+        // ESTADÍSTICAS MATEMÁTICAS DEL AMIGO
 
-        int partidasAmigo = 45;
-        int victoriasAmigo = 25;
-        int derrotasAmigo = partidasAmigo - victoriasAmigo;
-        int balasAmigo = (int)(Math.random() * 2000);
-        float winrateAmigo = partidasAmigo > 0 ? ((float) victoriasAmigo / partidasAmigo) * 100 : 0f;
+        int victoriasAmigo = amigo.getVictorias();
 
+        // Enlazamos los textos
         TextView txtAmigoPartidas = findViewById(R.id.stat_amigo_partidas);
         TextView txtAmigoWinrate = findViewById(R.id.stat_amigo_winrate);
         TextView txtAmigoVictorias = findViewById(R.id.stat_amigo_victorias);
         TextView txtAmigoDerrotas = findViewById(R.id.stat_amigo_derrotas);
         TextView txtBalasAmigo = findViewById(R.id.stat_amigo_balas);
-        if (txtBalasAmigo != null) txtBalasAmigo.setText(String.valueOf(balasAmigo));
 
-        if (txtAmigoPartidas != null) txtAmigoPartidas.setText(String.valueOf(partidasAmigo));
+        // Ponemos el dato real
         if (txtAmigoVictorias != null) txtAmigoVictorias.setText(String.valueOf(victoriasAmigo));
-        if (txtAmigoDerrotas != null) txtAmigoDerrotas.setText(String.valueOf(derrotasAmigo));
-        if (txtAmigoWinrate != null) txtAmigoWinrate.setText(String.format("%.1f%%", winrateAmigo));
 
+        // Ponemos guiones en los datos que el servidor no nos proporciona
+        if (txtBalasAmigo != null) txtBalasAmigo.setText("---");
+        if (txtAmigoPartidas != null) txtAmigoPartidas.setText("---");
+        if (txtAmigoDerrotas != null) txtAmigoDerrotas.setText("---");
+        if (txtAmigoWinrate != null) txtAmigoWinrate.setText("---");
+
+
+        // if (txtAmigoPartidas != null) txtAmigoPartidas.setText(String.valueOf(amigo.getNumAciertos()));
+
+        // Mostramos la vista
         if (layoutListaAmigosContenedor != null && layoutDetalleAmigo != null) {
             layoutListaAmigosContenedor.setVisibility(View.GONE);
             layoutDetalleAmigo.setVisibility(View.VISIBLE);
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
 
-        GestorEstadisticas stats = GestorEstadisticas.getInstance();
-
-        int partidas = stats.getPartidasJugadas();
-        int victorias = stats.getVictorias();
-        int derrotas = partidas - victorias;
-        float winrate = partidas > 0 ? ((float) victorias / partidas) * 100 : 0f;
-
-        TextView txtMioPartidas = findViewById(R.id.stat_mio_partidas);
-        TextView txtMioWinrate = findViewById(R.id.stat_mio_winrate);
-        TextView txtMioVictorias = findViewById(R.id.stat_mio_victorias);
-        TextView txtMioDerrotas = findViewById(R.id.stat_mio_derrotas);
-
-        if (txtMioPartidas != null) txtMioPartidas.setText(String.valueOf(partidas));
-        if (txtMioVictorias != null) txtMioVictorias.setText(String.valueOf(victorias));
-        if (txtMioDerrotas != null) txtMioDerrotas.setText(String.valueOf(derrotas));
-        if (txtMioWinrate != null) txtMioWinrate.setText(String.format("%.1f%%", winrate));
-
-    }
 
     private void cargarDatosPerfil() {
         OkHttpClient client = new OkHttpClient();
@@ -377,14 +349,18 @@ public class PerfilActivity extends AppCompatActivity {
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject(jsonData);
 
+                        Log.d("API_PERFIL", "JSON recibido: " + jsonData);
+
                         // Extraemos los datos del JSON
                         tagActual = obj.getString("tag");
-                        nombreImagen = obj.optString("fotoPerfil", ""); // Nombre del recurso o URL
+                        nombreImagen = obj.optString("foto_perfil", ""); // Nombre del recurso o URL
+                        Log.d("API_PERFIL", "Nombre de la imagen: " + nombreImagen);
+                        fotoPerfil.setBackgroundResource(GestorImagenes.obtenerImagenManual(nombreImagen));
                         int balas = obj.getInt("balas");
                         int victorias = obj.getInt("victorias");
                         int derrotas = obj.getInt("derrotas");
-                        int aciertos = obj.getInt("numAciertos");
-                        int fallos = obj.getInt("numFallos"); // Por si los necesitas luego
+                        int aciertos = obj.getInt("num_aciertos");
+                        int fallos = obj.getInt("num_fallos"); // Por si los necesitas luego
 
 
                         // Calculamos datos derivados
@@ -438,7 +414,7 @@ public class PerfilActivity extends AppCompatActivity {
         org.json.JSONObject jsonBody = new org.json.JSONObject();
         try {
             jsonBody.put("tag", nuevoTag);
-            jsonBody.put("fotoPerfil", nombreImagen);
+            jsonBody.put("foto_perfil", nombreImagen);
         } catch (org.json.JSONException e) {
             e.printStackTrace();
         }
@@ -465,16 +441,25 @@ public class PerfilActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                if (response.isSuccessful()) {
-                    runOnUiThread(() ->
-                            android.widget.Toast.makeText(PerfilActivity.this, "Perfil actualizado correctamente", android.widget.Toast.LENGTH_SHORT).show()
-                    );
-                } else {
-                    // Si el código es 400, probablemente el "tag" ya existe o es inválido
-                    runOnUiThread(() ->
-                            android.widget.Toast.makeText(PerfilActivity.this, "Error: El nombre ya está en uso", android.widget.Toast.LENGTH_SHORT).show()
-                    );
-                }
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        //Cambiamos la variable y el texto visual 
+                        tagActual = nuevoTag;
+                        if (textoNombreDatos != null) {
+                            textoNombreDatos.setText(nuevoTag);
+                        }
+
+                        //Avisamos al Home
+                        Intent intentDeVuelta = new Intent();
+                        intentDeVuelta.putExtra("NOMBRE_ACTUALIZADO", nuevoTag);
+                        setResult(RESULT_OK, intentDeVuelta);
+
+                        // Recargamos estadísticas
+                        cargarDatosPerfil();
+
+                    } else {
+                    }
+                });
             }
         });
     }

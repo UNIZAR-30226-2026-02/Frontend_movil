@@ -190,7 +190,7 @@ public class PartidaActivity extends AppCompatActivity {
 
                     for (int v = 0; v < votosArray.length(); v++) {
                         org.json.JSONObject votoJson = votosArray.getJSONObject(v);
-                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta || votoJson.optInt("idCartaTablero", -1) == idCarta) {
+                        if (votoJson.optInt("id_carta_tablero", -1) == idCarta || votoJson.optInt("id_carta_tablero", -1) == idCarta) {
                             contadorVotos++;
 
                             // Comprobamos si este voto es mío (el backend debe mandar el id_google o id_jugador en el voto)
@@ -1376,8 +1376,8 @@ public class PartidaActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 try {
                     JSONObject json = new JSONObject(payload);
-                    palabraPista = json.optString("palabra_pista", json.optString("palabraPista", ""));
-                    cantidadPista = json.optInt("pista_numero", json.optInt("pistaNumero", 0));
+                    palabraPista = json.optString("palabra_pista", json.optString("palabra_pista", ""));
+                    cantidadPista = json.optInt("pista_numero", json.optInt("pista_numero", 0));
 
                     // [CORRECCIÓN 2] Al recibir una nueva pista por WS, activar hayPista
                     // y resetear estado de voto, igual que hace la web en el subscribe de /pista.

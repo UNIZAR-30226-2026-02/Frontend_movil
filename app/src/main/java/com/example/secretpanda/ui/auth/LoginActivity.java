@@ -147,7 +147,7 @@ public class LoginActivity extends AppCompatActivity {
                                         // 🕵️‍♂️ NUEVO: Extraemos el jugador y miramos si tiene partida activa
                                         org.json.JSONObject jugadorJson = jsonObject.getJSONObject("jugador");
                                         // optLong devuelve 0 si no existe el campo o es null
-                                        long partidaActivaId = jugadorJson.optLong("partidaActivaId", 0);
+                                        long partidaActivaId = jugadorJson.optLong("partida_activa_id", 0);
                                         nombreUsuario = jugadorJson.optString("tag", "");
 
 

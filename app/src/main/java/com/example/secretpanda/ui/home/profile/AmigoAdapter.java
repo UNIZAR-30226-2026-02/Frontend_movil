@@ -56,6 +56,7 @@ public class AmigoAdapter extends RecyclerView.Adapter<AmigoAdapter.AmigoViewHol
         return listaAmigos.size();
     }
 
+
     // --- CLASE VIEWHOLDER INTERNA ---
     public static class AmigoViewHolder extends RecyclerView.ViewHolder {
         ImageView iconoAmigo;

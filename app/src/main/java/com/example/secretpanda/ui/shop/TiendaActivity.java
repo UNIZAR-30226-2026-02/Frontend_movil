@@ -121,9 +121,9 @@ public class TiendaActivity extends AppCompatActivity {
                                 try {
                                     org.json.JSONObject temaJson = temasArray.getJSONObject(i);
 
-                                    int idTema = temaJson.optInt("id_tema", temaJson.optInt("idTema", -1));
+                                    int idTema = temaJson.optInt("id_tema", temaJson.optInt("id_tema", -1));
                                     String nombre = temaJson.optString("nombre", "Tema Desconocido");
-                                    int precio = temaJson.optInt("precioBalas", temaJson.optInt("precio_balas", 0));
+                                    int precio = temaJson.optInt("precio_palas", temaJson.optInt("precio_balas", 0));
 
                                     ItemPersonalizacion item = new ItemPersonalizacion(
                                             nombre,

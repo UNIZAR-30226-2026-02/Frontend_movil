@@ -145,7 +145,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
 
                             // Extraemos la variable "idPartida" tal y como se llama en tu DTO
                             // Le decimos: "Busca 'id_partida'. Si no lo encuentras, busca 'idPartida'. Y extráelo como Long"
-                            int idPartidaCreada = (int) jsonObject.optLong("id_partida", jsonObject.optLong("idPartida", -1L));
+                            int idPartidaCreada = (int) jsonObject.optLong("id_partida", jsonObject.optLong("id_partida", -1L));
 
                             android.util.Log.w("CREAR_PARTIDA", "ID extraído en Android: " + idPartidaCreada);
 
@@ -258,7 +258,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                             org.json.JSONObject temaJson = temasArray.getJSONObject(i);
 
                             // Aceptamos camelCase o snake_case por si acaso
-                            int idTema = temaJson.optInt("id_tema", temaJson.optInt("idTema", -1));
+                            int idTema = temaJson.optInt("id_tema", temaJson.optInt("id_tema", -1));
                             String nombre = temaJson.optString("nombre", "");
 
                             if (idTema != -1 && !nombre.isEmpty()) {
