@@ -13,6 +13,11 @@ public class Logro {
     private int progresoActual;
     private boolean completado;
 
+    // Constructor vacío para poder crearlo desde el JSON paso a paso
+    public Logro() {
+    }
+
+    // Constructor completo original
     public Logro(int idLogro, String nombre, String descripcion, String tipo, String estadisticaClave, int valorObjetivo, int balasRecompensa) {
         this.idLogro = idLogro;
         this.nombre = nombre;
@@ -25,6 +30,8 @@ public class Logro {
         this.completado = false;
     }
 
+
+    // GETTERS
     public int getIdLogro() { return idLogro; }
     public String getNombre() { return nombre; }
     public String getDescripcion() { return descripcion; }
@@ -35,6 +42,14 @@ public class Logro {
     public int getProgresoActual() { return progresoActual; }
     public boolean isCompletado() { return completado; }
 
+    // SETTERS (
+    public void setIdLogro(int idLogro) { this.idLogro = idLogro; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
+    public void setEstadisticaClave(String estadisticaClave) { this.estadisticaClave = estadisticaClave; }
+    public void setValorObjetivo(int valorObjetivo) { this.valorObjetivo = valorObjetivo; }
+    public void setBalasRecompensa(int balasRecompensa) { this.balasRecompensa = balasRecompensa; }
     public void setProgresoActual(int progresoActual) { this.progresoActual = progresoActual; }
     public void setCompletado(boolean completado) { this.completado = completado; }
 }

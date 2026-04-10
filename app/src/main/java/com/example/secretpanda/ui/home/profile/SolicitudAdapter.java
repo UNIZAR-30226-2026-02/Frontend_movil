@@ -6,25 +6,26 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.model.Solicitud; // Asegúrate de importar el modelo
 
 import java.util.List;
 
 public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.ViewHolder> {
 
-    private List<String> listaSolicitudes;
+    // 1. Cambiamos String por Solicitud
+    private List<Solicitud> listaSolicitudes;
     private OnAccionSolicitudListener listener;
 
     public interface OnAccionSolicitudListener {
-        void onAceptar(int position, String nombre);
-        void onRechazar(int position, String nombre);
+        // 2. Añadimos el int idSolicitante
+        void onAceptar(int position, String nombre, int idSolicitante);
+        void onRechazar(int position, String nombre, int idSolicitante);
     }
 
-    public SolicitudAdapter(List<String> listaSolicitudes, OnAccionSolicitudListener listener) {
+    public SolicitudAdapter(List<Solicitud> listaSolicitudes, OnAccionSolicitudListener listener) {
         this.listaSolicitudes = listaSolicitudes;
         this.listener = listener;
     }
@@ -44,15 +45,19 @@ public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String nombre = listaSolicitudes.get(position);
+        // 3. Extraemos los datos del objeto
+        Solicitud solicitud = listaSolicitudes.get(position);
+        String nombre = solicitud.getNombre();
+        int idSolicitante = solicitud.getIdSolicitante();
+
         holder.txtNombre.setText(nombre);
 
         holder.btnAceptar.setOnClickListener(v -> {
-            if (listener != null) listener.onAceptar(holder.getAdapterPosition(), nombre);
+            if (listener != null) listener.onAceptar(holder.getAdapterPosition(), nombre, idSolicitante);
         });
 
         holder.btnRechazar.setOnClickListener(v -> {
-            if (listener != null) listener.onRechazar(holder.getAdapterPosition(), nombre);
+            if (listener != null) listener.onRechazar(holder.getAdapterPosition(), nombre, idSolicitante);
         });
     }
 

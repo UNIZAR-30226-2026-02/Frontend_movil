@@ -38,6 +38,7 @@ public class PerfilActivity extends AppCompatActivity {
     private TextView btnGestionarSolicitudes;
     private AmigoAdapter adaptador;
 
+    private List<Jugador> misAmigos;
     private String nombreImagen;
     private String tagActual;
 
@@ -67,10 +68,8 @@ public class PerfilActivity extends AppCompatActivity {
         recyclerAmigos.setLayoutManager(new LinearLayoutManager(this));
 
         // TUS AMIGOS FALSOS INICIALES
-        java.util.List<Jugador> misAmigos = new java.util.ArrayList<>();
-        misAmigos.add(new Jugador("NinjaMaster"));
-        misAmigos.add(new Jugador("BambooHunter"));
-
+        misAmigos = new java.util.ArrayList<>();
+        cargarAmigosServidor();
         adaptador = new AmigoAdapter(misAmigos, amigoClickado -> {
             mostrarDetalleDe(amigoClickado);
         });
@@ -93,7 +92,7 @@ public class PerfilActivity extends AppCompatActivity {
 
         ImageView btnCerrar = findViewById(R.id.btn_cerrar_perfil);
         btnCerrarSesion = findViewById(R.id.btn_cerrar_sesion);
-
+        cargarDatosPerfil();
         btnCerrar.setOnClickListener(v -> finish());
 
         tabDatos.setOnClickListener(v -> {
@@ -113,6 +112,11 @@ public class PerfilActivity extends AppCompatActivity {
             tabAmigos.setTextColor(Color.parseColor("#555555"));
             tabDatos.setBackgroundResource(R.drawable.tab_unselected);
             tabDatos.setTextColor(Color.WHITE);
+            cargarAmigosServidor();
+            adaptador = new AmigoAdapter(misAmigos, amigoClickado -> {
+                mostrarDetalleDe(amigoClickado);
+            });
+
         });
 
         btnCerrarSesion.setOnClickListener(v -> {
@@ -140,6 +144,74 @@ public class PerfilActivity extends AppCompatActivity {
         btnEditarPerfil.setOnClickListener(v -> mostrarDialogoEditar());
     }
 
+    private void cargarAmigosServidor() {
+        OkHttpClient client = new OkHttpClient();
+        // Sustituye por la IP de tu servidor si es necesario
+        String url = "http://10.0.2.2:8080/api/amigos/";
+
+        // Recuperamos el token JWT
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null || jwt.isEmpty()) {
+            android.util.Log.e("API_AMIGOS", "No hay token disponible");
+            return;
+        }
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> {
+                    android.widget.Toast.makeText(PerfilActivity.this, "Error de red al cargar amigos", android.widget.Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(jsonData);
+
+                        // IMPORTANTE: Asegúrate de usar la clase correcta aquí (Jugador o Amigo)
+                        // según lo que espere tu AmigoAdapter.
+                        List<Jugador> listaAmigosReales = new java.util.ArrayList<>();
+
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            org.json.JSONObject obj = jsonArray.getJSONObject(i);
+
+                            String tag = obj.getString("tag");
+                            String fotoPerfil = obj.optString("foto_perfil", "");
+                            int victorias = obj.getInt("victorias");
+                            int numAciertos = obj.getInt("num_aciertos");
+
+                            // Instanciamos el objeto con los datos del RF-24 y RF-25
+                            Jugador amigo = new Jugador(tag);
+                            amigo.setFotoPerfil(fotoPerfil);
+                            amigo.setVictorias(victorias);
+                            amigo.setNumAciertos(numAciertos);
+
+                            listaAmigosReales.add(amigo);
+                        }
+                        misAmigos = listaAmigosReales;
+
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("API_AMIGOS", "Error parseando el JSON de amigos", e);
+                    }
+                } else {
+                    runOnUiThread(() -> {
+                        android.widget.Toast.makeText(PerfilActivity.this, "Error del servidor: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }
+        });
+    }
+
     private void mostrarDialogoEditar() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_editar_perfil, null);
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
@@ -163,7 +235,8 @@ public class PerfilActivity extends AppCompatActivity {
         btnGuardar.setOnClickListener(v -> {
             String nuevoNombre = inputNombre.getText().toString().trim();
             if (!nuevoNombre.isEmpty()) {
-                actualizarPerfilServidor(nuevoNombre, "foto_perfil");
+                tagActual = nuevoNombre;
+                actualizarPerfilServidor(tagActual, nombreImagen);
                 textoNombreDatos.setText(nuevoNombre);
                 Intent intentDeVuelta = new Intent();
                 intentDeVuelta.putExtra("NOMBRE_ACTUALIZADO", nuevoNombre);
@@ -201,9 +274,6 @@ public class PerfilActivity extends AppCompatActivity {
 
             // 2. Obtenemos el nombre del recurso (ej: de R.drawable.avatar_1 a "avatar_1")
             nombreImagen = getResources().getResourceEntryName(recursoImagen);
-
-            // 3. Obtenemos el tag actual que haya en el TextView
-            tagActual = textoNombreDatos.getText().toString();
 
             // 4. ¡ENVIAMOS AL BACKEND!
             actualizarPerfilServidor(tagActual, nombreImagen);
@@ -253,21 +323,6 @@ public class PerfilActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // 1. ACTUALIZAR LISTA DE AMIGOS
-        List<String> nombresNuevos = com.example.secretpanda.data.model.SocialGlobal.getInstance().getMisAmigos();
-        java.util.List<Jugador> amigosConvertidos = new java.util.ArrayList<>();
-        for(String nombre : nombresNuevos) {
-            amigosConvertidos.add(new Jugador(nombre));
-        }
-
-        if (adaptador != null) {
-            adaptador.setListaAmigos(amigosConvertidos);
-            adaptador.notifyDataSetChanged();
-        }
-
-        // ===============================================
-        // 2. MAGIA: TUS ESTADÍSTICAS MATEMÁTICAS REALES
-        // ===============================================
         GestorEstadisticas stats = GestorEstadisticas.getInstance();
 
         int partidas = stats.getPartidasJugadas();
@@ -284,12 +339,7 @@ public class PerfilActivity extends AppCompatActivity {
         if (txtMioVictorias != null) txtMioVictorias.setText(String.valueOf(victorias));
         if (txtMioDerrotas != null) txtMioDerrotas.setText(String.valueOf(derrotas));
         if (txtMioWinrate != null) txtMioWinrate.setText(String.format("%.1f%%", winrate));
-        int misBalas = com.example.secretpanda.data.model.GestorEstadisticas.getInstance().getJugadorActual().getBalas();
 
-        TextView txtMisBalas = findViewById(R.id.texto_mis_balas);
-        if (txtMisBalas != null) {
-            txtMisBalas.setText(String.valueOf(misBalas));
-        }
     }
 
     private void cargarDatosPerfil() {
@@ -333,7 +383,9 @@ public class PerfilActivity extends AppCompatActivity {
                         int balas = obj.getInt("balas");
                         int victorias = obj.getInt("victorias");
                         int derrotas = obj.getInt("derrotas");
-                        // int aciertos = obj.getInt("numAciertos"); // Por si los necesitas luego
+                        int aciertos = obj.getInt("numAciertos");
+                        int fallos = obj.getInt("numFallos"); // Por si los necesitas luego
+
 
                         // Calculamos datos derivados
                         int totalPartidas = victorias + derrotas;

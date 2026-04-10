@@ -12,12 +12,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
-import com.example.secretpanda.data.model.SocialGlobal;
+import com.example.secretpanda.data.TokenManager;
+import com.example.secretpanda.data.model.Solicitud;
 import com.example.secretpanda.ui.customization.PersonalizacionActivity;
 import com.example.secretpanda.ui.home.HomeActivity;
 import com.example.secretpanda.ui.shop.TiendaActivity;
 
 import java.util.ArrayList;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class SolicitudesActivity extends AppCompatActivity {
 
@@ -33,6 +37,9 @@ public class SolicitudesActivity extends AppCompatActivity {
     // --- Búsqueda ---
     private EditText etBuscarAmigo;
     private View btnEnviarSolicitud;
+
+    private ArrayList<Solicitud> listaSolicitudesPendientes = new ArrayList<>();
+    private ArrayList<Solicitud> listaSolicitudesRecibidas = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +94,10 @@ public class SolicitudesActivity extends AppCompatActivity {
         // Empezamos en la pestaña 1 ("Añadir Amigo") por defecto
         mostrarPestana(1);
 
-        cargarDatos();
+        listaSolicitudesPendientes = new ArrayList<>();
+        listaSolicitudesRecibidas = new ArrayList<>();
+
+        //cargarDatos();
         configurarBuscador();
     }
 
@@ -131,6 +141,8 @@ public class SolicitudesActivity extends AppCompatActivity {
         else if (numeroPestana == 3) {
             if (pantallaPendientes != null) pantallaPendientes.setVisibility(View.VISIBLE);
             cajaActiva = caja3;
+            cargarSolicitudesRecibidasServidor();
+
         }
 
         // ¡Le damos el color de pestaña seleccionada!
@@ -146,35 +158,23 @@ public class SolicitudesActivity extends AppCompatActivity {
     // ==========================================
     private void cargarDatos() {
         if (recyclerRecibidas != null) {
-            adapterRecibidas = new SolicitudAdapter(new ArrayList<>(SocialGlobal.getInstance().getSolicitudesRecibidas()), new SolicitudAdapter.OnAccionSolicitudListener() {
+            adapterRecibidas = new SolicitudAdapter(listaSolicitudesRecibidas, new SolicitudAdapter.OnAccionSolicitudListener() {
                 @Override
-                public void onAceptar(int position, String nombre) {
-                    adapterRecibidas.removeItem(position);
-                    SocialGlobal.getInstance().aceptarSolicitud(nombre);
-                    Toast.makeText(SolicitudesActivity.this, "¡Has aceptado a " + nombre + "!", Toast.LENGTH_SHORT).show();
+                public void onAceptar(int position, String nombre, int idSolicitante) {
+                    // Llamamos a la API con estado "aceptada"
+                    responderSolicitudServidor(idSolicitante, "aceptada", position, nombre);
                 }
 
                 @Override
-                public void onRechazar(int position, String nombre) {
-                    adapterRecibidas.removeItem(position);
-                    SocialGlobal.getInstance().rechazarSolicitud(nombre);
-                    Toast.makeText(SolicitudesActivity.this, "Solicitud rechazada", Toast.LENGTH_SHORT).show();
+                public void onRechazar(int position, String nombre, int idSolicitante) {
+                    // Llamamos a la API con estado "rechazada" (o el que uses para cancelar)
+                    responderSolicitudServidor(idSolicitante, "rechazada", position, nombre);
                 }
             });
             recyclerRecibidas.setAdapter(adapterRecibidas);
         }
 
-        if (recyclerPendientes != null) {
-            adapterPendientes = new SolicitudPendienteAdapter(new ArrayList<>(SocialGlobal.getInstance().getSolicitudesPendientes()), new SolicitudPendienteAdapter.OnCancelarListener() {
-                @Override
-                public void onCancelar(int position, String nombre) {
-                    adapterPendientes.removeItem(position);
-                    SocialGlobal.getInstance().getSolicitudesPendientes().remove(nombre);
-                    Toast.makeText(SolicitudesActivity.this, "Solicitud cancelada", Toast.LENGTH_SHORT).show();
-                }
-            });
-            recyclerPendientes.setAdapter(adapterPendientes);
-        }
+        // ... (el código de recyclerPendientes se queda igual por ahora)
     }
 
     // ==========================================
@@ -188,23 +188,7 @@ public class SolicitudesActivity extends AppCompatActivity {
                 if (nombreEscrito.isEmpty()) {
                     return;
                 }
-                if (!SocialGlobal.getInstance().existeUsuario(nombreEscrito)) {
-                    Toast.makeText(this, "El usuario '" + nombreEscrito + "' no existe.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (SocialGlobal.getInstance().esMiAmigo(nombreEscrito)) {
-                    Toast.makeText(this, "¡" + nombreEscrito + " ya es tu amigo!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (SocialGlobal.getInstance().yaEnvieSolicitud(nombreEscrito)) {
-                    Toast.makeText(this, "Ya tienes una solicitud pendiente con " + nombreEscrito, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                SocialGlobal.getInstance().enviarSolicitud(nombreEscrito);
-                if (adapterPendientes != null) {
-                    adapterPendientes.addItem(nombreEscrito);
-                }
+                enviarSolicitudServidor(nombreEscrito);
                 etBuscarAmigo.setText("");
 
                 Toast.makeText(this, "Solicitud enviada a " + nombreEscrito, Toast.LENGTH_SHORT).show();
@@ -245,5 +229,192 @@ public class SolicitudesActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
             });
         }
+    }
+
+
+    private void enviarSolicitudServidor(String tagReceptor) {
+        // 1. Validamos que haya token
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null || jwt.isEmpty()) {
+            android.widget.Toast.makeText(this, "Error de sesión: No hay token", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/amigos/solicitudes";
+
+        // 2. Creamos el JSON con el tag del receptor
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
+        try {
+            jsonBody.put("tag_receptor", tagReceptor);
+        } catch (org.json.JSONException e) {
+            e.printStackTrace();
+        }
+
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(
+                jsonBody.toString(),
+                okhttp3.MediaType.parse("application/json; charset=utf-8")
+        );
+
+        // 3. Petición POST con autorización
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        // 4. Ejecutamos la llamada
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() ->
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "Error de red", android.widget.Toast.LENGTH_SHORT).show()
+                );
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "¡Solicitud enviada a " + tagReceptor + "!", Toast.LENGTH_SHORT).show();
+                        // Limpiamos el buscador para que el usuario sepa que ha funcionado
+                        if (etBuscarAmigo != null) etBuscarAmigo.setText("");
+                    } else if (response.code() == 404) {
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "Jugador no encontrado", android.widget.Toast.LENGTH_SHORT).show();
+                    } else if (response.code() == 409) {
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "Ya hay una solicitud pendiente o ya sois amigos", android.widget.Toast.LENGTH_LONG).show();
+                    } else {
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "Error al enviar: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+    }
+
+    private void cargarSolicitudesRecibidasServidor() {
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null) return;
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/amigos/solicitudes";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> android.util.Log.e("API_SOLICITUDES", "Error al cargar recibidas"));
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONArray array = new org.json.JSONArray(jsonData);
+                        ArrayList<Solicitud> nuevosNombres = new ArrayList<>();
+
+                        for (int i = 0; i < array.length(); i++) {
+                            org.json.JSONObject obj = array.getJSONObject(i);
+                            // Extraemos el tag del solicitante (RF-24)
+
+                            int id_solicitante = obj.getInt("id_solicitante");
+                            String tag_solicitante = obj.getString("tag_solicitante");
+                            String foto_perfil = obj.getString("foto_perfil_solicitante");
+                            String fecha_solicitud = obj.getString("fecha_solicitud");
+                            String estado = obj.getString("estado");
+                            Solicitud s = new Solicitud(id_solicitante, tag_solicitante, foto_perfil, fecha_solicitud, estado);
+
+                            nuevosNombres.add(s);
+
+                            // Nota: Aquí también tienes disponible 'foto_perfil_solicitante'
+                            // y 'fecha_solicitud' si decides mejorar el diseño del item.
+                        }
+
+                        runOnUiThread(() -> {
+                            // Limpiamos y actualizamos la lista global
+                            listaSolicitudesRecibidas.clear();
+                            listaSolicitudesRecibidas.addAll(nuevosNombres);
+
+                            // Notificamos al adaptador del cambio
+                            if (adapterRecibidas != null) {
+                                adapterRecibidas.notifyDataSetChanged();
+                            }
+                        });
+
+                    } catch (org.json.JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    private void responderSolicitudServidor(int idSolicitante, String nuevoEstado, int position, String nombreAmigo) {
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null) return;
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/amigos/solicitudes";
+
+        // 1. Preparamos el cuerpo de la petición (JSON)
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
+        try {
+            jsonBody.put("id_solicitante", idSolicitante);
+            // Nota: Asumo "rechazada" para rechazar. Cámbialo si tu backend usa otra palabra.
+            jsonBody.put("estado", nuevoEstado);
+        } catch (org.json.JSONException e) {
+            e.printStackTrace();
+        }
+
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(
+                jsonBody.toString(),
+                okhttp3.MediaType.parse("application/json; charset=utf-8")
+        );
+
+        // 2. Construimos la petición PUT
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        // 3. Ejecutamos la llamada
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() ->
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "Error de red al responder", android.widget.Toast.LENGTH_SHORT).show()
+                );
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        // Si el servidor confirma, eliminamos el item de la lista visualmente
+                        if (adapterRecibidas != null) {
+                            adapterRecibidas.removeItem(position);
+                        }
+
+                        // Mostramos mensaje de éxito
+                        String mensaje = nuevoEstado.equals("aceptada") ?
+                                "¡Has aceptado a " + nombreAmigo + "!" :
+                                "Solicitud rechazada";
+                        android.widget.Toast.makeText(SolicitudesActivity.this, mensaje, android.widget.Toast.LENGTH_SHORT).show();
+
+                    } else {
+                        android.widget.Toast.makeText(SolicitudesActivity.this, "Error: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
     }
 }

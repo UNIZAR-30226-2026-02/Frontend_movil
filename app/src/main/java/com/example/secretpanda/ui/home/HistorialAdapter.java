@@ -15,7 +15,7 @@ import com.example.secretpanda.data.model.PartidaHistorial;
 
 import java.util.List;
 
-/*public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.HistorialViewHolder> {
+public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.HistorialViewHolder> {
 
     private List<PartidaHistorial> listaPartidas;
 
@@ -41,7 +41,7 @@ import java.util.List;
         PartidaHistorial partida = listaPartidas.get(position);
 
         // 1. Mostrar la Fecha y el Código de partida
-        holder.txtFecha.setText(partida.fechaFin.split("T")); // Muestra solo la fecha si viene con hora
+        holder.txtFecha.setText(partida.fechaFin.split("T")[0]); // Muestra solo la fecha si viene con hora
         holder.txtCodigo.setText("Sala: " + partida.codigo_partida);
 
         // 2. Mostrar Equipo y Rol
@@ -91,4 +91,4 @@ import java.util.List;
             txtAciertos = itemView.findViewById(R.id.item_historial_aciertos);
         }
     }
-}*/
+}

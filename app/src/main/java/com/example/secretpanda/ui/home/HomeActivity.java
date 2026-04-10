@@ -1,5 +1,5 @@
 package com.example.secretpanda.ui.home;
-
+import com.example.secretpanda.data.model.PartidaHistorial;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -259,14 +259,38 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // Sincronizar el dinero en el Home al volver de otras pantallas
-        // Asegúrate de que el R.id coincide con el ID de las balas en tu home.xml
-        TextView txtBalasHome = findViewById(R.id.txt_balas_home); // O el ID que tengas
+        cargarBalasReales();
+    }
+    private void cargarBalasReales() {
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String token = new com.example.secretpanda.data.TokenManager(this).getToken();
+        if (token == null) return;
 
-        if (txtBalasHome != null) {
-            int misBalas = com.example.secretpanda.data.model.GestorEstadisticas.getInstance().getJugadorActual().getBalas();
-            txtBalasHome.setText(String.valueOf(misBalas));
-        }
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url("http://10.0.2.2:8080/api/jugadores")
+                .get()
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {}
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        org.json.JSONObject obj = new org.json.JSONObject(response.body().string());
+                        int balas = obj.optInt("balas", 0);
+
+                        runOnUiThread(() -> {
+                            android.widget.TextView txtBalas = findViewById(R.id.txt_balas_home);
+                            if (txtBalas != null) txtBalas.setText(String.valueOf(balas));
+                        });
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+            }
+        });
     }
     private void cargarHistorialServidor(HistorialAdapter adapter) {
         OkHttpClient client = new OkHttpClient();
