@@ -77,7 +77,6 @@ public class PerfilActivity extends AppCompatActivity {
         recyclerAmigos = findViewById(R.id.recycler_amigos);
         recyclerAmigos.setLayoutManager(new LinearLayoutManager(this));
 
-        // TUS AMIGOS FALSOS INICIALES
         misAmigos = new java.util.ArrayList<>();
         cargarAmigosServidor();
         adaptador = new AmigoAdapter(misAmigos, amigoClickado -> {
@@ -153,14 +152,21 @@ public class PerfilActivity extends AppCompatActivity {
     }
 
     private void cargarAmigosServidor() {
-        OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/amigos/";
+        Log.d("API_AMIGOS", "Iniciando petición a cargarAmigosServidor...");
 
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
-        if (jwt == null || jwt.isEmpty()) return;
 
-        Request request = new Request.Builder()
+        // 1. Comprobamos si el token falla
+        if (jwt == null || jwt.isEmpty()) {
+            Log.e("API_AMIGOS", "Error: El token es nulo o está vacío. Abortando petición.");
+            return;
+        }
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/amigos/";
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Authorization", "Bearer " + jwt)
@@ -168,24 +174,36 @@ public class PerfilActivity extends AppCompatActivity {
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure( okhttp3.Call call, java.io.IOException e) {
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                Log.e("API_AMIGOS", "Fallo catastrófico de red: " + e.getMessage());
                 runOnUiThread(() -> android.widget.Toast.makeText(PerfilActivity.this, "Error de red al cargar amigos", android.widget.Toast.LENGTH_SHORT).show());
             }
 
             @Override
-            public void onResponse( okhttp3.Call call,okhttp3.Response response) throws java.io.IOException {
-                if (response.isSuccessful() && response.body() != null) {
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                // 2. Controlamos si el servidor devuelve error (401, 404, 500...)
+                if (!response.isSuccessful()) {
+                    Log.e("API_AMIGOS", "Respuesta del servidor fallida. Código: " + response.code());
+                    return;
+                }
+
+                if (response.body() != null) {
+                    // 3. LA REGLA DE ORO: Guardar el string en una variable
+                    String jsonResponse = response.body().string();
+                    Log.d("API_AMIGOS", "JSON recibido correctamente: " + jsonResponse);
+
                     try {
-                        org.json.JSONArray jsonArray = new org.json.JSONArray(response.body().string());
-                        List<Jugador> listaAmigosReales = new java.util.ArrayList<>();
+                        // Usamos la variable en lugar de volver a llamar a body().string()
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(jsonResponse);
+                        java.util.List<Jugador> listaAmigosReales = new java.util.ArrayList<>();
 
                         for (int i = 0; i < jsonArray.length(); i++) {
                             org.json.JSONObject obj = jsonArray.getJSONObject(i);
 
                             String tag = obj.getString("tag");
-                            String fotoPerfil = obj.optString("foto_perfil", obj.optString("foto_perfil", ""));
+                            String fotoPerfil = obj.optString("foto_perfil", "");
                             int victorias = obj.optInt("victorias", 0);
-                            int numAciertos = obj.optInt("num_aciertos", obj.optInt("num_aciertos", 0));
+                            int numAciertos = obj.optInt("num_aciertos", 0);
 
                             Jugador amigo = new Jugador(tag);
                             amigo.setFotoPerfil(fotoPerfil);
@@ -204,8 +222,10 @@ public class PerfilActivity extends AppCompatActivity {
                         });
 
                     } catch (org.json.JSONException e) {
-                        android.util.Log.e("API_AMIGOS", "Error parseando amigos", e);
+                        Log.e("API_AMIGOS", "Error parseando el JSON: " + jsonResponse, e);
                     }
+                } else {
+                    Log.w("API_AMIGOS", "La respuesta fue exitosa pero el cuerpo (body) estaba vacío.");
                 }
             }
         });

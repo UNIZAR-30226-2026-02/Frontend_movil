@@ -21,8 +21,8 @@ public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.View
 
     public interface OnAccionSolicitudListener {
         // 2. Añadimos el int idSolicitante
-        void onAceptar(int position, String nombre, int idSolicitante);
-        void onRechazar(int position, String nombre, int idSolicitante);
+        void onAceptar(int position, String nombre, String idSolicitante);
+        void onRechazar(int position, String nombre, String idSolicitante);
     }
 
     public SolicitudAdapter(List<Solicitud> listaSolicitudes, OnAccionSolicitudListener listener) {
@@ -48,7 +48,7 @@ public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.View
         // 3. Extraemos los datos del objeto
         Solicitud solicitud = listaSolicitudes.get(position);
         String nombre = solicitud.getNombre();
-        int idSolicitante = solicitud.getIdSolicitante();
+        String idSolicitante = solicitud.getIdSolicitante();
 
         holder.txtNombre.setText(nombre);
 

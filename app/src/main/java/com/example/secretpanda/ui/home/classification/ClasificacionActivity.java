@@ -70,7 +70,7 @@ public class ClasificacionActivity extends AppCompatActivity {
         conectarWebSocket();
 
         // Cargamos los datos iniciales por REST (Cargamos global por defecto)
-        cargarRankingGlobal();
+        cargarRankingAmigos(); // Refrescamos datos al pulsar
 
         // Configuramos la UI para que 'Global' parezca activa por defecto si queremos
         // cambiarPestana(tabGlobal, tabAmigos, listaGlobalActual);

@@ -3,6 +3,7 @@ package com.example.secretpanda.ui.home.profile;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -19,9 +20,13 @@ import com.example.secretpanda.ui.home.HomeActivity;
 import com.example.secretpanda.ui.shop.TiendaActivity;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import ua.naiksoftware.stomp.Stomp;
+import ua.naiksoftware.stomp.StompClient;
+import ua.naiksoftware.stomp.dto.StompHeader;
 
 public class SolicitudesActivity extends AppCompatActivity {
 
@@ -41,6 +46,7 @@ public class SolicitudesActivity extends AppCompatActivity {
     private ArrayList<String> listaSolicitudesPendientes = new ArrayList<>();
     private ArrayList<Solicitud> listaSolicitudesRecibidas = new ArrayList<>();
 
+    private StompClient stompClient;
     private TextView txtFeedback;
 
     @Override
@@ -86,12 +92,12 @@ public class SolicitudesActivity extends AppCompatActivity {
 
         adapterRecibidas = new SolicitudAdapter(listaSolicitudesRecibidas, new SolicitudAdapter.OnAccionSolicitudListener() {
             @Override
-            public void onAceptar(int position, String nombre, int idSolicitante) {
+            public void onAceptar(int position, String nombre, String idSolicitante) {
                 responderSolicitudServidor(idSolicitante, "aceptada", position, nombre);
             }
 
             @Override
-            public void onRechazar(int position, String nombre, int idSolicitante) {
+            public void onRechazar(int position, String nombre, String idSolicitante) {
                 responderSolicitudServidor(idSolicitante, "rechazada", position, nombre);
             }
         });
@@ -107,6 +113,7 @@ public class SolicitudesActivity extends AppCompatActivity {
         // Iniciar la pantalla correctamente
         mostrarPestana(1);
         cargarSolicitudesRecibidasServidor();
+        suscribirseASolicitudesEnTiempoReal();
         configurarBuscador();
     }
 
@@ -295,17 +302,19 @@ public class SolicitudesActivity extends AppCompatActivity {
                         org.json.JSONArray array = new org.json.JSONArray(jsonData);
                         ArrayList<Solicitud> nuevosNombres = new ArrayList<>();
 
+                        Log.d("API_SOLICITUDES", "JSON: " + jsonData);
+
                         for (int i = 0; i < array.length(); i++) {
                             org.json.JSONObject obj = array.getJSONObject(i);
                             // Extraemos el tag del solicitante (RF-24)
 
-                            int id_solicitante = obj.getInt("id_solicitante");
+                            String id_solicitante = obj.getString("id_solicitante");
                             String tag_solicitante = obj.getString("tag_solicitante");
                             String foto_perfil = obj.getString("foto_perfil_solicitante");
                             String fecha_solicitud = obj.getString("fecha_solicitud");
                             String estado = obj.getString("estado");
                             Solicitud s = new Solicitud(id_solicitante, tag_solicitante, foto_perfil, fecha_solicitud, estado);
-
+                            Log.d("API_SOLICITUDES", "Item JSON: " + s.getIdSolicitante());
                             nuevosNombres.add(s);
 
                             // Nota: Aquí también tienes disponible 'foto_perfil_solicitante'
@@ -331,7 +340,7 @@ public class SolicitudesActivity extends AppCompatActivity {
         });
     }
 
-    private void responderSolicitudServidor(int idSolicitante, String nuevoEstado, int position, String nombreAmigo) {
+    private void responderSolicitudServidor(String idSolicitante, String nuevoEstado, int position, String nombreAmigo) {
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
         if (jwt == null) return;
@@ -344,6 +353,7 @@ public class SolicitudesActivity extends AppCompatActivity {
         try {
             jsonBody.put("estado", nuevoEstado);
             jsonBody.put("id_solicitante", idSolicitante);
+            Log.d("API_SOLICITUDES", "JSON: " + jsonBody.toString());
             // Nota: Asumo "rechazada" para rechazar. Cámbialo si tu backend usa otra palabra.
         } catch (org.json.JSONException e) {
             e.printStackTrace();
@@ -392,6 +402,78 @@ public class SolicitudesActivity extends AppCompatActivity {
             }
         });
     }
+    @android.annotation.SuppressLint("CheckResult")
+    private void suscribirseASolicitudesEnTiempoReal() {
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null) return;
+
+        // 1. La URL base de tu WebSocket en Spring Boot (suele acabar en /ws o /websocket)
+        String urlConexion = "ws://10.0.2.2:8080/ws/websocket";
+
+        // NOTA: Si usas NaikSoftware STOMP:
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, urlConexion);
+        // Para autenticar, puedes enviar el token en la cabecera de conexión:
+        List<StompHeader> headers = new ArrayList<>();
+        headers.add(new StompHeader("Authorization", "Bearer " + jwt));
+        stompClient.connect(headers);
+
+        String destinoSuscripcion = "/user/queue/solicitudes";
+
+            // 2. Nos suscribimos al canal (Ejemplo con sintaxis STOMP estándar)
+
+        stompClient.topic(destinoSuscripcion).subscribe(topicMessage -> {
+            String payload = topicMessage.getPayload();
+            procesarNuevasSolicitudes(payload);
+        }, throwable -> {
+            Log.e("WEBSOCKET", "Error en la suscripción: ", throwable);
+        });
+
+
+        Log.d("WEBSOCKET", "Suscrito a: " + destinoSuscripcion);
+    }
+
+    private void procesarNuevasSolicitudes(String jsonPayload) {
+        try {
+            org.json.JSONArray jsonArray = new org.json.JSONArray(jsonPayload);
+            java.util.ArrayList<Solicitud> nuevasSolicitudes = new java.util.ArrayList<>();
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                org.json.JSONObject obj = jsonArray.getJSONObject(i);
+
+                // Mapeamos los datos del JSON (RF-24)
+                String idSolicitante = obj.getString("id_solicitante");
+                String tagSolicitante = obj.getString("tag_solicitante");
+                String fotoPerfil = obj.optString("foto_perfil_solicitante", "");
+                String fecha = obj.optString("fecha_solicitud", "");
+                String estado = obj.getString("estado");
+
+                // Solo mostramos las pendientes
+                if ("pendiente".equalsIgnoreCase(estado)) {
+                    // Ajusta la creación del objeto según el constructor de tu clase Solicitud
+                    Solicitud solicitud = new Solicitud(idSolicitante, tagSolicitante, fotoPerfil, fecha, estado);
+                    nuevasSolicitudes.add(solicitud);
+                }
+            }
+
+            // 3. Actualizamos la interfaz en el Hilo Principal (UI Thread)
+            runOnUiThread(() -> {
+                listaSolicitudesRecibidas.clear();
+                listaSolicitudesRecibidas.addAll(nuevasSolicitudes);
+
+                if (adapterRecibidas != null) {
+                    adapterRecibidas.notifyDataSetChanged();
+                }
+
+                // Actualizar textos si la lista está vacía, etc.
+                Log.d("WEBSOCKET", "Lista de solicitudes actualizada en tiempo real.");
+            });
+
+        } catch (org.json.JSONException e) {
+            Log.e("WEBSOCKET", "Error parseando el array de solicitudes", e);
+        }
+    }
+
     private void mostrarFeedback(String mensaje, boolean esExito) {
         if (txtFeedback != null) {
             txtFeedback.setVisibility(View.VISIBLE);
@@ -403,4 +485,15 @@ public class SolicitudesActivity extends AppCompatActivity {
             }
         }
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Desconectar el WebSocket cuando destruimos la Activity
+
+        if (stompClient != null && stompClient.isConnected()) {
+            stompClient.disconnect();
+        }
+
+    }
+
 }
