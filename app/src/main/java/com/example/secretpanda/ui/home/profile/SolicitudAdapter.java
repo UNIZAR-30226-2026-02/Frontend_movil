@@ -3,61 +3,58 @@ package com.example.secretpanda.ui.home.profile;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
-import com.example.secretpanda.data.model.Solicitud; // Asegúrate de importar el modelo
+import com.example.secretpanda.data.model.Solicitud;
+import com.example.secretpanda.ui.home.GestorImagenes;
 
 import java.util.List;
 
-public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.ViewHolder> {
+public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.SolicitudViewHolder> {
 
-    // 1. Cambiamos String por Solicitud
     private List<Solicitud> listaSolicitudes;
-    private OnAccionSolicitudListener listener;
+    private OnSolicitudActionListener listener;
 
-    public interface OnAccionSolicitudListener {
-        // 2. Añadimos el int idSolicitante
-        void onAceptar(int position, String nombre, String idSolicitante);
-        void onRechazar(int position, String nombre, String idSolicitante);
+    public interface OnSolicitudActionListener {
+        void onAceptar(Solicitud solicitud);
+        void onRechazar(Solicitud solicitud);
     }
 
-    public SolicitudAdapter(List<Solicitud> listaSolicitudes, OnAccionSolicitudListener listener) {
+    public SolicitudAdapter(List<Solicitud> listaSolicitudes, OnSolicitudActionListener listener) {
         this.listaSolicitudes = listaSolicitudes;
         this.listener = listener;
     }
 
-    public void removeItem(int position) {
-        listaSolicitudes.remove(position);
-        notifyItemRemoved(position);
-        notifyItemRangeChanged(position, listaSolicitudes.size());
-    }
-
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_solicitud, parent, false);
-        return new ViewHolder(view);
+    public SolicitudViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_solicitud, parent, false);
+        return new SolicitudViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // 3. Extraemos los datos del objeto
+    public void onBindViewHolder(@NonNull SolicitudViewHolder holder, int position) {
         Solicitud solicitud = listaSolicitudes.get(position);
-        String nombre = solicitud.getNombre();
-        String idSolicitante = solicitud.getIdSolicitante();
+        
+        holder.tvNombre.setText(solicitud.getTagSolicitante());
 
-        holder.txtNombre.setText(nombre);
+        int resId = GestorImagenes.obtenerImagenManual(solicitud.getFotoPerfilSolicitante());
+        if (resId != 0) {
+            holder.ivFoto.setImageResource(resId);
+        } else {
+            holder.ivFoto.setImageResource(R.mipmap.ic_launcher);
+        }
 
         holder.btnAceptar.setOnClickListener(v -> {
-            if (listener != null) listener.onAceptar(holder.getAdapterPosition(), nombre, idSolicitante);
+            if (listener != null) listener.onAceptar(solicitud);
         });
 
         holder.btnRechazar.setOnClickListener(v -> {
-            if (listener != null) listener.onRechazar(holder.getAdapterPosition(), nombre, idSolicitante);
+            if (listener != null) listener.onRechazar(solicitud);
         });
     }
 
@@ -66,16 +63,16 @@ public class SolicitudAdapter extends RecyclerView.Adapter<SolicitudAdapter.View
         return listaSolicitudes.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtNombre;
-        ImageView btnRechazar;
-        FrameLayout btnAceptar;
+    public static class SolicitudViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivFoto, btnAceptar, btnRechazar;
+        TextView tvNombre;
 
-        public ViewHolder(@NonNull View itemView) {
+        public SolicitudViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtNombre = itemView.findViewById(R.id.txt_nombre_recibida);
-            btnAceptar = itemView.findViewById(R.id.btn_aceptar_recibida);
-            btnRechazar = itemView.findViewById(R.id.btn_rechazar_recibida);
+            ivFoto = itemView.findViewById(R.id.icono_solicitante);
+            tvNombre = itemView.findViewById(R.id.nombre_solicitante);
+            btnAceptar = itemView.findViewById(R.id.btn_aceptar_solicitud);
+            btnRechazar = itemView.findViewById(R.id.btn_rechazar_solicitud);
         }
     }
 }

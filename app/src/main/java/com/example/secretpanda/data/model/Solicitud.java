@@ -1,35 +1,25 @@
 package com.example.secretpanda.data.model;
 
-public class Solicitud {
-    public String id_solicitante;
-    public String tag_solicitante;
-    public String foto_perfil;
-    public String fecha_solicitud;
-    public String estado;
+import java.io.Serializable;
 
-    public Solicitud(String idSolicitante, String nombre, String fotoPerfil, String fechaSolicitud, String estado) {
-        this.id_solicitante = idSolicitante;
-        this.tag_solicitante = nombre;
-        this.foto_perfil = fotoPerfil;
-        this.fecha_solicitud = fechaSolicitud;
+public class Solicitud implements Serializable {
+    private String id_solicitante;
+    private String tag_solicitante;
+    private String foto_perfil_solicitante;
+    private String fecha_solicitud;
+    private String estado;
+
+    public Solicitud(String id_solicitante, String tag_solicitante, String foto_perfil_solicitante, String fecha_solicitud, String estado) {
+        this.id_solicitante = id_solicitante;
+        this.tag_solicitante = tag_solicitante;
+        this.foto_perfil_solicitante = foto_perfil_solicitante;
+        this.fecha_solicitud = fecha_solicitud;
         this.estado = estado;
     }
-    public String getFotoPerfil() {
-        return foto_perfil;
-    }
 
-    public String getFechaSolicitud() {
-        return fecha_solicitud;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-    public String getIdSolicitante() {
-        return id_solicitante;
-    }
-
-    public String getNombre() {
-        return tag_solicitante;
-    }
+    public String getIdSolicitante() { return id_solicitante; }
+    public String getTagSolicitante() { return tag_solicitante; }
+    public String getFotoPerfilSolicitante() { return foto_perfil_solicitante; }
+    public String getFechaSolicitud() { return fecha_solicitud; }
+    public String getEstado() { return estado; }
 }

@@ -40,7 +40,16 @@ public class AmigoAdapter extends RecyclerView.Adapter<AmigoAdapter.AmigoViewHol
         Jugador amigo = listaAmigos.get(position);
         holder.textoNombre.setText(amigo.getTag());
 
-        // ¡NUEVO! Detectamos el clic en toda la fila
+        // Cargamos la foto de perfil usando el GestorImagenes
+        int resId = com.example.secretpanda.ui.home.GestorImagenes.obtenerImagenManual(amigo.getFotoPerfil());
+        if (resId != 0) {
+            holder.iconoAmigo.setImageResource(resId);
+        } else {
+            // Imagen por defecto si no se encuentra
+            holder.iconoAmigo.setImageResource(R.mipmap.ic_launcher);
+        }
+
+        // Detectamos el clic en toda la fila
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onAmigoClick(amigo);
