@@ -2,6 +2,7 @@ package com.example.secretpanda.ui.shop;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,6 +22,9 @@ import com.example.secretpanda.ui.home.HomeActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class TiendaActivity extends AppCompatActivity {
 
@@ -51,14 +55,11 @@ public class TiendaActivity extends AppCompatActivity {
         recyclerBarajas.setAdapter(adapterBarajas);
         recyclerBordes.setAdapter(adapterBordes);
         recyclerFondos.setAdapter(adapterFondos);
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
         actualizarTextoSaldo();
         cargarDatosTienda();
     }
+
 
     private void actualizarTextoSaldo() {
         // LEEMOS LAS BALAS DEL JUGADOR REAL
@@ -93,12 +94,23 @@ public class TiendaActivity extends AppCompatActivity {
         recyclerBordes.setAdapter(adapterBordes);
         recyclerFondos.setAdapter(adapterFondos);*/
 
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        OkHttpClient client = new OkHttpClient();
+
+        // URL del endpoint (ajusta la IP si es necesario)
         String url = "http://10.0.2.2:8080/api/temas/activos";
 
-        okhttp3.Request request = new okhttp3.Request.Builder()
+        // Obtenemos el token para la autenticación
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        if (jwt == null || jwt.isEmpty()) {
+            return; // O redirigir al Login
+        }
+
+        Request request = new Request.Builder()
                 .url(url)
                 .get()
+                .addHeader("Authorization", "Bearer " + jwt)
                 .build();
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
@@ -121,20 +133,26 @@ public class TiendaActivity extends AppCompatActivity {
                                 try {
                                     org.json.JSONObject temaJson = temasArray.getJSONObject(i);
 
+                                    Log.d("API_TIENDA", "Tema JSON: " + temaJson.toString());
+
                                     int idTema = temaJson.optInt("id_tema", temaJson.optInt("id_tema", -1));
                                     String nombre = temaJson.optString("nombre", "Tema Desconocido");
                                     int precio = temaJson.optInt("precio_palas", temaJson.optInt("precio_balas", 0));
+                                    boolean comprado = temaJson.optBoolean("comprado", false);
 
-                                    ItemPersonalizacion item = new ItemPersonalizacion(
-                                            nombre,
-                                            true,        // bloqueado por defecto en la tienda
-                                            "baraja",    // tipo
-                                            0,           // icono (0 para que ponga la carta por defecto)
-                                            precio       // precio en balas
-                                    );
-                                    item.setId(idTema);
+                                    if (!comprado){
+                                        ItemPersonalizacion item = new ItemPersonalizacion(
+                                                nombre,
+                                                true,        // bloqueado por defecto en la tienda
+                                                "baraja",    // tipo
+                                                0,           // icono (0 para que ponga la carta por defecto)
+                                                precio       // precio en balas
+                                        );
+                                        item.setId(idTema);
 
-                                    barajasTienda.add(item);
+                                        barajasTienda.add(item);
+
+                                    }
                                 } catch (Exception e) {
                                     android.util.Log.e("API_TIENDA", "Error procesando item", e);
                                 }
@@ -190,10 +208,9 @@ public class TiendaActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "No tienes suficientes balas.", Toast.LENGTH_SHORT).show();
             }*/
-            String miIdGoogle = "MiNombreDeUsuario"; // ⚠️ Pon aquí tu variable real
 
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-            String url = "http://10.0.2.2:8080/api/tienda/comprar/" + miIdGoogle;
+            String url = "http://10.0.2.2:8080/api/tienda/comprar/tema";
 
             TokenManager tokenManager = new TokenManager(this);
             String jwt = tokenManager.getToken();
@@ -232,24 +249,35 @@ public class TiendaActivity extends AppCompatActivity {
                         if (response.isSuccessful()) {
                             try {
                                 org.json.JSONObject resJson = new org.json.JSONObject(respuestaCuerpo);
-                                int balasRestantes = resJson.optInt("balas", -1);
+                                // El backend retorna las balas restantes
+                                int balasRestantes = resJson.getInt("balas");
 
-                                if (balasRestantes != -1) {
-                                    Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
+                                // 4. Actualizar datos globales (RF-8)
+                                Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
+                                if (jugador != null) {
                                     jugador.setBalas(balasRestantes);
-                                    actualizarTextoSaldo();
-
-                                    item.setBloqueado(false);
-                                    adaptadorOrigen.notifyItemChanged(position);
-
-                                    Toast.makeText(TiendaActivity.this, "¡Has adquirido " + item.getNombre() + "!", Toast.LENGTH_SHORT).show();
-                                    dialog.dismiss();
                                 }
-                            } catch (Exception e) {}
+
+                                // Actualizar UI del header y de la lista
+                                actualizarTextoSaldo(); // Método que ya tienes para refrescar el saldo en pantalla
+                                item.setBloqueado(false); // Ahora está comprado
+                                adaptadorOrigen.notifyItemChanged(position);
+
+                                Toast.makeText(TiendaActivity.this, "¡Compra realizada con éxito!", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+
+                            } catch (org.json.JSONException e) {
+                                Toast.makeText(TiendaActivity.this, "Error en la respuesta del servidor", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            Toast.makeText(TiendaActivity.this, "Error al comprar. ¿Tienes suficientes balas?", Toast.LENGTH_LONG).show();
+                            // Manejo de errores (saldo insuficiente, etc)
                             btnComprar.setEnabled(true);
                             txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
+                            if (response.code() == 400) {
+                                Toast.makeText(TiendaActivity.this, "Balas insuficientes o artículo ya comprado", Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(TiendaActivity.this, "Error: " + response.code(), Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
                 }

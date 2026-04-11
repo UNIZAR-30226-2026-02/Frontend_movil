@@ -3,6 +3,7 @@ package com.example.secretpanda.ui.customization;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.home.HomeActivity;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
 import com.example.secretpanda.data.model.InventarioGlobal;
@@ -30,6 +32,9 @@ public class PersonalizacionActivity extends AppCompatActivity {
     private LinearLayout layoutTematicaSeleccionada;
 
     private RecyclerView recyclerPosesion, recyclerBloqueados;
+
+    private List<ItemPersonalizacion> posesion = new ArrayList<>();
+    private List<ItemPersonalizacion> bloqueados = new ArrayList<>();
 
     private PersonalizacionAdapter adapterPosesion;
     private PersonalizacionAdapter adapterBloqueados;
@@ -70,7 +75,8 @@ public class PersonalizacionActivity extends AppCompatActivity {
                 tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo"));
 
         // EMPEZAMOS EN BARAJAS (¡Ahora en singular!)
-        cargarDatos("baraja");
+        //cargarDatos("baraja");
+        cargarInventarioServidor("baraja");
     }
 
     @Override
@@ -233,5 +239,128 @@ public class PersonalizacionActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
             });
         }
+    }
+
+    private void cargarInventarioServidor(String categoria) {
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        if (jwt == null || jwt.isEmpty()) {
+            return; // O redirigir al Login
+        }
+
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/jugadores/personalizaciones";
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> android.widget.Toast.makeText(PersonalizacionActivity.this, "Error al conectar con el inventario", android.widget.Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful()) {
+                    String jsonData = response.body().string();
+                    try {
+                        org.json.JSONArray array = new org.json.JSONArray(jsonData);
+                        Log.d("API_PERSONALIZACION", "JSON: " + jsonData);
+
+                        List<ItemPersonalizacion> nuevosPosesion = new ArrayList<>();
+                        List<ItemPersonalizacion> nuevosBloqueados = new ArrayList<>();
+                        String itemEquipadoNombre = "Ninguno";
+                        int posSeleccionada = -1;
+
+                        for (int i = 0; i < array.length(); i++) {
+                            org.json.JSONObject obj = array.getJSONObject(i);
+                            Log.d("API_PERSONALIZACION", "Item JSON: " + obj.toString());
+
+                            // 1. Extraemos los campos del JSON (RF-8/RF-10)
+                            String tipo = obj.getString("tipo"); // "baraja", "borde", "fondo"
+
+                            // Solo procesamos los que coincidan con la pestaña actual
+                            if (tipo.equalsIgnoreCase(categoria)) {
+                                int id = obj.getInt("id_personalizacion");
+                                String nombre = obj.getString("nombre");
+                                String valorVisual = obj.getString("valor_visual");
+                                boolean equipado = obj.getBoolean("equipado");
+                                boolean comprado = obj.getBoolean("comprado");
+
+                                // 2. Mapeamos a tu modelo ItemPersonalizacion
+                                // (Asumo que el constructor es: nombre, bloqueado, tipo, icono, precio)
+                                ItemPersonalizacion item = new ItemPersonalizacion(
+                                        nombre,
+                                        !comprado, // bloqueado = no comprado
+                                        tipo,
+                                        0, // El icono lo manejaremos con valorVisual después
+                                        0  // El precio no suele venir en el inventario, solo en tienda
+                                );
+                                item.setId(id);
+                                // Si tienes un campo para guardar el string de la imagen:
+                                // item.setValorVisual(valorVisual);
+
+                                if (comprado) {
+                                    nuevosPosesion.add(item);
+                                    if (equipado) {
+                                        itemEquipadoNombre = nombre;
+                                        posSeleccionada = nuevosPosesion.size() - 1;
+                                    }
+                                } else {
+                                    nuevosBloqueados.add(item);
+                                }
+                            }
+                        }
+
+                        // 3. Actualizamos la UI en el hilo principal
+                        final String nombreEq = itemEquipadoNombre;
+                        final int indexEq = posSeleccionada;
+
+                        runOnUiThread(() -> {
+                            txtTematicaSeleccionada.setText(nombreEq);
+
+                            posesion.clear();
+                            posesion.addAll(nuevosPosesion);
+                            bloqueados.clear();
+                            bloqueados.addAll(nuevosBloqueados);
+
+
+                            if (posesion.isEmpty()) {
+                                txtVacioPosesion.setVisibility(View.VISIBLE);
+                                recyclerPosesion.setVisibility(View.GONE);
+                                txtTematicaSeleccionada.setText("Ninguna");
+                            } else {
+                                txtVacioPosesion.setVisibility(View.GONE);
+                                recyclerPosesion.setVisibility(View.VISIBLE);
+                                txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
+                            }
+
+                            // Configurar adaptadores
+                            adapterPosesion = new PersonalizacionAdapter(posesion, false, true, (item, pos) -> mostrarPreview(item, pos, true));
+                            adapterBloqueados = new PersonalizacionAdapter(bloqueados, true, false, (item, pos) -> mostrarPreview(item, pos, false));
+
+                            // Marcar el equipado visualmente
+                            if (indexEq != -1) {
+                                adapterPosesion.setPosicionSeleccionada(indexEq);
+                            }
+
+                            recyclerPosesion.setAdapter(adapterPosesion);
+                            recyclerBloqueados.setAdapter(adapterBloqueados);
+
+                            // Gestionar texto de lista vacía
+                            txtVacioPosesion.setVisibility(posesion.isEmpty() ? View.VISIBLE : View.GONE);
+                        });
+
+                    } catch (org.json.JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
     }
 }

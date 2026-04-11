@@ -400,11 +400,16 @@ public class PartidaActivity extends AppCompatActivity {
             }
         }
 
-        // [CORRECCIÓN 7] Navegar a la pantalla de fin de partida si la partida terminó,
-        // equivalente a navigate(`/fin-partida/${idPartida}`) en JSX.
         String estado = json.optString("estado", "");
         if ("finalizada".equalsIgnoreCase(estado)) {
             android.util.Log.d("WS_TABLERO", "🏁 ¡La partida ha terminado!");
+
+            // Lanzamos la pantalla completa de Fin de Partida
+            android.content.Intent intent = new android.content.Intent(PartidaActivity.this, FinPartidaActivity.class);
+            intent.putExtra("ID_PARTIDA", idPartidaActual);
+            startActivity(intent);
+
+            // Destruimos la actividad actual del tablero
             finish();
         }
     }
