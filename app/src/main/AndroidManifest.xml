@@ -71,6 +71,11 @@
         <activity android:name=".ui.game.createMatch.CrearMisionOpcionesActivity" android:exported="false" />
         <activity android:name=".ui.game.createMatch.ConfiguracionMisionActivity" android:exported="false" />
 
+        <activity 
+            android:name=".ui.game.match.FinPartidaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
     </application>
 
 </manifest>
