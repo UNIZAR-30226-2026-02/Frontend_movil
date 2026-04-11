@@ -38,43 +38,35 @@ public class SolicitudesActivity extends AppCompatActivity {
     private EditText etBuscarAmigo;
     private View btnEnviarSolicitud;
 
-    private ArrayList<Solicitud> listaSolicitudesPendientes = new ArrayList<>();
+    private ArrayList<String> listaSolicitudesPendientes = new ArrayList<>();
     private ArrayList<Solicitud> listaSolicitudesRecibidas = new ArrayList<>();
+
+    private TextView txtFeedback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //  Cargar el diseño de la pantalla
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_solicitudes);
 
+        //  Enlazar los botones y vistas del XML
         configurarNavegacionInferior();
 
-        // ==============================================================
-        // 0. BOTÓN DE CERRAR LA PANTALLA (X)
-        // ==============================================================
-        // Buscamos el botón por los nombres más comunes que sueles poner
         View btnCerrar = findViewById(R.id.btn_cerrar_solicitudes);
+        if (btnCerrar != null) btnCerrar.setOnClickListener(v -> finish());
 
+        caja1 = findViewById(R.id.tab_enviar);
+        caja2 = findViewById(R.id.tab_recibidas);
+        caja3 = findViewById(R.id.tab_pendientes);
 
-        if (btnCerrar != null) {
-            // "finish()" cierra esta Activity y te devuelve a la pantalla anterior
-            btnCerrar.setOnClickListener(v -> finish());
-        }
+        pantallaAnadir = findViewById(R.id.layout_enviar_solicitud);
+        pantallaRecibidas = findViewById(R.id.layout_solicitudes_recibidas);
+        pantallaPendientes = findViewById(R.id.layout_solicitudes_pendientes);
 
-        // ==============================================================
-        // 1. ENLAZAR PESTAÑAS (Revisa que los IDs coincidan con los tuyos)
-        // ==============================================================
-        caja1 = findViewById(R.id.tab_enviar); // Pestaña: Añadir Amigo
-        caja2 = findViewById(R.id.tab_recibidas); // Pestaña: Recibidas
-        caja3 = findViewById(R.id.tab_pendientes); // Pestaña: Pendientes
+        txtFeedback = findViewById(R.id.txt_feedback_solicitud);
 
-        pantallaAnadir = findViewById(R.id.layout_enviar_solicitud);     // Layout de buscar
-        pantallaRecibidas = findViewById(R.id.layout_solicitudes_recibidas);  // Layout de recibidas
-        pantallaPendientes = findViewById(R.id.layout_solicitudes_pendientes); // Layout de pendientes
-
-        // ==============================================================
-        // 2. ENLAZAR BUSCADOR Y RECYCLERS
-        // ==============================================================
         etBuscarAmigo = findViewById(R.id.input_nombre_solicitud);
         btnEnviarSolicitud = findViewById(R.id.btn_enviar_solicitud);
 
@@ -84,20 +76,37 @@ public class SolicitudesActivity extends AppCompatActivity {
         if (recyclerRecibidas != null) recyclerRecibidas.setLayoutManager(new LinearLayoutManager(this));
         if (recyclerPendientes != null) recyclerPendientes.setLayoutManager(new LinearLayoutManager(this));
 
-        // ==============================================================
-        // 3. LÓGICA DE PESTAÑAS AL HACER CLIC
-        // ==============================================================
         if (caja1 != null) caja1.setOnClickListener(v -> mostrarPestana(1));
         if (caja2 != null) caja2.setOnClickListener(v -> mostrarPestana(2));
         if (caja3 != null) caja3.setOnClickListener(v -> mostrarPestana(3));
 
-        // Empezamos en la pestaña 1 ("Añadir Amigo") por defecto
-        mostrarPestana(1);
-
+        // Inicializar Listas y Adaptadores
         listaSolicitudesPendientes = new ArrayList<>();
         listaSolicitudesRecibidas = new ArrayList<>();
 
-        //cargarDatos();
+        adapterRecibidas = new SolicitudAdapter(listaSolicitudesRecibidas, new SolicitudAdapter.OnAccionSolicitudListener() {
+            @Override
+            public void onAceptar(int position, String nombre, int idSolicitante) {
+                responderSolicitudServidor(idSolicitante, "aceptada", position, nombre);
+            }
+
+            @Override
+            public void onRechazar(int position, String nombre, int idSolicitante) {
+                responderSolicitudServidor(idSolicitante, "rechazada", position, nombre);
+            }
+        });
+
+        if (recyclerRecibidas != null) recyclerRecibidas.setAdapter(adapterRecibidas);
+
+        adapterPendientes = new SolicitudPendienteAdapter(listaSolicitudesPendientes, (position, nombre) -> {
+            Toast.makeText(SolicitudesActivity.this, "Cancelar no implementado", Toast.LENGTH_SHORT).show();
+        });
+
+        if (recyclerPendientes != null) recyclerPendientes.setAdapter(adapterPendientes);
+
+        // Iniciar la pantalla correctamente
+        mostrarPestana(1);
+        cargarSolicitudesRecibidasServidor();
         configurarBuscador();
     }
 
@@ -105,31 +114,27 @@ public class SolicitudesActivity extends AppCompatActivity {
     // EL NUEVO MÉTODO PARA CAMBIAR COLORES Y OCULTAR EL BUSCADOR
     // ==============================================================
     private void mostrarPestana(int numeroPestana) {
-        // 1. Ocultar todas las pantallas por precaución
         if (pantallaAnadir != null) pantallaAnadir.setVisibility(View.GONE);
         if (pantallaRecibidas != null) pantallaRecibidas.setVisibility(View.GONE);
         if (pantallaPendientes != null) pantallaPendientes.setVisibility(View.GONE);
-
-        // ¡LA SOLUCIÓN A TU BUG! Ocultamos el buscador de forma forzosa
         if (etBuscarAmigo != null) etBuscarAmigo.setVisibility(View.GONE);
         if (btnEnviarSolicitud != null) btnEnviarSolicitud.setVisibility(View.GONE);
 
-        // 2. Apagar los colores de todos los botones (Gris)
+        // Escondemos el mensaje de feedback al cambiar de pestaña
+        if (txtFeedback != null) txtFeedback.setVisibility(View.GONE);
+
         View[] todasLasCajas = {caja1, caja2, caja3};
         for (View caja : todasLasCajas) {
             if (caja != null) {
                 caja.setBackgroundResource(R.drawable.fondo_gris_redondeado);
-                // Si tienes un texto dentro del botón, lo ponemos en blanco/grisáceo
                 if (caja instanceof TextView) ((TextView) caja).setTextColor(Color.parseColor("#AAAAAA"));
             }
         }
 
-        // 3. Encender solo la pestaña elegida (Color verde o blanco y mostrar su pantalla)
         View cajaActiva = null;
 
         if (numeroPestana == 1) {
             if (pantallaAnadir != null) pantallaAnadir.setVisibility(View.VISIBLE);
-            // Volvemos a mostrar el buscador solo aquí
             if (etBuscarAmigo != null) etBuscarAmigo.setVisibility(View.VISIBLE);
             if (btnEnviarSolicitud != null) btnEnviarSolicitud.setVisibility(View.VISIBLE);
             cajaActiva = caja1;
@@ -137,17 +142,16 @@ public class SolicitudesActivity extends AppCompatActivity {
         else if (numeroPestana == 2) {
             if (pantallaRecibidas != null) pantallaRecibidas.setVisibility(View.VISIBLE);
             cajaActiva = caja2;
+
+
+            cargarSolicitudesRecibidasServidor();
         }
         else if (numeroPestana == 3) {
             if (pantallaPendientes != null) pantallaPendientes.setVisibility(View.VISIBLE);
             cajaActiva = caja3;
-            cargarSolicitudesRecibidasServidor();
-
         }
 
-        // ¡Le damos el color de pestaña seleccionada!
         if (cajaActiva != null) {
-            // Puedes cambiar fondo_blanco_redondeado por borde_verde_seleccion_personalizacion si prefieres
             cajaActiva.setBackgroundResource(R.drawable.fondo_blanco_redondeado);
             if (cajaActiva instanceof TextView) ((TextView) cajaActiva).setTextColor(Color.BLACK);
         }
@@ -185,13 +189,14 @@ public class SolicitudesActivity extends AppCompatActivity {
             btnEnviarSolicitud.setOnClickListener(v -> {
                 String nombreEscrito = etBuscarAmigo.getText().toString().trim();
 
+                // Si está vacío, avisamos y cortamos la ejecución antes de llamar al servidor
                 if (nombreEscrito.isEmpty()) {
+                    mostrarFeedback("Por favor, escribe un nombre de usuario.", false);
                     return;
                 }
-                enviarSolicitudServidor(nombreEscrito);
-                etBuscarAmigo.setText("");
 
-                Toast.makeText(this, "Solicitud enviada a " + nombreEscrito, Toast.LENGTH_SHORT).show();
+                // Si no está vacío, enviamos
+                enviarSolicitudServidor(nombreEscrito);
             });
         }
     }
@@ -233,18 +238,13 @@ public class SolicitudesActivity extends AppCompatActivity {
 
 
     private void enviarSolicitudServidor(String tagReceptor) {
-        // 1. Validamos que haya token
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
-        if (jwt == null || jwt.isEmpty()) {
-            android.widget.Toast.makeText(this, "Error de sesión: No hay token", android.widget.Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (jwt == null || jwt.isEmpty()) return;
 
         OkHttpClient client = new OkHttpClient();
         String url = "http://10.0.2.2:8080/api/amigos/solicitudes";
 
-        // 2. Creamos el JSON con el tag del receptor
         org.json.JSONObject jsonBody = new org.json.JSONObject();
         try {
             jsonBody.put("tag_receptor", tagReceptor);
@@ -253,39 +253,37 @@ public class SolicitudesActivity extends AppCompatActivity {
         }
 
         okhttp3.RequestBody body = okhttp3.RequestBody.create(
-                jsonBody.toString(),
-                okhttp3.MediaType.parse("application/json; charset=utf-8")
+                jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8")
         );
 
-        // 3. Petición POST con autorización
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url(url)
-                .post(body)
-                .addHeader("Authorization", "Bearer " + jwt)
-                .build();
+                .url(url).post(body).addHeader("Authorization", "Bearer " + jwt).build();
 
-        // 4. Ejecutamos la llamada
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                runOnUiThread(() ->
-                        android.widget.Toast.makeText(SolicitudesActivity.this, "Error de red", android.widget.Toast.LENGTH_SHORT).show()
-                );
+                runOnUiThread(() -> mostrarFeedback("Error de conexión al servidor", false));
             }
 
             @Override
             public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
                 runOnUiThread(() -> {
                     if (response.isSuccessful()) {
-                        android.widget.Toast.makeText(SolicitudesActivity.this, "¡Solicitud enviada a " + tagReceptor + "!", Toast.LENGTH_SHORT).show();
-                        // Limpiamos el buscador para que el usuario sepa que ha funcionado
+                        // Mostramos mensaje de éxito
+                        mostrarFeedback("¡Solicitud enviada a " + tagReceptor + "!", true);
                         if (etBuscarAmigo != null) etBuscarAmigo.setText("");
+
+                        // Añadimos a la lista de Pendientes localmente
+                        if (adapterPendientes != null) {
+                            adapterPendientes.addItem(tagReceptor);
+                        }
+
                     } else if (response.code() == 404) {
-                        android.widget.Toast.makeText(SolicitudesActivity.this, "Jugador no encontrado", android.widget.Toast.LENGTH_SHORT).show();
+                        mostrarFeedback("El usuario introducido no existe", false);
                     } else if (response.code() == 409) {
-                        android.widget.Toast.makeText(SolicitudesActivity.this, "Ya hay una solicitud pendiente o ya sois amigos", android.widget.Toast.LENGTH_LONG).show();
+                        mostrarFeedback("Ya hay una solicitud o ya sois amigos", false);
                     } else {
-                        android.widget.Toast.makeText(SolicitudesActivity.this, "Error al enviar: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
+                        mostrarFeedback("Error al enviar código: " + response.code(), false);
                     }
                 });
             }
@@ -416,5 +414,16 @@ public class SolicitudesActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+    private void mostrarFeedback(String mensaje, boolean esExito) {
+        if (txtFeedback != null) {
+            txtFeedback.setVisibility(View.VISIBLE);
+            txtFeedback.setText(mensaje);
+            if (esExito) {
+                txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
+            } else {
+                txtFeedback.setTextColor(Color.parseColor("#F44336")); // Rojo
+            }
+        }
     }
 }
