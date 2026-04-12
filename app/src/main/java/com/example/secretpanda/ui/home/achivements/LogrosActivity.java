@@ -188,6 +188,8 @@ public class LogrosActivity extends AppCompatActivity {
             // Lógica de progreso Real
             holder.barra.setMax(logro.getValorObjetivo());
             holder.barra.setProgress(logro.getProgresoActual());
+            holder.txtDescripcion.setText(logro.getDescripcion());
+
 
             if (logro.isCompletado()) {
                 holder.txtProgreso.setText("¡Completado!");
@@ -200,12 +202,13 @@ public class LogrosActivity extends AppCompatActivity {
         @Override public int getItemCount() { return items.size(); }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView txtTitulo, txtProgreso, txtMonedas; ProgressBar barra;
+            TextView txtTitulo, txtProgreso, txtMonedas, txtDescripcion; ProgressBar barra;
             ViewHolder(View v) {
                 super(v);
                 txtTitulo = v.findViewById(R.id.txt_titulo_logro);
                 txtProgreso = v.findViewById(R.id.txt_progreso_logro);
                 txtMonedas = v.findViewById(R.id.txt_recompensa_logro);
+                txtDescripcion = v.findViewById(R.id.txt_descripcion_logro);
                 barra = v.findViewById(R.id.barra_progreso_logro);
             }
         }
@@ -228,6 +231,7 @@ public class LogrosActivity extends AppCompatActivity {
             // Lógica de progreso Real
             holder.barra.setMax(medalla.getValorObjetivo());
             holder.barra.setProgress(medalla.getProgresoActual());
+            holder.txtDescripcion.setText(medalla.getDescripcion());
 
             if (medalla.isCompletado()) {
                 holder.iconoCheck.setVisibility(View.VISIBLE);
@@ -242,11 +246,12 @@ public class LogrosActivity extends AppCompatActivity {
         @Override public int getItemCount() { return items.size(); }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView txtTitulo, txtProgreso; ProgressBar barra; ImageView iconoCheck;
+            TextView txtTitulo, txtProgreso, txtDescripcion; ProgressBar barra; ImageView iconoCheck;
             ViewHolder(View v) {
                 super(v);
                 txtTitulo = v.findViewById(R.id.txt_titulo_medalla);
                 txtProgreso = v.findViewById(R.id.txt_progreso_medalla);
+                txtDescripcion = v.findViewById(R.id.txt_descripcion_medalla);
                 barra = v.findViewById(R.id.barra_progreso_medalla);
                 iconoCheck = v.findViewById(R.id.icono_completado_medalla);
             }

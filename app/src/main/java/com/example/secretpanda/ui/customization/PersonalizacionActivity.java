@@ -84,10 +84,10 @@ public class PersonalizacionActivity extends AppCompatActivity {
         super.onResume();
         if (txtSeccionActual != null) {
             String tituloActual = txtSeccionActual.getText().toString().toLowerCase();
-            // ¡AQUÍ ESTABA EL FALLO! Ahora lo pasamos en singular
-            if (tituloActual.contains("barajas")) cargarDatos("baraja");
-            else if (tituloActual.contains("borde")) cargarDatos("borde");
-            else cargarDatos("fondo");
+
+            if (tituloActual.contains("barajas")) cargarInventarioServidor("baraja");
+            else if (tituloActual.contains("borde")) cargarInventarioServidor("borde");
+            else cargarInventarioServidor("fondo");
         }
     }
 
@@ -110,9 +110,10 @@ public class PersonalizacionActivity extends AppCompatActivity {
         animarAltura(inactiva2, 50);
 
         String tituloMin = titulo.toLowerCase();
-        if (tituloMin.contains("barajas")) cargarDatos("baraja");
-        else if (tituloMin.contains("borde")) cargarDatos("borde");
-        else cargarDatos("fondo");
+
+        if (tituloMin.contains("barajas")) cargarInventarioServidor("baraja");
+        else if (tituloMin.contains("borde")) cargarInventarioServidor("borde");
+        else cargarInventarioServidor("fondo");
     }
 
     private void animarAltura(View vista, int altoFinalDp) {
@@ -181,14 +182,11 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
     private void mostrarPreview(ItemPersonalizacion item, int position, boolean permiteSeleccion) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_preview_personalizacion, null);
-
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setView(dialogView);
         android.app.AlertDialog dialog = builder.create();
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
         TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo);
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview);
@@ -196,23 +194,16 @@ public class PersonalizacionActivity extends AppCompatActivity {
         android.widget.Button btnSeleccionar = dialogView.findViewById(R.id.btn_seleccionar_preview);
 
         txtTitulo.setText(item.getNombre());
-
-        if (item.getIconoResId() != 0) {
-            imgPreview.setImageResource(item.getIconoResId());
-        } else {
-            imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
-        }
+        if (item.getIconoResId() != 0) imgPreview.setImageResource(item.getIconoResId());
+        else imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
 
         if (!permiteSeleccion || item.getTipo().equals("baraja")) {
             btnSeleccionar.setVisibility(View.GONE);
         } else {
             btnSeleccionar.setVisibility(View.VISIBLE);
             btnSeleccionar.setOnClickListener(v -> {
-                if(adapterPosesion != null){
-                    adapterPosesion.setPosicionSeleccionada(position);
-                }
-                txtTematicaSeleccionada.setText(item.getNombre());
-                dialog.dismiss();
+
+                equiparItemServidor(item.getId(), item.getNombre(), position, dialog);
             });
         }
 
@@ -244,122 +235,156 @@ public class PersonalizacionActivity extends AppCompatActivity {
     private void cargarInventarioServidor(String categoria) {
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
-
-        if (jwt == null || jwt.isEmpty()) {
-            return; // O redirigir al Login
-        }
+        if (jwt == null || jwt.isEmpty()) return;
 
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores/personalizaciones";
+
+        //  LEER EL INVENTARIO
+        String urlInventario = "http://10.0.2.2:8080/api/jugadores/personalizaciones";
+        okhttp3.Request requestInv = new okhttp3.Request.Builder()
+                .url(urlInventario).get().addHeader("Authorization", "Bearer " + jwt).build();
+
+        client.newCall(requestInv).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {}
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response responseInv) throws java.io.IOException {
+                if (!responseInv.isSuccessful()) return;
+
+                List<ItemPersonalizacion> comprados = new ArrayList<>();
+                List<Integer> idsComprados = new ArrayList<>();
+                String[] itemEquipadoNombre = {"Ninguno"};
+                int[] posEquipada = {-1};
+
+                try {
+                    org.json.JSONArray arrInv = new org.json.JSONArray(responseInv.body().string());
+                    for (int i = 0; i < arrInv.length(); i++) {
+                        org.json.JSONObject obj = arrInv.getJSONObject(i);
+                        String tipo = obj.optString("tipo", "baraja");
+
+                        if (tipo.equalsIgnoreCase(categoria)) {
+                            int id = obj.optInt("id_tema", -1); // Según API es id_tema
+                            String nombre = obj.optString("nombre", "Desconocido");
+                            boolean equipado = obj.optBoolean("equipado", false);
+
+                            ItemPersonalizacion item = new ItemPersonalizacion(nombre, false, tipo, 0, 0);
+                            item.setId(id);
+                            comprados.add(item);
+                            idsComprados.add(id);
+
+                            if (equipado) {
+                                itemEquipadoNombre[0] = nombre;
+                                posEquipada[0] = comprados.size() - 1;
+                            }
+                        }
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
+
+                //  LEER LA TIENDA (Para sacar lo bloqueado)
+                String urlTienda = "http://10.0.2.2:8080/api/temas/activos";
+                okhttp3.Request requestTienda = new okhttp3.Request.Builder()
+                        .url(urlTienda).get().addHeader("Authorization", "Bearer " + jwt).build();
+
+                client.newCall(requestTienda).enqueue(new okhttp3.Callback() {
+                    @Override
+                    public void onFailure(okhttp3.Call call, java.io.IOException e) {}
+
+                    @Override
+                    public void onResponse(okhttp3.Call call, okhttp3.Response responseTienda) throws java.io.IOException {
+                        List<ItemPersonalizacion> bloqueadosLocal = new ArrayList<>();
+
+                        if (responseTienda.isSuccessful()) {
+                            try {
+                                org.json.JSONArray arrTienda = new org.json.JSONArray(responseTienda.body().string());
+                                for (int i = 0; i < arrTienda.length(); i++) {
+                                    org.json.JSONObject obj = arrTienda.getJSONObject(i);
+                                    int id = obj.optInt("id_tema", -1);
+                                    String nombre = obj.optString("nombre", "Desconocido");
+                                    String tipo = obj.optString("tipo", "baraja");
+
+                                    // Si es de esta pestaña y no lo tenemos comprado
+                                    if (tipo.equalsIgnoreCase(categoria) && !idsComprados.contains(id)) {
+                                        ItemPersonalizacion item = new ItemPersonalizacion(nombre, true, tipo, 0, 0);
+                                        item.setId(id);
+                                        bloqueadosLocal.add(item);
+                                    }
+                                }
+                            } catch (Exception e) { e.printStackTrace(); }
+                        }
+
+                        //  DIBUJAR TODO EN PANTALLA
+                        runOnUiThread(() -> {
+                            posesion.clear(); posesion.addAll(comprados);
+                            PersonalizacionActivity.this.bloqueados.clear();
+                            PersonalizacionActivity.this.bloqueados.addAll(bloqueadosLocal);
+
+                            txtTematicaSeleccionada.setText(itemEquipadoNombre[0]);
+                            if (posesion.isEmpty()) {
+                                txtVacioPosesion.setVisibility(View.VISIBLE);
+                                recyclerPosesion.setVisibility(View.GONE);
+                            } else {
+                                txtVacioPosesion.setVisibility(View.GONE);
+                                recyclerPosesion.setVisibility(View.VISIBLE);
+                                if (posEquipada[0] == -1) txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
+                            }
+
+                            boolean permiteSeleccion = !categoria.equals("baraja");
+                            adapterPosesion = new PersonalizacionAdapter(posesion, false, permiteSeleccion, (item, pos) -> mostrarPreview(item, pos, permiteSeleccion));
+                            adapterBloqueados = new PersonalizacionAdapter(PersonalizacionActivity.this.bloqueados, true, false, (item, pos) -> mostrarPreview(item, pos, false));
+
+                            if (posEquipada[0] != -1) adapterPosesion.setPosicionSeleccionada(posEquipada[0]);
+
+                            recyclerPosesion.setAdapter(adapterPosesion);
+                            recyclerBloqueados.setAdapter(adapterBloqueados);
+                        });
+                    }
+                });
+            }
+        });
+    }
+    private void equiparItemServidor(int idPersonalizacion, String nombreItem, int position, android.app.AlertDialog dialog) {
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+        if (jwt == null) return;
+
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String url = "http://10.0.2.2:8080/api/personalizaciones/equipar";
+
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
+        try {
+            jsonBody.put("id_personalizacion", idPersonalizacion);
+            jsonBody.put("equipado", true);
+        } catch (Exception e) { e.printStackTrace(); }
+
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(
+                jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8")
+        );
 
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(url)
-                .get()
+                .put(body)
                 .addHeader("Authorization", "Bearer " + jwt)
                 .build();
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                runOnUiThread(() -> android.widget.Toast.makeText(PersonalizacionActivity.this, "Error al conectar con el inventario", android.widget.Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> android.widget.Toast.makeText(PersonalizacionActivity.this, "Error de red al equipar", android.widget.Toast.LENGTH_SHORT).show());
             }
 
             @Override
             public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                if (response.isSuccessful()) {
-                    String jsonData = response.body().string();
-                    try {
-                        org.json.JSONArray array = new org.json.JSONArray(jsonData);
-                        Log.d("API_PERSONALIZACION", "JSON: " + jsonData);
-
-                        List<ItemPersonalizacion> nuevosPosesion = new ArrayList<>();
-                        List<ItemPersonalizacion> nuevosBloqueados = new ArrayList<>();
-                        String itemEquipadoNombre = "Ninguno";
-                        int posSeleccionada = -1;
-
-                        for (int i = 0; i < array.length(); i++) {
-                            org.json.JSONObject obj = array.getJSONObject(i);
-                            Log.d("API_PERSONALIZACION", "Item JSON: " + obj.toString());
-
-                            // 1. Extraemos los campos del JSON (RF-8/RF-10)
-                            String tipo = obj.getString("tipo"); // "baraja", "borde", "fondo"
-
-                            // Solo procesamos los que coincidan con la pestaña actual
-                            if (tipo.equalsIgnoreCase(categoria)) {
-                                int id = obj.getInt("id_personalizacion");
-                                String nombre = obj.getString("nombre");
-                                String valorVisual = obj.getString("valor_visual");
-                                boolean equipado = obj.getBoolean("equipado");
-                                boolean comprado = obj.getBoolean("comprado");
-
-                                // 2. Mapeamos a tu modelo ItemPersonalizacion
-                                // (Asumo que el constructor es: nombre, bloqueado, tipo, icono, precio)
-                                ItemPersonalizacion item = new ItemPersonalizacion(
-                                        nombre,
-                                        !comprado, // bloqueado = no comprado
-                                        tipo,
-                                        0, // El icono lo manejaremos con valorVisual después
-                                        0  // El precio no suele venir en el inventario, solo en tienda
-                                );
-                                item.setId(id);
-                                // Si tienes un campo para guardar el string de la imagen:
-                                // item.setValorVisual(valorVisual);
-
-                                if (comprado) {
-                                    nuevosPosesion.add(item);
-                                    if (equipado) {
-                                        itemEquipadoNombre = nombre;
-                                        posSeleccionada = nuevosPosesion.size() - 1;
-                                    }
-                                } else {
-                                    nuevosBloqueados.add(item);
-                                }
-                            }
-                        }
-
-                        // 3. Actualizamos la UI en el hilo principal
-                        final String nombreEq = itemEquipadoNombre;
-                        final int indexEq = posSeleccionada;
-
-                        runOnUiThread(() -> {
-                            txtTematicaSeleccionada.setText(nombreEq);
-
-                            posesion.clear();
-                            posesion.addAll(nuevosPosesion);
-                            bloqueados.clear();
-                            bloqueados.addAll(nuevosBloqueados);
-
-
-                            if (posesion.isEmpty()) {
-                                txtVacioPosesion.setVisibility(View.VISIBLE);
-                                recyclerPosesion.setVisibility(View.GONE);
-                                txtTematicaSeleccionada.setText("Ninguna");
-                            } else {
-                                txtVacioPosesion.setVisibility(View.GONE);
-                                recyclerPosesion.setVisibility(View.VISIBLE);
-                                txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
-                            }
-
-                            // Configurar adaptadores
-                            adapterPosesion = new PersonalizacionAdapter(posesion, false, true, (item, pos) -> mostrarPreview(item, pos, true));
-                            adapterBloqueados = new PersonalizacionAdapter(bloqueados, true, false, (item, pos) -> mostrarPreview(item, pos, false));
-
-                            // Marcar el equipado visualmente
-                            if (indexEq != -1) {
-                                adapterPosesion.setPosicionSeleccionada(indexEq);
-                            }
-
-                            recyclerPosesion.setAdapter(adapterPosesion);
-                            recyclerBloqueados.setAdapter(adapterBloqueados);
-
-                            // Gestionar texto de lista vacía
-                            txtVacioPosesion.setVisibility(posesion.isEmpty() ? View.VISIBLE : View.GONE);
-                        });
-
-                    } catch (org.json.JSONException e) {
-                        e.printStackTrace();
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        if(adapterPosesion != null) adapterPosesion.setPosicionSeleccionada(position);
+                        txtTematicaSeleccionada.setText(nombreItem);
+                        android.widget.Toast.makeText(PersonalizacionActivity.this, "¡Equipado!", android.widget.Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    } else {
+                        android.widget.Toast.makeText(PersonalizacionActivity.this, "Error al equipar: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
                     }
-                }
+                });
             }
         });
     }
