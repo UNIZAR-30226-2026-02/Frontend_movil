@@ -53,34 +53,9 @@ public class JugadorSalaAdapter extends RecyclerView.Adapter<JugadorSalaAdapter.
         }
 
         if (holder.btnExpulsar != null) {
-            if (jugador.getTag().equals(miNombreJugador)) {
-                holder.btnExpulsar.setVisibility(View.GONE);
-            } else {
-                holder.btnExpulsar.setVisibility(View.VISIBLE);
-            }
-
-            // --- NUEVA LÓGICA PARA EL BOTÓN DE EXPULSAR ---
-            if (holder.btnExpulsar != null) {
-
-                // Si NO eres líder, o el jugador de esta carta eres TÚ mismo -> Ocultamos la X
-                if (!esLider || jugador.getTag().equals(miNombreJugador)) {
-                    holder.btnExpulsar.setVisibility(View.GONE);
-                } else {
-                    // Si eres líder y es otro jugador -> Mostramos la X
-                    holder.btnExpulsar.setVisibility(View.VISIBLE);
-                }
-
-                // El listener se queda igual (total, si no se ve, no se puede clicar)
-                holder.btnExpulsar.setOnClickListener(v -> {
-                    int posicionActual = holder.getAdapterPosition();
-                    if (posicionActual != RecyclerView.NO_POSITION) {
-                        listaJugadores.remove(posicionActual);
-                        notifyItemRemoved(posicionActual);
-                        notifyItemRangeChanged(posicionActual, listaJugadores.size());
-                        if (listener != null) listener.onJugadoresCambiados(listaJugadores);
-                    }
-                });
-            }
+            // El botón de expulsar (X) se elimina por completo de la vista por petición del usuario.
+            holder.btnExpulsar.setVisibility(View.GONE);
+            holder.btnExpulsar.setOnClickListener(null);
         }
     }
 
