@@ -254,6 +254,43 @@ public class HomeActivity extends AppCompatActivity {
         super.onResume();
 
         cargarBalasReales();
+        cargarFotoPerfil();
+    }
+    private void cargarFotoPerfil() {
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        String token = new com.example.secretpanda.data.TokenManager(this).getToken();
+        if (token == null) return;
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url("http://10.0.2.2:8080/api/jugadores")
+                .get()
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {}
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        org.json.JSONObject obj = new org.json.JSONObject(response.body().string());
+                        String fotoPerfil = obj.optString("foto_perfil", "1");
+
+                        runOnUiThread(() -> {
+                            ImageView imgPerfil = findViewById(R.id.btn_perfil);
+                            if (imgPerfil != null) {
+                                int resId = GestorImagenes.obtenerImagenManual(fotoPerfil);
+                                imgPerfil.setImageResource(resId);
+                                // Quitamos el padding si es una foto de perfil real (opcional, para que se vea mejor)
+                                imgPerfil.setPadding(0, 0, 0, 0);
+                            }
+                        });
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+            }
+        });
     }
     private void cargarBalasReales() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();

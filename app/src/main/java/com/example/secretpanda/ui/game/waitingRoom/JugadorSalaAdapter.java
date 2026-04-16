@@ -44,6 +44,10 @@ public class JugadorSalaAdapter extends RecyclerView.Adapter<JugadorSalaAdapter.
 
         holder.tvNombre.setText(jugador.getTag());
 
+        // Cargamos la foto de perfil usando el GestorImagenes
+        int resId = com.example.secretpanda.ui.home.GestorImagenes.obtenerImagenManual(jugador.getFotoPerfil());
+        holder.ivPerfil.setImageResource(resId);
+
         if (jugador.isEsEquipoAzul()) {
             holder.cardJugador.setStrokeColor(android.graphics.Color.parseColor("#0000FF"));
             holder.tvNombre.setShadowLayer(8f, 0f, 0f, android.graphics.Color.parseColor("#0000FF"));
@@ -68,12 +72,14 @@ public class JugadorSalaAdapter extends RecyclerView.Adapter<JugadorSalaAdapter.
         com.google.android.material.card.MaterialCardView cardJugador;
         TextView tvNombre;
         View btnExpulsar;
+        android.widget.ImageView ivPerfil;
 
         public JugadorViewHolder(@NonNull View itemView) {
             super(itemView);
             cardJugador = itemView.findViewById(R.id.card_jugador);
             tvNombre = itemView.findViewById(R.id.tv_nombre_jugador);
             btnExpulsar = itemView.findViewById(R.id.btn_expulsar);
+            ivPerfil = itemView.findViewById(R.id.iv_perfil_sala);
         }
     }
 }

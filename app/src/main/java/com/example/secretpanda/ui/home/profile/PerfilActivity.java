@@ -269,11 +269,15 @@ public class PerfilActivity extends AppCompatActivity {
         recyclerImagenes.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 3));
 
         java.util.List<Integer> misImagenes = new java.util.ArrayList<>();
-        for (int i = 0; i < 60; i++) misImagenes.add(R.mipmap.ic_launcher);
+        misImagenes.add(R.drawable.panda_mago);
+        misImagenes.add(R.drawable.panda_explorador);
+        misImagenes.add(R.drawable.panda_buceador);
+        misImagenes.add(R.drawable.panda_futurista);
+        misImagenes.add(R.drawable.panda_bambu);
 
         ImagenPerfilAdapter adapter = new ImagenPerfilAdapter(misImagenes, recurso -> {
             imagenPerfilActual.setImageResource(recurso);
-            nombreImagen = getResources().getResourceEntryName(recurso);
+            nombreImagen = GestorImagenes.getStringIdFromResource(recurso);
             actualizarPerfilServidor(tagActual, nombreImagen);
             dialog.dismiss();
         });
@@ -351,13 +355,9 @@ public class PerfilActivity extends AppCompatActivity {
                             if (txtAciertos != null) txtAciertos.setText(String.valueOf(aciertos));
                             if (txtFallos != null) txtFallos.setText(String.valueOf(fallos));
 
-                            if (!nombreImagen.isEmpty()) {
-                                int resId = getResources().getIdentifier(nombreImagen, "drawable", getPackageName());
-                                if (resId != 0) {
-                                    ImageView imgPerfil = findViewById(R.id.icono_perfil_datos);
-                                    if (imgPerfil != null) imgPerfil.setImageResource(resId);
-                                }
-                            }
+                            int resId = GestorImagenes.obtenerImagenManual(nombreImagen);
+                            ImageView imgPerfil = findViewById(R.id.icono_perfil_datos);
+                            if (imgPerfil != null) imgPerfil.setImageResource(resId);
                         });
 
                     } catch (org.json.JSONException e) {

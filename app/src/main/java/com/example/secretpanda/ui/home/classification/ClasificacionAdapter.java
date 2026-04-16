@@ -43,19 +43,8 @@ public class ClasificacionAdapter extends RecyclerView.Adapter<ClasificacionAdap
         holder.textoVictorias.setText(String.valueOf(jugador.getVictorias()));
 
         String nombreImagen = jugador.getFotoPerfil();
-        if (nombreImagen != null && !nombreImagen.isEmpty()) {
-            // Buscamos el recurso por su nombre (ej. "avatar_1")
-            int resId = holder.itemView.getContext().getResources().getIdentifier(
-                    nombreImagen, "drawable", holder.itemView.getContext().getPackageName());
-
-            if (resId != 0) {
-                holder.fotoPerfil.setImageResource(resId);
-            } else {
-                holder.fotoPerfil.setImageResource(R.mipmap.ic_launcher); // Imagen por defecto
-            }
-        } else {
-            holder.fotoPerfil.setImageResource(R.mipmap.ic_launcher); // Imagen por defecto
-        }
+        int resId = com.example.secretpanda.ui.home.GestorImagenes.obtenerImagenManual(nombreImagen);
+        holder.fotoPerfil.setImageResource(resId);
         // ==========================================
         // LÓGICA DE ORO, PLATA Y BRONCE
         // ==========================================

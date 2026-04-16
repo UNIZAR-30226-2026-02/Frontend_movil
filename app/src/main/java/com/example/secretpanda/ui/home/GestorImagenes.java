@@ -4,7 +4,7 @@ import com.example.secretpanda.R;
 
 public class GestorImagenes {
     public static int obtenerImagenManual(String nombreImagen) {
-        if (nombreImagen == null || nombreImagen.isEmpty()) return R.drawable.baseline_emoji_events_24;
+        if (nombreImagen == null || nombreImagen.isEmpty()) return R.drawable.panda_mago;
 
         switch (nombreImagen.toLowerCase()) {
             case "1":
@@ -24,21 +24,19 @@ public class GestorImagenes {
                 return R.drawable.panda_bambu;
         }
         
-        // Si es un nombre de recurso directo (ej. "avatar_1")
-        return 0; 
+        return R.drawable.panda_mago; 
+    }
+
+    public static String getStringIdFromResource(int resId) {
+        if (resId == R.drawable.panda_mago) return "1";
+        if (resId == R.drawable.panda_explorador) return "2";
+        if (resId == R.drawable.panda_buceador) return "3";
+        if (resId == R.drawable.panda_futurista) return "4";
+        if (resId == R.drawable.panda_bambu) return "5";
+        return "1";
     }
 
     public static int getMedallaPorVictorias(int victorias) {
-        // Temporalmante deshabilitado hasta tener los recursos drawable de las medallas
-        /*
-        if (victorias >= 100) {
-            return R.drawable.medal_gold;
-        } else if (victorias >= 50) {
-            return R.drawable.medal_silver;
-        } else if (victorias >= 10) {
-            return R.drawable.medal_bronze;
-        }
-        */
         return R.drawable.baseline_emoji_events_24; 
     }
 }
