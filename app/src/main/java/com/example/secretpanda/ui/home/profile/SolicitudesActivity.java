@@ -106,7 +106,7 @@ public class SolicitudesActivity extends AppCompatActivity {
         tabEnviar.setOnClickListener(v -> switchTab(1));
         tabRecibidas.setOnClickListener(v -> switchTab(2));
         tabPendientes.setOnClickListener(v -> switchTab(3));
-        switchTab(2);
+        switchTab(1);
     }
 
     private void switchTab(int index) {

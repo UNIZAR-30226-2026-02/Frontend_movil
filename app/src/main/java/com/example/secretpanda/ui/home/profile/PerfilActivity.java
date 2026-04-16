@@ -40,6 +40,8 @@ public class PerfilActivity extends AppCompatActivity {
     private List<Jugador> misAmigos;
     private String nombreImagen="";
     private ImageView fotoPerfil;
+
+    private String fotoSeleccionadaTemporal = "";
     private String tagActual= "Espía Secreto";
 
     @Override
@@ -237,17 +239,26 @@ public class PerfilActivity extends AppCompatActivity {
 
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_editar);
         Button btnGuardar = dialogView.findViewById(R.id.btn_guardar_cambios);
-        ImageView btnCambiarFoto = dialogView.findViewById(R.id.btn_cambiar_foto);
+        ImageView btnCambiarFoto = dialogView.findViewById(R.id.editar_foto_perfil); // 🔥 Cambiado al ID correcto (la imagen central)
         android.widget.EditText inputNombre = dialogView.findViewById(R.id.input_editar_nombre);
+
+        fotoSeleccionadaTemporal = nombreImagen;
+        int resId = GestorImagenes.obtenerImagenManual(fotoSeleccionadaTemporal);
+        if (resId != 0 && btnCambiarFoto != null) {
+            btnCambiarFoto.setImageResource(resId);
+        }
 
         inputNombre.setText(tagActual);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
-        btnCambiarFoto.setOnClickListener(v -> mostrarDialogoElegirImagen(btnCambiarFoto));
+
+        if (btnCambiarFoto != null) {
+            btnCambiarFoto.setOnClickListener(v -> mostrarDialogoElegirImagen(btnCambiarFoto));
+        }
 
         btnGuardar.setOnClickListener(v -> {
             String nuevoNombre = inputNombre.getText().toString().trim();
             if (!nuevoNombre.isEmpty()) {
-                actualizarPerfilServidor(nuevoNombre, nombreImagen);
+                actualizarPerfilServidor(nuevoNombre, fotoSeleccionadaTemporal);
                 dialog.dismiss();
             }
         });
@@ -276,11 +287,12 @@ public class PerfilActivity extends AppCompatActivity {
         misImagenes.add(R.drawable.panda_bambu);
 
         ImagenPerfilAdapter adapter = new ImagenPerfilAdapter(misImagenes, recurso -> {
+
             imagenPerfilActual.setImageResource(recurso);
-            nombreImagen = GestorImagenes.getStringIdFromResource(recurso);
-            actualizarPerfilServidor(tagActual, nombreImagen);
+            fotoSeleccionadaTemporal = GestorImagenes.getStringIdFromResource(recurso);
             dialog.dismiss();
         });
+
         recyclerImagenes.setAdapter(adapter);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
         dialog.show();

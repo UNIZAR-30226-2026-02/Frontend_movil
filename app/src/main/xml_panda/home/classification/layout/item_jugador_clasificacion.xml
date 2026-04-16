@@ -31,10 +31,11 @@
 
         <ImageView
             android:id="@+id/foto_perfil"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_launcher_foreground"
-            android:background="@drawable/ic_square_bg" />
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/circle_shape"
+            android:clipToOutline="true"
+            android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/nombre_jugador"

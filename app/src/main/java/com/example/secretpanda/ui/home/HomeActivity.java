@@ -277,21 +277,19 @@ public class HomeActivity extends AppCompatActivity {
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject(response.body().string());
                         int balas = obj.optInt("balas", 0);
-                        String foto = obj.optString("foto_perfil", ""); // [cite: 87, 121]
+                        String foto = obj.optString("foto_perfil", "");
 
                         runOnUiThread(() -> {
-                            // Actualizar Balas
                             android.widget.TextView txtBalas = findViewById(R.id.txt_balas_home);
                             if (txtBalas != null) txtBalas.setText(String.valueOf(balas));
 
-                            // actualizar foto de perfil en el boton
                             ImageView btnPerfil = findViewById(R.id.btn_perfil);
-                            if (btnPerfil != null && !foto.isEmpty()) {
-                                int resId = getResources().getIdentifier(foto, "drawable", getPackageName());
+                            if (btnPerfil != null) {
+                                int resId = GestorImagenes.obtenerImagenManual(foto);
                                 if (resId != 0) {
                                     btnPerfil.setImageResource(resId);
-                                    btnPerfil.setClipToOutline(true);
-                                    btnPerfil.setBackgroundResource(R.drawable.circle_shape);
+                                } else {
+                                    btnPerfil.setImageResource(R.drawable.logo_secret_panda); // Por si acaso
                                 }
                             }
                         });

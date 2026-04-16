@@ -12,6 +12,8 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:background="@drawable/circle_shape"
+        android:clipToOutline="true"
+        android:scaleType="centerCrop"
         android:backgroundTint="#4CAF50" /> <TextView
     android:id="@+id/nombre_amigo"
     android:layout_width="0dp"

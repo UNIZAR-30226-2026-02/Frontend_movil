@@ -9,13 +9,17 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:scaleType="centerCrop"
-        android:background="@drawable/circulo_fondo" /> <ImageView
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignEnd="@id/imagen_opcion_perfil"
-        android:layout_alignBottom="@id/imagen_opcion_perfil"
-        android:background="@drawable/circulo_blanco_borde_negro" android:src="@android:drawable/ic_input_add"
-        android:padding="2dp"
-        android:elevation="4dp"/>
+        android:background="@drawable/circulo_fondo"
+        android:clipToOutline="true" /> <ImageView
+    android:layout_width="24dp"
+    android:layout_height="24dp"
+    android:layout_alignEnd="@id/imagen_opcion_perfil"
+    android:layout_alignBottom="@id/imagen_opcion_perfil"
+    android:background="@drawable/circulo_blanco_borde_negro"
+    android:src="@android:drawable/ic_input_add"
+    android:padding="2dp"
+    android:elevation="4dp"
+    android:clipToOutline="true"
+    android:scaleType="centerCrop"/>
 
 </RelativeLayout>

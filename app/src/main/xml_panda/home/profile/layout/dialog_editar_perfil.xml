@@ -49,6 +49,8 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:background="@drawable/circle_shape"
+                android:clipToOutline="true"
+                android:scaleType="centerCrop"
                 android:backgroundTint="#CC0000" /> <ImageView
             android:id="@+id/btn_cambiar_foto"
             android:layout_width="24dp"
