@@ -303,8 +303,9 @@ public class PersonalizacionActivity extends AppCompatActivity {
                                     String nombre = obj.optString("nombre", "Desconocido");
                                     String tipo = obj.optString("tipo", "baraja");
 
-                                    // Si es de esta pestaña y no lo tenemos comprado
-                                    if (tipo.equalsIgnoreCase(categoria) && !idsComprados.contains(id)) {
+
+                                    // Si el nombre es "Básico", no lo añadimos a bloqueados aunque no esté en idsComprados
+                                    if (tipo.equalsIgnoreCase(categoria) && !idsComprados.contains(id) && !nombre.equalsIgnoreCase("Basico")) {
                                         ItemPersonalizacion item = new ItemPersonalizacion(nombre, true, tipo, 0, 0);
                                         item.setId(id);
                                         bloqueadosLocal.add(item);

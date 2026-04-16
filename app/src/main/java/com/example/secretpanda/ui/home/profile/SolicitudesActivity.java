@@ -271,10 +271,15 @@ public class SolicitudesActivity extends AppCompatActivity {
         String jwt = tm.getToken();
         if (jwt == null) return;
 
-        if (txtFeedback != null) txtFeedback.setText("Enviando...");
+        // Mostrar estado inicial
+        if (txtFeedback != null) {
+            txtFeedback.setVisibility(View.VISIBLE);
+            txtFeedback.setTextColor(Color.BLACK);
+            txtFeedback.setText("Enviando...");
+        }
 
         JSONObject bodyJson = new JSONObject();
-        try { bodyJson.put("tag_receptor", tag); } catch (JSONException e) { return; }
+        try { bodyJson.put("tag_receptor", tag); } catch (JSONException e) { return; } // [cite: 117]
 
         RequestBody body = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
@@ -288,29 +293,33 @@ public class SolicitudesActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
-                    if (txtFeedback != null) txtFeedback.setText("Error de red");
-                    Toast.makeText(SolicitudesActivity.this, "Error de red", Toast.LENGTH_SHORT).show();
+                    if (txtFeedback != null) {
+                        txtFeedback.setTextColor(Color.parseColor("#F44336"));
+                        txtFeedback.setText("Error de red");
+                    }
                 });
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                final int code = response.code();
                 final String responseData = response.body() != null ? response.body().string() : "";
+
                 runOnUiThread(() -> {
                     if (response.isSuccessful()) {
-                        if (txtFeedback != null) txtFeedback.setText("");
-                        Toast.makeText(SolicitudesActivity.this, "¡Solicitud enviada!", Toast.LENGTH_SHORT).show();
+                        txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
+                        txtFeedback.setText("¡Solicitud enviada con éxito!");
                         etBuscarAmigo.setText("");
                     } else {
-                        String errorMsg = "Error al enviar";
-                        try {
-                            JSONObject resObj = new JSONObject(responseData);
-                            if (resObj.has("error")) errorMsg = resObj.getString("error");
-                            else if (resObj.has("message")) errorMsg = resObj.getString("message");
-                        } catch (Exception ignored) {}
-                        
-                        if (txtFeedback != null) txtFeedback.setText(errorMsg);
-                        Toast.makeText(SolicitudesActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                        // ERRORES
+                        txtFeedback.setTextColor(Color.parseColor("#F44336")); // Rojo
+                        if (code == 409) {
+                            txtFeedback.setText("Este usuario ya es tu amigo o tiene una solicitud pendiente.");
+                        } else if (code == 404) {
+                            txtFeedback.setText("El usuario no existe.");
+                        } else {
+                            txtFeedback.setText("No se pudo enviar la solicitud.");
+                        }
                     }
                 });
             }

@@ -253,9 +253,9 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        cargarBalasReales();
+        cargarDatosUsuarioHome();
     }
-    private void cargarBalasReales() {
+    private void cargarDatosUsuarioHome() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         if (token == null) return;
@@ -276,10 +276,23 @@ public class HomeActivity extends AppCompatActivity {
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject(response.body().string());
                         int balas = obj.optInt("balas", 0);
+                        String foto = obj.optString("foto_perfil", ""); // [cite: 87, 121]
 
                         runOnUiThread(() -> {
+                            // Actualizar Balas
                             android.widget.TextView txtBalas = findViewById(R.id.txt_balas_home);
                             if (txtBalas != null) txtBalas.setText(String.valueOf(balas));
+
+                            // actualizar foto de perfil en el boton
+                            ImageView btnPerfil = findViewById(R.id.btn_perfil);
+                            if (btnPerfil != null && !foto.isEmpty()) {
+                                int resId = getResources().getIdentifier(foto, "drawable", getPackageName());
+                                if (resId != 0) {
+                                    btnPerfil.setImageResource(resId);
+                                    btnPerfil.setClipToOutline(true);
+                                    btnPerfil.setBackgroundResource(R.drawable.circle_shape);
+                                }
+                            }
                         });
                     } catch (Exception e) { e.printStackTrace(); }
                 }
