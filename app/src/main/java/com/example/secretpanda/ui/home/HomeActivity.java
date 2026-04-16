@@ -46,9 +46,9 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
@@ -66,15 +66,15 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         // CAPTURAR BOTONES PRINCIPALES
-        Button btnNuevaMision = findViewById(R.id.btn_nueva_mision);
-        Button btnUneteMision = findViewById(R.id.btn_unete_mision);
+        View btnNuevaMision = findViewById(R.id.btn_nueva_mision);
+        View btnUneteMision = findViewById(R.id.btn_unete_mision);
 
         // El botón de las 3 rayitas
         ImageView btnMenuOpciones = findViewById(R.id.btn_menu_opciones);
 
         ImageView btnClasificacion = findViewById(R.id.btn_clasificacion);
 
-        ImageView btnPerfil = findViewById(R.id.btn_perfil);
+        View btnPerfil = findViewById(R.id.btn_perfil);
         perfilLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {

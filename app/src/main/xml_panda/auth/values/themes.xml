@@ -2,47 +2,67 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Base.Theme.SecretPanda" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Colores base de la app -->
+        <item name="android:windowBackground">@color/desk_wood</item>
+        <item name="colorPrimary">@color/agent_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/folder_manila</item>
+        <item name="colorOnSecondary">@color/ink_text</item>
+        <item name="android:textColor">@color/white</item>
     </style>
+
     <style name="Theme.SecretPanda" parent="Base.Theme.SecretPanda" />
 
+    <!-- Estilos de Texto -->
+    <style name="TextAppearance.SecretPanda.Typewriter" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textColor">@color/ink_text</item>
+    </style>
+
+    <style name="TextAppearance.SecretPanda.Stamp" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textColor">@color/fbi_red</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Botones estilo Web -->
     <style name="BotonSecretPanda" parent="Widget.Material3.Button">
-        <item name="android:textSize">20sp</item>
-        <item name="backgroundTint">@color/white</item>
-        <item name="strokeColor">@color/borde_negro</item>
-        <item name="strokeWidth">3dp</item>
-        <item name="cornerRadius">4dp</item>
-        <item name="android:textColor">@color/black</item>
-        <item name="android:gravity">start|center_vertical</item>
-        <item name="android:paddingStart">24dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="backgroundTint">@color/folder_manila</item>
+        <item name="strokeColor">@color/folder_border</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerRadius">2dp</item>
+        <item name="android:textColor">@color/ink_text</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+...
+    <style name="BotonSecretPanda.Confirmar">
+        <item name="backgroundTint">@color/agent_green</item>
+        <item name="strokeColor">@color/black</item>
+        <item name="android:textColor">@color/white</item>
     </style>
 
-    <style name="BotonSecretPanda2" parent="Widget.Material3.Button">
-        <item name="android:textSize">20sp</item>
+    <style name="BotonSecretPanda.Cancelar">
         <item name="backgroundTint">@color/gris_boton</item>
-        <item name="strokeColor">@color/borde_negro</item>
-        <item name="strokeWidth">3dp</item>
-        <item name="cornerRadius">4dp</item>
-        <item name="android:gravity">start|center_vertical</item>
-        <item name="android:paddingStart">24dp</item>
+        <item name="strokeColor">@color/black</item>
+        <item name="android:textColor">@color/folder_border_light</item>
     </style>
 
-    <style name="BotonSecretPandaVerde" parent="Widget.Material3.Button">
-        <item name="android:textSize">20sp</item>
-        <item name="backgroundTint">@color/verde_boton</item> <item name="strokeColor">@color/borde_negro</item>
-        <item name="strokeWidth">3dp</item>
-        <item name="cornerRadius">4dp</item>
-        <item name="android:textColor">@color/black</item>
-        <item name="android:gravity">start|center_vertical</item>
-        <item name="android:paddingStart">24dp</item>
+    <!-- Tarjetas / Paneles -->
+    <style name="CardView.SecretPanda.Manila" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">@color/folder_manila</item>
+        <item name="cardCornerRadius">2dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="strokeColor">@color/folder_border</item>
+        <item name="strokeWidth">1dp</item>
     </style>
 
     <style name="PosicionLogoFijo">
         <item name="android:layout_width">260dp</item>
         <item name="android:layout_height">260dp</item>
-
         <item name="layout_constraintTop_toTopOf">parent</item>
         <item name="android:layout_marginTop">80dp</item>
-
         <item name="layout_constraintStart_toStartOf">parent</item>
         <item name="layout_constraintEnd_toEndOf">parent</item>
     </style>

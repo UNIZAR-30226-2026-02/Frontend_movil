@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sombra proyectada -->
+    <item android:top="8dp" android:left="8dp">
+        <shape>
+            <solid android:color="#40000000" />
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+    <!-- Lomo de la carpeta (borde izquierdo oscuro) -->
+    <item>
+        <shape>
+            <solid android:color="#B89055" />
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+    <!-- Cuerpo de la carpeta con gradiente -->
+    <item android:left="10dp">
+        <shape>
+            <gradient
+                android:startColor="#C4A060"
+                android:centerColor="#D4B070"
+                android:endColor="#C4A060"
+                android:angle="0" />
+            <corners
+                android:topRightRadius="15dp"
+                android:bottomRightRadius="15dp"
+                android:topLeftRadius="2dp"
+                android:bottomLeftRadius="2dp" />
+        </shape>
+    </item>
+    <!-- Textura/Línea de pliegue -->
+    <item android:left="12dp" android:right="380dp">
+        <shape>
+            <solid android:color="#40FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

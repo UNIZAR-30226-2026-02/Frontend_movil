@@ -2,6 +2,23 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Paleta de Identidad Secret Panda / FBI (Basada en Web) -->
+    <color name="desk_wood">#1A1208</color> <!-- Fondo escritorio oscuro -->
+    <color name="folder_manila">#F5EDD8</color> <!-- Fondo papel/carpeta principal -->
+    <color name="folder_manila_dark">#E8DCC0</color> <!-- Sombra/Papel viejo -->
+    <color name="folder_border">#A08050</color> <!-- Borde de carpeta/input -->
+    <color name="folder_border_light">#C4A060</color> <!-- Borde más claro/acentos -->
+
+    <color name="fbi_red">#8B2020</color> <!-- Rojo FBI / Alerta -->
+    <color name="agent_blue">#3366CC</color> <!-- Azul Equipo/Agente -->
+    <color name="agent_blue_light">#80A0D0</color> <!-- Azul claro web -->
+    <color name="agent_green">#2A5A2A</color> <!-- Verde éxito/confirmación -->
+
+    <color name="ink_text">#3A2A10</color> <!-- Color tinta antigua para texto en papel -->
+    <color name="ink_muted">#8A7A60</color> <!-- Texto secundario/muted -->
+
+    <!-- Colores base anteriores (mantener compatibilidad temporal) -->
     <color name="bg_dark">#1A1717</color>
     <color name="header_gray">#8E8E8E</color>
     <color name="card_gray">#D9D9D9</color>
@@ -9,7 +26,7 @@
     <color name="nav_selected">#555555</color>
     <color name="fondo_oscuro">#1A1A1A</color>
     <color name="rojo_google">#DB4437</color>
-    <color name="gris_boton">#808080</color>
+    <color name="gris_boton">#3A2A2A</color>
     <color name="borde_negro">#000000</color>
-    <color name="verde_boton">#49A83E</color>
+    <color name="verde_boton">#2A5A2A</color>
 </resources>
