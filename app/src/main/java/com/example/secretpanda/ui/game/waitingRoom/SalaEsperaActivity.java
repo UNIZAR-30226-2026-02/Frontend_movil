@@ -161,17 +161,33 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private void suscribirseAlCanalDelLobby() {
         String destinoTopic = "/topic/partidas/" + idPartida + "/lobby";
         stompClient.topic(destinoTopic).subscribe(stompMessage -> {
+            String payload = stompMessage.getPayload();
+            if ("FINALIZADA".equalsIgnoreCase(payload)) {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
+                    finish();
+                });
+                return;
+            }
             try {
-                String jsonCrudo = stompMessage.getPayload();
-                JSONObject json = new JSONObject(jsonCrudo);
+                JSONObject json = new JSONObject(payload);
+                String estado = json.optString("estado", "");
 
-                if ("en_curso".equalsIgnoreCase(json.optString("estado", ""))) {
+                if ("en_curso".equalsIgnoreCase(estado)) {
                     runOnUiThread(() -> {
                         Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
                         intent.putExtra("ID_PARTIDA", idPartida);
                         intent.putExtra("MI_NOMBRE_USUARIO", miPropioIdGoogle);
                         intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "azul" : "rojo");
                         startActivity(intent);
+                        finish();
+                    });
+                    return;
+                }
+                
+                if ("finalizada".equalsIgnoreCase(estado)) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "La sala ha sido cerrada por el líder.", Toast.LENGTH_LONG).show();
                         finish();
                     });
                     return;

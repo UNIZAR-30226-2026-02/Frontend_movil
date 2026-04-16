@@ -121,8 +121,13 @@ public class PartidaActivity extends AppCompatActivity {
 
     private void suscribirseAlEstadoPublico() {
         stompClient.topic("/topic/partidas/" + idPartidaActual + "/estado").subscribe(msg -> {
+            String payload = msg.getPayload();
+            if ("FINALIZADA".equalsIgnoreCase(payload)) {
+                runOnUiThread(this::navegarAFinPartida);
+                return;
+            }
             try {
-                JSONObject json = new JSONObject(msg.getPayload());
+                JSONObject json = new JSONObject(payload);
                 runOnUiThread(() -> aplicarEstadoTotal(json));
             } catch (Exception e) { Log.e("WS", "Error estado publico", e); }
         });
@@ -130,22 +135,30 @@ public class PartidaActivity extends AppCompatActivity {
 
     private void suscribirseAlEstadoPrivado() {
         stompClient.topic("/user/queue/partidas/" + idPartidaActual + "/estado").subscribe(msg -> {
+            String payload = msg.getPayload();
+            if ("FINALIZADA".equalsIgnoreCase(payload)) {
+                runOnUiThread(this::navegarAFinPartida);
+                return;
+            }
             try {
-                JSONObject json = new JSONObject(msg.getPayload());
+                JSONObject json = new JSONObject(payload);
                 runOnUiThread(() -> aplicarEstadoTotal(json));
             } catch (Exception e) { Log.e("WS", "Error estado privado", e); }
         });
+    }
+
+    private void navegarAFinPartida() {
+        Intent intent = new Intent(this, FinPartidaActivity.class);
+        intent.putExtra("ID_PARTIDA", idPartidaActual);
+        startActivity(intent);
+        finish();
     }
 
     private void aplicarEstadoTotal(JSONObject json) {
         try {
             String estadoPartida = json.optString("estado", "");
             if ("finalizada".equalsIgnoreCase(estadoPartida)) {
-                // Sincronizado con FinPartidaActivity
-                Intent intent = new Intent(this, FinPartidaActivity.class);
-                intent.putExtra("ID_PARTIDA", idPartidaActual);
-                startActivity(intent);
-                finish();
+                navegarAFinPartida();
                 return;
             }
 
