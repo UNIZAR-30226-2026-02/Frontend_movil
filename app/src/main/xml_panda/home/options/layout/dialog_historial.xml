@@ -30,6 +30,21 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="8dp" />
 
+    <TextView
+        android:id="@+id/txt_historial_vacio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aún no has jugado ninguna partida"
+        android:textColor="#CCCCCC"
+        android:textSize="16sp"
+        android:textStyle="italic"
+        android:textAlignment="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/titulo"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_historial"
         android:layout_width="match_parent"

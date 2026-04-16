@@ -45,6 +45,8 @@ public class SolicitudesActivity extends AppCompatActivity {
     private View btnEnviarSolicitud;
     private TextView txtFeedback;
 
+    private TextView txtMensajeRecibidas;
+
     private List<Solicitud> listaRecibidas = new ArrayList<>();
     private List<String> listaPendientes = new ArrayList<>();
 
@@ -74,6 +76,8 @@ public class SolicitudesActivity extends AppCompatActivity {
         etBuscarAmigo = findViewById(R.id.input_nombre_solicitud);
         btnEnviarSolicitud = findViewById(R.id.btn_enviar_solicitud);
         txtFeedback = findViewById(R.id.txt_feedback_solicitud);
+
+        txtMensajeRecibidas = findViewById(R.id.texto_mensaje_recibidas);
 
         findViewById(R.id.btn_cerrar_solicitudes).setOnClickListener(v -> finish());
     }
@@ -117,9 +121,13 @@ public class SolicitudesActivity extends AppCompatActivity {
         tabRecibidas.setBackgroundColor(index == 2 ? Color.parseColor("#E5F3F5") : Color.parseColor("#5C7A99"));
         tabPendientes.setBackgroundColor(index == 3 ? Color.parseColor("#E5F3F5") : Color.parseColor("#5C7A99"));
 
+        ((TextView) tabEnviar).setTextColor(index == 1 ? Color.parseColor("#333333") : Color.WHITE);
+        ((TextView) tabRecibidas).setTextColor(index == 2 ? Color.parseColor("#333333") : Color.WHITE);
+        ((TextView) tabPendientes).setTextColor(index == 3 ? Color.parseColor("#333333") : Color.WHITE);
         if (index == 2) cargarSolicitudesRecibidasServidor();
         if (index == 3) cargarSolicitudesPendientesServidor();
         if (index == 1 && txtFeedback != null) txtFeedback.setText("");
+        if (txtMensajeRecibidas != null) txtMensajeRecibidas.setVisibility(View.INVISIBLE);
     }
 
     private void cargarSolicitudesPendientesServidor() {
@@ -239,7 +247,11 @@ public class SolicitudesActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         listaRecibidas.remove(s);
                         adapterRecibidas.notifyDataSetChanged();
-                        Toast.makeText(SolicitudesActivity.this, "Solicitud " + nuevoEstado, Toast.LENGTH_SHORT).show();
+                        if (txtMensajeRecibidas != null) {
+                            txtMensajeRecibidas.setText(nuevoEstado.equals("aceptada") ? "✔ Solicitud aceptada" : "✘ Solicitud rechazada");
+                            txtMensajeRecibidas.setTextColor(nuevoEstado.equals("aceptada") ? Color.parseColor("#4CAF50") : Color.parseColor("#F44336"));
+                            txtMensajeRecibidas.setVisibility(View.VISIBLE);
+                        }
                     });
                 }
             }

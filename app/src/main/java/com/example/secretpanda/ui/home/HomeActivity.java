@@ -226,13 +226,13 @@ public class HomeActivity extends AppCompatActivity {
         // 1. Configurar RecyclerView (Asegúrate de tener un RecyclerView con este ID en dialog_historial.xml)
         RecyclerView recycler = dialogView.findViewById(R.id.recycler_historial);
         recycler.setLayoutManager(new LinearLayoutManager(this));
-
+        TextView txtVacio = dialogView.findViewById(R.id.txt_historial_vacio);
         // Creamos el adaptador (necesitarás crear esta clase HistorialAdapter similar a las anteriores)
         HistorialAdapter adapter = new HistorialAdapter(new ArrayList<>());
         recycler.setAdapter(adapter);
 
         // 2. CARGA AUTOMÁTICA: Llamamos al servidor nada más abrir
-        cargarHistorialServidor(adapter);
+        cargarHistorialServidor(adapter, txtVacio, recycler);
 
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_popup);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
@@ -286,7 +286,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
-    private void cargarHistorialServidor(HistorialAdapter adapter) {
+    private void cargarHistorialServidor(HistorialAdapter adapter, TextView txtVacio, RecyclerView recycler) {
         OkHttpClient client = new OkHttpClient();
         String url = "http://10.0.2.2:8080/api/jugadores/historial";
 
@@ -317,13 +317,13 @@ public class HomeActivity extends AppCompatActivity {
                         for (int i = 0; i < array.length(); i++) {
                             org.json.JSONObject obj = array.getJSONObject(i);
                             PartidaHistorial ph = new PartidaHistorial();
-                            ph.id_partida = obj.getInt("id_partida");
-                            ph.codigo_partida = obj.getString("codigo_partida");
+                            ph.id_partida = obj.optInt("id_partida");
+                            ph.codigo_partida = obj.optString("codigo_partida");
                             ph.fechaFin = obj.optString("fecha_fin", "---");
-                            ph.equipo = obj.getString("equipo");
-                            ph.rol = obj.getString("rol");
-                            ph.rojoGana = obj.getBoolean("rojo_gana");
-                            ph.abandono = obj.getBoolean("abandono");
+                            ph.equipo = obj.optString("equipo");
+                            ph.rol = obj.optString("rol");
+                            ph.rojoGana = obj.optBoolean("rojo_gana");
+                            ph.abandono = obj.optBoolean("abandono");
 
                             // Solo procesamos aciertos/fallos si es agente (RF-4)
                             if (ph.rol.equalsIgnoreCase("agente")) {
@@ -333,7 +333,16 @@ public class HomeActivity extends AppCompatActivity {
                             lista.add(ph);
                         }
 
-                        runOnUiThread(() -> adapter.setLista(lista));
+                        runOnUiThread(() -> {
+                            if (lista.isEmpty()) {
+                                txtVacio.setVisibility(View.VISIBLE);
+                                recycler.setVisibility(View.GONE);
+                            } else {
+                                txtVacio.setVisibility(View.GONE);
+                                recycler.setVisibility(View.VISIBLE);
+                            }
+                            adapter.setLista(lista);
+                        });
 
                     } catch (org.json.JSONException e) {
                         e.printStackTrace();
