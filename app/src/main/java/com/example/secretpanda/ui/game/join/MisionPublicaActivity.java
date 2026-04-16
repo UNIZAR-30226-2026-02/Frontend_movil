@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.game.match.PartidaActivity;
 import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
@@ -65,8 +66,14 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
         nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
-        if (btnCerrar != null) btnCerrar.setOnClickListener(v -> finish());
-        if (btnSelectorTematicas != null) btnSelectorTematicas.setOnClickListener(v -> mostrarDialogoFiltro());
+        if (btnCerrar != null) btnCerrar.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            finish();
+        });
+        if (btnSelectorTematicas != null) btnSelectorTematicas.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            mostrarDialogoFiltro();
+        });
 
         // 1. ¡SUPER IMPORTANTE! Inicializamos las listas ANTES de pedir datos al servidor
         listaPartidasTodas = new ArrayList<>();
@@ -199,6 +206,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
         dialog.setMisTematicas(temasParaElDialogo);
 
         dialog.setTematicaListener(tematica -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             tematicaFiltroActual = tematica;
             if (tvTematicaActual != null) {
                 tvTematicaActual.setText(tematicaFiltroActual);

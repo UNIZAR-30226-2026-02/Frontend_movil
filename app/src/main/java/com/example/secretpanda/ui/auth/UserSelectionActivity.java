@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.Jugador; // ¡Importante importar el modelo!
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
 
 public class UserSelectionActivity extends AppCompatActivity {
@@ -25,6 +26,7 @@ public class UserSelectionActivity extends AppCompatActivity {
 
 
         btnAceptar.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             String username = inputUsuario.getText().toString().trim();
             nombreUsuario = username;
             if (username.length() < 4) {

@@ -1,4 +1,4 @@
-package com.example.secretpanda.ui.game.match;
+package com.example.secretpanda.ui.game.endMatch;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,6 +14,7 @@ import androidx.cardview.widget.CardView;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
 
 import org.json.JSONObject;
@@ -53,6 +54,7 @@ public class FinPartidaActivity extends AppCompatActivity {
 
         // NUEVA NAVEGACIÓN PURA AL HOME
         btnVolverEscritorio.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(FinPartidaActivity.this, HomeActivity.class);
             
             // Estas dos flags son CRÍTICAS: Borran todo el historial de la partida anterior
@@ -83,7 +85,6 @@ public class FinPartidaActivity extends AppCompatActivity {
         btnVolverEscritorio = findViewById(R.id.btn_volver_escritorio);
     }
 
-    // Método exactamente igual al fetchResultados() de Pantalla15FinPartida.jsx
     private void fetchResultadosWeb() {
         // LLAMADA 1: Obtener estadísticas finales de la partida (SINGULAR: /partida/{id}/fin)
         String urlFin = "http://10.0.2.2:8080/api/partida/" + idPartida + "/fin";
@@ -177,10 +178,12 @@ public class FinPartidaActivity extends AppCompatActivity {
 
             // Cartel Dinámico
             if (heGanado) {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_aplauso);
                 tvSubtituloVictoria.setText("¡Enhorabuena agente!");
                 tvTituloVictoria.setText("HAS GANADO");
                 tvDetalleVictoria.setText("(Tu equipo ha desmantelado la red rival)");
             } else {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_fiasco);
                 tvSubtituloVictoria.setText("¡Misión fallida!");
                 tvTituloVictoria.setText("HAS PERDIDO");
                 tvDetalleVictoria.setText("(Victoria para el Equipo " + equipoGanador + ")");

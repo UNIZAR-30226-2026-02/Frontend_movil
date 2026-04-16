@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
+import com.example.secretpanda.ui.EfectosManager;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -42,11 +43,13 @@ public class MisionPrivadaActivity extends AppCompatActivity {
 
         // Botón para volver atrás (Home)
         btnHome.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             finish(); // Cierra esta actividad y vuelve a la anterior (UnirseMisionActivity)
         });
 
         // Botón de confirmar unión
         btnUnirse.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             String codigo = etCodigoSala.getText().toString().trim();
 
             if (codigo.isEmpty()) {

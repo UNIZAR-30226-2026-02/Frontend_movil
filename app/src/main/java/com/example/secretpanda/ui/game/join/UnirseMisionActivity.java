@@ -7,6 +7,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.EfectosManager;
 
 public class UnirseMisionActivity extends AppCompatActivity {
 
@@ -35,12 +36,14 @@ public class UnirseMisionActivity extends AppCompatActivity {
 
         // Clic en el botón Home (Volver atrás)
         btnHome.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             // Cierra esta actividad y vuelve a la anterior
             finish();
         });
 
         // Clic en Misión Privada
         tarjetaPrivada.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             android.content.Intent intent = new android.content.Intent(UnirseMisionActivity.this, MisionPrivadaActivity.class);
             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             startActivity(intent);
@@ -53,6 +56,7 @@ public class UnirseMisionActivity extends AppCompatActivity {
 
         // Clic en Misión Pública
         tarjetaPublica.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             android.content.Intent intent = new android.content.Intent(UnirseMisionActivity.this, MisionPublicaActivity.class);
             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             startActivity(intent);

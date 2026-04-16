@@ -11,6 +11,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,6 +23,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
+import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.MusicaService;
 import com.example.secretpanda.ui.home.classification.ClasificacionActivity; // Importamos la nueva pantalla
 
 import com.example.secretpanda.ui.home.achivements.LogrosActivity;
@@ -93,6 +96,7 @@ public class HomeActivity extends AppCompatActivity {
         );
 
         btnPerfil.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(HomeActivity.this, PerfilActivity.class);
 
             // PASAMOS SOLO EL STRING (EL NOMBRE)
@@ -102,6 +106,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         btnNuevaMision.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(HomeActivity.this, CrearMisionOpcionesActivity.class);
             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             startActivity(intent);
@@ -109,7 +114,7 @@ public class HomeActivity extends AppCompatActivity {
         });
         if (btnUneteMision != null) {
             btnUneteMision.setOnClickListener(v -> {
-                // Abrir la pantalla de Tienda
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, UnirseMisionActivity.class);
                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                 startActivity(intent);
@@ -118,10 +123,14 @@ public class HomeActivity extends AppCompatActivity {
             });
         }
 
-        btnMenuOpciones.setOnClickListener(v -> mostrarMenuPersonalizado(v));
+        btnMenuOpciones.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            mostrarMenuPersonalizado(v);
+        });
 
         if (btnClasificacion != null) {
             btnClasificacion.setOnClickListener(v -> {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 Intent intent = new Intent(HomeActivity.this, ClasificacionActivity.class);
                 startActivity(intent);
             });
@@ -134,7 +143,7 @@ public class HomeActivity extends AppCompatActivity {
 
         if (btnNavTienda != null) {
             btnNavTienda.setOnClickListener(v -> {
-                // Abrir la pantalla de Tienda
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, TiendaActivity.class);
                 startActivity(intent);
 
@@ -144,7 +153,7 @@ public class HomeActivity extends AppCompatActivity {
         View btnNavPersonalizacion = findViewById(R.id.nav_personalizar);
         if (btnNavPersonalizacion != null) {
             btnNavPersonalizacion.setOnClickListener(v -> {
-                // Abrir la pantalla de Tienda
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, PersonalizacionActivity.class);
                 startActivity(intent);
 
@@ -154,14 +163,15 @@ public class HomeActivity extends AppCompatActivity {
         View btnLogros = findViewById(R.id.btn_logros);
         if (btnLogros != null) {
             btnLogros.setOnClickListener(v -> {
-                // Abrir la pantalla de Tienda
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, LogrosActivity.class);
                 startActivity(intent);
 
                 overridePendingTransition(0, 0);
             });
         }
-
+        Intent intentMusica = new Intent(this, MusicaService.class);
+        startService(intentMusica);
 
     }
 
@@ -181,16 +191,19 @@ public class HomeActivity extends AppCompatActivity {
         Button btnHistorial = popupView.findViewById(R.id.btn_opcion_historial);
 
         btnMusica.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             popupWindow.dismiss();
             mostrarDialogoMusica();
         });
 
         btnComoJugar.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             popupWindow.dismiss();
             mostrarDialogoComoJugar();
         });
 
         btnHistorial.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             popupWindow.dismiss();
             mostrarDialogoHistorial();
         });
@@ -204,6 +217,68 @@ public class HomeActivity extends AppCompatActivity {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_musica, null);
         AlertDialog dialog = crearDialogoBase(dialogView);
 
+        // 1. Referenciar las SeekBars del XML
+        SeekBar seekBarMusica = dialogView.findViewById(R.id.seekbar_musica_fondo);
+        SeekBar seekBarEfectos = dialogView.findViewById(R.id.seekbar_efectos_sonido);
+
+        // Usamos un archivo de preferencias llamado "Ajustes_Audio"
+        android.content.SharedPreferences prefs = getSharedPreferences("Ajustes_Audio", MODE_PRIVATE);
+
+        // Recuperamos el valor (por defecto 50 para música y 80 para efectos si no hay nada guardado)
+        int volMusicaGuardado = prefs.getInt("volumen_fondo", 50);
+        int volEfectosGuardado = prefs.getInt("volumen_efectos", 80);
+
+        // Aplicamos los valores cargados a las barras visualmente
+        seekBarMusica.setProgress(volMusicaGuardado);
+        seekBarEfectos.setProgress(volEfectosGuardado);
+
+        // 3. Configurar Listener para Música de Fondo
+        seekBarMusica.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    float volumen = progress / 100f;
+                    // Cambiamos el volumen en el servicio en tiempo real
+                    MusicaService.setVolumen(volumen);
+                }
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Guardamos el valor final en las preferencias al soltar la barra
+                prefs.edit().putInt("volumen_fondo", seekBar.getProgress()).apply();
+            }
+        });
+
+        // 4. Configurar Listener para Efectos de Sonido
+        seekBarEfectos.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    // Guardamos el volumen en tiempo real para que si suena algún efecto
+                    // mientras el diálogo está abierto, ya coja el valor nuevo.
+                    prefs.edit().putInt("volumen_efectos", progress).apply();
+                }
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Guardamos el valor por seguridad al soltar
+                prefs.edit().putInt("volumen_efectos", seekBar.getProgress()).apply();
+
+                // ¡EL TOQUE ESTRELLA!
+                // Hacemos sonar el click de prueba justo al soltar la barra
+                // para que el usuario escuche cómo ha quedado el volumen.
+                // *Usa el método rápido sin pausas que decidimos antes*
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            }
+        });
+
+        // Botón cerrar
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_popup);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 

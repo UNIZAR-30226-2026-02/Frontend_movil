@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
 import com.example.secretpanda.data.model.InventarioGlobal;
@@ -66,14 +67,18 @@ public class PersonalizacionActivity extends AppCompatActivity {
         recyclerPosesion.setLayoutManager(new GridLayoutManager(this, 3));
         recyclerBloqueados.setLayoutManager(new GridLayoutManager(this, 3));
 
-        tabBarajas.setOnClickListener(v -> seleccionarPestana(
-                tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, tabFondos, txtTabFondos, "Temática barajas"));
+        tabBarajas.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            seleccionarPestana(tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, tabFondos, txtTabFondos, "Temática barajas");
+        });
 
-        tabBordes.setOnClickListener(v -> seleccionarPestana(
-                tabBordes, txtTabBordes, tabBarajas, txtTabBarajas, tabFondos, txtTabFondos, "Temática borde"));
+        tabBordes.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            seleccionarPestana(tabBordes, txtTabBordes, tabBarajas, txtTabBarajas, tabFondos, txtTabFondos, "Temática borde");});
 
-        tabFondos.setOnClickListener(v -> seleccionarPestana(
-                tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo"));
+        tabFondos.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            seleccionarPestana(tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo");});
 
         // EMPEZAMOS EN BARAJAS (¡Ahora en singular!)
         //cargarDatos("baraja");
@@ -203,12 +208,15 @@ public class PersonalizacionActivity extends AppCompatActivity {
         } else {
             btnSeleccionar.setVisibility(View.VISIBLE);
             btnSeleccionar.setOnClickListener(v -> {
-
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 equiparItemServidor(item.getId(), item.getNombre(), position, dialog);
             });
         }
 
-        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+        btnCerrar.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            dialog.dismiss();
+        });
         dialog.show();
     }
 
@@ -216,6 +224,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
         LinearLayout btnNavInicio = findViewById(R.id.nav_inicio);
         if (btnNavInicio != null) {
             btnNavInicio.setOnClickListener(v -> {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 Intent intent = new Intent(PersonalizacionActivity.this, HomeActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
@@ -225,6 +234,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
         LinearLayout btnNavTienda = findViewById(R.id.nav_tienda);
         if (btnNavTienda != null) {
             btnNavTienda.setOnClickListener(v -> {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 Intent intent = new Intent(PersonalizacionActivity.this, TiendaActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);

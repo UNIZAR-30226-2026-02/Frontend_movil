@@ -7,6 +7,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.EfectosManager;
 
 public class CrearMisionOpcionesActivity extends AppCompatActivity {
 
@@ -23,10 +24,14 @@ public class CrearMisionOpcionesActivity extends AppCompatActivity {
 
         nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
-        btnVolver.setOnClickListener(v -> finish());
+        btnVolver.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            finish();
+        });
 
         // Si es privada, le pasamos "esPrivada" = true a la siguiente pantalla
         btnPrivada.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(this, ConfiguracionMisionActivity.class);
             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             intent.putExtra("ES_PRIVADA", true);
@@ -35,6 +40,7 @@ public class CrearMisionOpcionesActivity extends AppCompatActivity {
 
         // Si es pública, le pasamos "esPrivada" = false
         btnPublica.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(this, ConfiguracionMisionActivity.class);
             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             intent.putExtra("ES_PRIVADA", false);

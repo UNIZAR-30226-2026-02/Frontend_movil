@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.game.join.TematicasDialogFragment;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 
@@ -54,8 +55,14 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         TextView txtTitulo = findViewById(R.id.txt_titulo_config);
         if (txtTitulo != null) txtTitulo.setText(esPrivada ? "Configurar misión privada" : "Configurar misión pública");
 
-        findViewById(R.id.btn_volver_home_config).setOnClickListener(v -> finish());
-        findViewById(R.id.btn_desplegable_tematica_crear).setOnClickListener(v -> mostrarDialogoTematicas());
+        findViewById(R.id.btn_volver_home_config).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            finish();
+        });
+        findViewById(R.id.btn_desplegable_tematica_crear).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            mostrarDialogoTematicas();
+        });
         txtTematica = findViewById(R.id.txt_tematica_elegida_crear);
 
         botonesTiempo = new TextView[]{
@@ -72,7 +79,10 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         configurarBotonesSeleccion(botonesJugadores, new int[]{4, 6, 8, 10}, false);
         seleccionarBoton(botonesJugadores[2]);
 
-        findViewById(R.id.btn_crear_mision_final).setOnClickListener(v -> crearMision());
+        findViewById(R.id.btn_crear_mision_final).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            crearMision();
+        });
         obtenerMisTematicas();
     }
 
@@ -144,6 +154,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         dialog.setMisTematicas(new ArrayList<>(misTematicasDisponibles.keySet()));
         dialog.setConfiguracionFiltros(true, false);
         dialog.setTematicaListener(tema -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             tematicaSeleccionada = tema;
             txtTematica.setText(tema);
         });
@@ -154,6 +165,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         for (int i = 0; i < botones.length; i++) {
             final int idx = i;
             botones[i].setOnClickListener(v -> {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 for (TextView b : botones) b.setBackgroundResource(R.drawable.fondo_btn_unirse_pequeno);
                 seleccionarBoton(botones[idx]);
                 if (esTiempo) tiempoSeleccionado = valores[idx];

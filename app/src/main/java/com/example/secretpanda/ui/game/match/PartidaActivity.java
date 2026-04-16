@@ -18,6 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.EfectosManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -148,7 +149,7 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void navegarAFinPartida() {
-        Intent intent = new Intent(this, FinPartidaActivity.class);
+        Intent intent = new Intent(this, com.example.secretpanda.ui.game.endMatch.FinPartidaActivity.class);
         intent.putExtra("ID_PARTIDA", idPartidaActual);
         startActivity(intent);
         finish();
@@ -502,7 +503,10 @@ public class PartidaActivity extends AppCompatActivity {
             d.dismiss();
             abandonarPartidaBackend();
         });
-        d.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> d.dismiss());
+        d.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_cancelar);
+            d.dismiss();
+        });
         d.show();
     }
 

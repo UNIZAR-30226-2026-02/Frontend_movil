@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.LoadingActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -55,6 +56,8 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EfectosManager.inicializar(this);
+
         setContentView(R.layout.activity_login);
 
 
@@ -68,6 +71,7 @@ public class LoginActivity extends AppCompatActivity {
         // 2. Configuramos el botón
         btnLogin = findViewById(R.id.button);
         btnLogin.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             // Al pulsar, abrimos la ventana de cuentas de Google
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
             googleSignInLauncher.launch(signInIntent);

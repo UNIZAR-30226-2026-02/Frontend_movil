@@ -18,6 +18,7 @@ import com.example.secretpanda.data.model.GestorEstadisticas;
 import com.example.secretpanda.data.model.InventarioGlobal;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
 import com.example.secretpanda.data.model.Jugador;
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.customization.PersonalizacionActivity;
 import com.example.secretpanda.ui.home.HomeActivity;
 
@@ -258,6 +259,7 @@ public class TiendaActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         txtFeedback.setVisibility(View.VISIBLE);
                         if (response.isSuccessful()) {
+                            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_disparo);
                             try {
                                 org.json.JSONObject resJson = new org.json.JSONObject(respuestaCuerpo);
                                 int balasRestantes = resJson.getInt("balas");

@@ -65,6 +65,10 @@
             android:exported="false"/>
         <activity android:name=".ui.game.waitingRoom.SalaEsperaActivity"
             android:exported="false"/>
+        <service
+            android:name=".ui.MusicaService"
+            android:enabled="true"
+            android:exported="false" />
 
         <activity android:name=".ui.home.achivements.LogrosActivity" android:exported="false" />
 
@@ -72,7 +76,7 @@
         <activity android:name=".ui.game.createMatch.ConfiguracionMisionActivity" android:exported="false" />
 
         <activity 
-            android:name=".ui.game.match.FinPartidaActivity"
+            android:name=".ui.game.endMatch.FinPartidaActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
+import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.game.match.PartidaActivity;
 
 import org.json.JSONObject;
@@ -309,7 +310,10 @@ public class SalaEsperaActivity extends AppCompatActivity {
         d.requestWindowFeature(Window.FEATURE_NO_TITLE);
         d.setContentView(R.layout.dialog_error_jugadores);
         if (d.getWindow() != null) d.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-        d.findViewById(R.id.btn_cerrar_error).setOnClickListener(v -> d.dismiss());
+        d.findViewById(R.id.btn_cerrar_error).setOnClickListener(v -> {
+                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+                d.dismiss();
+        });
         d.show();
     }
 
@@ -317,9 +321,15 @@ public class SalaEsperaActivity extends AppCompatActivity {
         dialogoCarga = new Dialog(this);
         dialogoCarga.setContentView(R.layout.dialog_confirmar_inicio);
         if (dialogoCarga.getWindow() != null) dialogoCarga.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-        dialogoCarga.findViewById(R.id.btn_cerrar_dialogo).setOnClickListener(v -> dialogoCarga.dismiss());
+        dialogoCarga.findViewById(R.id.btn_cerrar_dialogo).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            dialogoCarga.dismiss();
+        });
         Button btn = dialogoCarga.findViewById(R.id.btn_iniciar_confirmado);
-        btn.setOnClickListener(v -> { btn.setEnabled(false); iniciarPartidaHTTP(); });
+        btn.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_aceptar);
+            btn.setEnabled(false);
+            iniciarPartidaHTTP(); });
         dialogoCarga.show();
     }
 
@@ -327,8 +337,14 @@ public class SalaEsperaActivity extends AppCompatActivity {
         Dialog d = new Dialog(this);
         d.setContentView(R.layout.dialog_abandonar);
         if (d.getWindow() != null) d.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-        d.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> d.dismiss());
-        d.findViewById(R.id.btn_confirmar_abandonar).setOnClickListener(v -> { d.dismiss(); salirDeLaSala(); });
+        d.findViewById(R.id.btn_cerrar_abandonar).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            d.dismiss();
+        });
+        d.findViewById(R.id.btn_confirmar_abandonar).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_cancelar);
+            d.dismiss();
+            salirDeLaSala(); });
         d.show();
     }
 
