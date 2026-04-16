@@ -25,10 +25,12 @@
         app:cardElevation="0dp">
 
         <ImageView
+            android:id="@+id/iv_perfil_sala"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_dialog_map" /> </androidx.cardview.widget.CardView>
+            android:src="@android:drawable/ic_dialog_map" />
+ </androidx.cardview.widget.CardView>
 
     <TextView
         android:id="@+id/tv_nombre_jugador"
