@@ -259,14 +259,20 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
                 try {
                     org.json.JSONArray arrInv = new org.json.JSONArray(responseInv.body().string());
+                    boolean basicoEncontrado = false; // 🔥 1. Creamos la variable bandera
+
                     for (int i = 0; i < arrInv.length(); i++) {
                         org.json.JSONObject obj = arrInv.getJSONObject(i);
                         String tipo = obj.optString("tipo", "baraja");
 
                         if (tipo.equalsIgnoreCase(categoria)) {
-                            int id = obj.optInt("id_tema", -1); // Según API es id_tema
+                            int id = obj.optInt("id_tema", -1);
                             String nombre = obj.optString("nombre", "Desconocido");
                             boolean equipado = obj.optBoolean("equipado", false);
+
+                            if (nombre.equalsIgnoreCase("Básico") || nombre.equalsIgnoreCase("Basico")) {
+                                basicoEncontrado = true;
+                            }
 
                             ItemPersonalizacion item = new ItemPersonalizacion(nombre, false, tipo, 0, 0);
                             item.setId(id);
@@ -279,6 +285,19 @@ public class PersonalizacionActivity extends AppCompatActivity {
                             }
                         }
                     }
+
+                    if (!basicoEncontrado) {
+                        ItemPersonalizacion basico = new ItemPersonalizacion("Básico", false, categoria, 0, 0);
+                        basico.setId(-1); // Le ponemos una ID ficticia
+                        comprados.add(0, basico); // Lo ponemos de primero en la lista
+                        idsComprados.add(-1);
+
+                        if (posEquipada[0] == -1) {
+                            itemEquipadoNombre[0] = "Básico";
+                            posEquipada[0] = 0;
+                        }
+                    }
+
                 } catch (Exception e) { e.printStackTrace(); }
 
                 //  LEER LA TIENDA (Para sacar lo bloqueado)
