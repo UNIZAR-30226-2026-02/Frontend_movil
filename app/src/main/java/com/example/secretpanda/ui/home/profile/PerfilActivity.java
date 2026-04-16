@@ -132,6 +132,15 @@ public class PerfilActivity extends AppCompatActivity {
         ImageView btnEditarPerfil = findViewById(R.id.btn_editar_perfil);
         btnEditarPerfil.setOnClickListener(v -> mostrarDialogoEditar());
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Si estábamos en la pestaña de Amigos, recargamos la lista
+        if (layoutAmigos != null && layoutAmigos.getVisibility() == View.VISIBLE) {
+            cargarAmigosServidor();
+        }
+        cargarDatosPerfil();
+    }
 
     private void cargarAmigosServidor() {
         TokenManager tokenManager = new TokenManager(this);
@@ -299,22 +308,38 @@ public class PerfilActivity extends AppCompatActivity {
                     String jsonData = response.body().string();
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject(jsonData);
-                        tagActual = obj.getString("tag");
-                        nombreImagen = obj.optString("foto_perfil", "");
-                        int balas = obj.getInt("balas");
-                        int victorias = obj.getInt("victorias");
-                        int derrotas = obj.getInt("derrotas");
 
+                        // Extraemos los datos del JSON
+                        tagActual = obj.getString("tag");
+                        nombreImagen = obj.optString("foto_perfil");
+                        int balas = obj.optInt("balas", 0);
+                        int victorias = obj.optInt("victorias", 0);
+                        int derrotas = obj.optInt("derrotas", 0);
+
+
+                        int aciertos = obj.optInt("num_aciertos");
+                        int fallos = obj.optInt("num_fallos");
+
+
+                        // Calculamos datos derivados
                         int totalPartidas = victorias + derrotas;
                         float winrate = totalPartidas > 0 ? ((float) victorias / totalPartidas) * 100 : 0f;
 
+                        // Actualizamos la UI en el hilo principal
                         runOnUiThread(() -> {
+                            // Nombre y Balas
                             if (textoNombreDatos != null) textoNombreDatos.setText(tagActual);
+
+                            // Buscamos los TextViews de estadísticas
                             TextView txtPartidas = findViewById(R.id.stat_mio_partidas);
                             TextView txtVictorias = findViewById(R.id.stat_mio_victorias);
                             TextView txtDerrotas = findViewById(R.id.stat_mio_derrotas);
                             TextView txtWinrate = findViewById(R.id.stat_mio_winrate);
                             TextView txtBalas = findViewById(R.id.texto_mis_balas);
+
+
+                            TextView txtAciertos = findViewById(R.id.stat_mio_aciertos);
+                            TextView txtFallos = findViewById(R.id.stat_mio_fallos);
 
                             if (txtPartidas != null) txtPartidas.setText(String.valueOf(totalPartidas));
                             if (txtVictorias != null) txtVictorias.setText(String.valueOf(victorias));
@@ -322,13 +347,21 @@ public class PerfilActivity extends AppCompatActivity {
                             if (txtWinrate != null) txtWinrate.setText(String.format("%.1f%%", winrate));
                             if (txtBalas != null) txtBalas.setText(String.valueOf(balas));
 
+
+                            if (txtAciertos != null) txtAciertos.setText(String.valueOf(aciertos));
+                            if (txtFallos != null) txtFallos.setText(String.valueOf(fallos));
+
                             if (!nombreImagen.isEmpty()) {
                                 int resId = getResources().getIdentifier(nombreImagen, "drawable", getPackageName());
-                                if (resId != 0 && fotoPerfil != null) fotoPerfil.setImageResource(resId);
+                                if (resId != 0) {
+                                    ImageView imgPerfil = findViewById(R.id.icono_perfil_datos);
+                                    if (imgPerfil != null) imgPerfil.setImageResource(resId);
+                                }
                             }
                         });
+
                     } catch (org.json.JSONException e) {
-                        Log.e("API_PERFIL", "Error parseo perfil", e);
+                        android.util.Log.e("API_PERFIL", "Error parseando perfil", e);
                     }
                 }
             }
