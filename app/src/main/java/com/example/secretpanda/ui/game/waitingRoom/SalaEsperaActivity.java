@@ -96,16 +96,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
         if (tvTiempoSala != null) tvTiempoSala.setText(tiempoTurno + "s");
 
-        TextView tvCodigoPartida = findViewById(R.id.tv_codigo_partida);
-        View layoutCodigoEntero = (View) tvCodigoPartida.getParent();
-
-        if (!esPrivada) {
-            layoutCodigoEntero.setVisibility(View.GONE);
-        } else {
-            layoutCodigoEntero.setVisibility(View.VISIBLE);
-            String codigoRecibido = getIntent().getStringExtra("CODIGO_PARTIDA");
-            tvCodigoPartida.setText(codigoRecibido);
-        }
 
         btnUnirseAzul.setOnClickListener(v -> {
             if (!estoyEnEquipoAzul) {
@@ -163,6 +153,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         String destinoTopic = "/topic/partidas/" + idPartida + "/lobby";
         stompClient.topic(destinoTopic).subscribe(stompMessage -> {
             String payload = stompMessage.getPayload();
+            Log.d("WS_LOBBY", "Payload: " + payload);
             if ("FINALIZADA".equalsIgnoreCase(payload)) {
                 runOnUiThread(() -> {
                     Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
@@ -219,6 +210,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                     jugadorLocal = j;
                                     actualizarBotonesEquipo();
                                 }
+                            }
+                            if(json.getBoolean("es_publica")){
+
                             }
                             adapter.notifyDataSetChanged();
                             actualizarContadores(listaJugadores);
@@ -367,6 +361,15 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         JSONObject json = new JSONObject(response.body().string());
+                        TextView tvCodigoPartida = findViewById(R.id.tv_codigo_partida);
+                        View layoutCodigoEntero = (View) tvCodigoPartida.getParent();
+
+                        if (json.getBoolean("es_publica")) {
+                            layoutCodigoEntero.setVisibility(View.GONE);
+                        } else {
+                            layoutCodigoEntero.setVisibility(View.VISIBLE);
+                            tvCodigoPartida.setText(json.optString("codigo_partida", ""));
+                        }
                         org.json.JSONArray array = json.optJSONArray("jugadores");
                         if (array != null) {
                             runOnUiThread(() -> {

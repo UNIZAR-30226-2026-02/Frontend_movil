@@ -41,10 +41,13 @@ public class FinPartidaActivity extends AppCompatActivity {
     private TextView tvAciertosRojo, tvAciertosAzul;
     private Button btnVolverEscritorio;
 
+    private String miPropioIdGoogle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fin_partida);
+        miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
         idPartida = getIntent().getIntExtra("ID_PARTIDA", -1);
         client = new OkHttpClient();
@@ -56,7 +59,7 @@ public class FinPartidaActivity extends AppCompatActivity {
         btnVolverEscritorio.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(FinPartidaActivity.this, HomeActivity.class);
-            
+            intent.putExtra("MI_NOMBRE_USUARIO", miPropioIdGoogle);
             // Estas dos flags son CRÍTICAS: Borran todo el historial de la partida anterior
             // para que el Home vuelva a ser la única pantalla activa (como si acabaras de abrir la app).
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
