@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="340dp"
     android:layout_height="wrap_content"
-    android:background="#D8D8D8"
+    android:background="@color/folder_manila"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -32,18 +32,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:fontFamily="serif"
+            android:fontFamily="monospace"
             android:text="Todas las temáticas"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            android:textStyle="bold|italic" />
+            android:textColor="@color/ink_text"
+            android:textSize="14sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_tematicas_grid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         android:padding="8dp"
         android:clipToPadding="false" />
 
@@ -53,6 +52,6 @@
         android:layout_gravity="center"
         android:layout_marginTop="16dp"
         android:src="@android:drawable/arrow_down_float"
-        app:tint="#000000" />
+        app:tint="@color/ink_muted" />
 
 </LinearLayout>

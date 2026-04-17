@@ -3,44 +3,44 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1918"
+    android:background="@color/desk_wood"
     android:orientation="vertical">
 
+    <!-- Cabecera estilo pestaña de carpeta -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#8E8E8E"
-        android:padding="16dp">
+        android:background="@color/folder_manila"
+        android:padding="20dp"
+        android:elevation="8dp">
 
         <TextView
+            android:id="@+id/txt_titulo_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:fontFamily="serif"
-            android:text="Crear nueva misión"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold|italic"
-            android:shadowColor="#000000"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="2" />
+            android:layout_toStartOf="@id/btn_volver_home_crear"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="monospace"
+            android:text="NUEVA MISIÓN"
+            android:textColor="@color/ink_text"
+            android:textSize="18sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold" />
 
         <FrameLayout
             android:id="@+id/btn_volver_home_crear"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             android:background="@drawable/fondo_boton_mision">
-
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_menu_myplaces"
-                app:tint="#000000" />
+                app:tint="@color/ink_text" />
         </FrameLayout>
     </RelativeLayout>
 
@@ -49,62 +49,104 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="32dp">
+        android:padding="28dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SELECCIONE NIVEL DE ACCESO"
+            android:textColor="@color/white"
+            android:alpha="0.7"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:letterSpacing="0.2"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- Tarjeta PRIVADA -->
         <LinearLayout
             android:id="@+id/tarjeta_crear_privada"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:background="@drawable/fondo_boton_mision"
+            android:layout_marginBottom="24dp"
+            android:background="@color/folder_manila"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="40dp">
+            android:padding="32dp"
+            android:elevation="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:fontFamily="monospace"
+                android:text="MISIÓN PRIVADA"
+                android:textColor="@color/ink_text"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:fontFamily="serif"
-                android:text="Misión privada"
-                android:textColor="#000000"
-                android:textSize="28sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="SOLO AGENTES CON CÓDIGO"
+                android:textColor="#5A4A20"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:src="@android:drawable/ic_secure"
-                app:tint="#000000" />
+                app:tint="#2A3A5A" />
         </LinearLayout>
 
+        <!-- Tarjeta PÚBLICA -->
         <LinearLayout
             android:id="@+id/tarjeta_crear_publica"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/fondo_boton_mision"
+            android:background="@color/folder_manila"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="40dp">
+            android:padding="32dp"
+            android:elevation="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:fontFamily="monospace"
+                android:text="MISIÓN PÚBLICA"
+                android:textColor="@color/ink_text"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:fontFamily="serif"
-                android:text="Misión pública"
-                android:textColor="#000000"
-                android:textSize="28sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="CUALQUIER AGENTE DISPONIBLE"
+                android:textColor="#2A5A2A"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
             <ImageView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:src="@android:drawable/ic_dialog_map"
-                app:tint="#000000" />
+                app:tint="#2A5A2A" />
         </LinearLayout>
+
+        <!-- Detalle estético final -->
+        <ImageView
+            android:layout_width="140dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="40dp"
+            android:src="@drawable/bg_stamp_confidential"
+            android:alpha="0.4"
+            android:rotation="-12"/>
 
     </LinearLayout>
 </LinearLayout>
