@@ -99,18 +99,18 @@ public class PerfilActivity extends AppCompatActivity {
             cargarDatosPerfil();
             layoutAmigos.setVisibility(View.GONE);
             layoutDatos.setVisibility(View.VISIBLE);
-            tabDatos.setBackgroundResource(R.drawable.tab_selected);
-            tabDatos.setTextColor(Color.parseColor("#555555"));
-            tabAmigos.setBackgroundResource(R.drawable.tab_unselected);
+            tabDatos.setBackgroundResource(R.drawable.bg_tab_manila_active);
+            tabDatos.setTextColor(Color.parseColor("#3A2A10"));
+            tabAmigos.setBackgroundResource(R.drawable.bg_tab_manila_inactive);
             tabAmigos.setTextColor(Color.WHITE);
         });
 
         tabAmigos.setOnClickListener(v -> {
             layoutDatos.setVisibility(View.GONE);
             layoutAmigos.setVisibility(View.VISIBLE);
-            tabAmigos.setBackgroundResource(R.drawable.tab_selected);
-            tabAmigos.setTextColor(Color.parseColor("#555555"));
-            tabDatos.setBackgroundResource(R.drawable.tab_unselected);
+            tabAmigos.setBackgroundResource(R.drawable.bg_tab_manila_active);
+            tabAmigos.setTextColor(Color.parseColor("#3A2A10"));
+            tabDatos.setBackgroundResource(R.drawable.bg_tab_manila_inactive);
             tabDatos.setTextColor(Color.WHITE);
             cargarAmigosServidor();
         });

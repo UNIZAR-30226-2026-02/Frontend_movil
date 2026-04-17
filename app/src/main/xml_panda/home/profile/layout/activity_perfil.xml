@@ -4,14 +4,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#80000000">
+    android:background="@color/desk_wood">
 
     <LinearLayout
-        android:layout_width="350dp"
-        android:layout_height="650dp"
-        android:background="@drawable/fondo_popup_redondeado"
+        android:layout_width="360dp"
+        android:layout_height="680dp"
+        android:background="@drawable/bg_manila_folder"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,83 +20,102 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:text="Perfil"
-                android:textSize="24sp"
-                android:textStyle="italic"
-                android:textColor="#555555" />
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/btn_cerrar_perfil"
+                android:layout_alignParentStart="true"
+                android:text="EXPEDIENTE DE AGENTE"
+                android:textSize="18sp"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textColor="@color/ink_text"
+                android:letterSpacing="0.05" />
 
             <ImageView
                 android:id="@+id/btn_cerrar_perfil"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_alignParentEnd="true"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                app:tint="#555555" />
+                android:src="@drawable/ic_cerrar_x"
+                app:tint="@color/ink_text"
+                android:padding="4dp"/>
         </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:weightSum="2"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp">
 
             <TextView
                 android:id="@+id/tab_amigos"
                 android:layout_width="0dp"
-                android:layout_height="45dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:background="@drawable/tab_selected"
+                android:background="@drawable/bg_tab_manila_active"
                 android:gravity="center"
-                android:text="Amigos"
-                android:textColor="#555555" />
+                android:text="AMIGOS"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textColor="@color/ink_text" />
 
             <TextView
                 android:id="@+id/tab_datos"
                 android:layout_width="0dp"
-                android:layout_height="45dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:background="@drawable/tab_unselected"
+                android:background="@drawable/bg_tab_manila_inactive"
                 android:gravity="center"
-                android:text="Datos"
-                android:textColor="#FFFFFF" />
+                android:text="DATOS"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textColor="@color/white" />
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/layout_amigos"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp">
 
             <LinearLayout
                 android:id="@+id/layout_lista_amigos_contenedor"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <TextView
                     android:id="@+id/btn_gestionar_solicitudes"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/fondo_input"
-                    android:text="Gestionar solicitudes"
+                    android:background="@drawable/fondo_input_borde_negro"
+                    android:backgroundTint="@color/folder_manila_dark"
+                    android:text="GESTIONAR SOLICITUDES"
                     android:textAlignment="center"
-                    android:textColor="#333333"
-                    android:textSize="18sp"
-                    android:paddingVertical="12dp"
+                    android:textColor="@color/ink_text"
+                    android:fontFamily="serif"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:paddingVertical="10dp"
                     android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lista de amigos"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
+                    android:text="AMIGOS"
+                    android:textColor="@color/ink_muted"
+                    android:fontFamily="serif"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
                     android:layout_marginBottom="8dp" />
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -125,58 +144,65 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:layout_alignParentEnd="true"
-                        android:src="@android:drawable/ic_menu_close_clear_cancel"
-                        app:tint="#333333" />
+                        android:src="@drawable/ic_cerrar_x"
+                        app:tint="@color/ink_text" />
                 </RelativeLayout>
 
-                <ImageView
-                    android:id="@+id/icono_detalle_amigo"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/circle_shape"
-                    android:clipToOutline="true"
-                    android:scaleType="centerCrop"
-                    android:backgroundTint="#CC0000" />
+                <FrameLayout
+                    android:layout_width="100dp"
+                    android:layout_height="120dp"
+                    android:background="@drawable/polaroid_bg"
+                    android:padding="8dp"
+                    android:layout_marginBottom="16dp">
+                    
+                    <ImageView
+                        android:id="@+id/icono_detalle_amigo"
+                        android:layout_width="match_parent"
+                        android:layout_height="80dp"
+                        android:scaleType="centerCrop"
+                        android:background="#222"/>
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/texto_nombre_detalle_amigo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Nombre"
-                    android:textColor="#FFFFFF"
-                    android:textSize="28sp"
+                    android:textColor="@color/ink_text"
+                    android:fontFamily="serif"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="32dp"/>
+                    android:layout_marginBottom="24dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="40dp"
-                    android:background="@drawable/fondo_popup_redondeado"
+                    android:layout_marginHorizontal="20dp"
+                    android:background="@drawable/fondo_input_borde_negro"
+                    android:backgroundTint="@color/folder_manila_dark"
                     android:orientation="vertical"
-                    android:padding="24dp"
+                    android:padding="20dp"
                     android:gravity="center">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Victorias Totales"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:text="VICTORIAS CONFIRMADAS"
+                        android:textColor="@color/ink_text"
+                        android:fontFamily="serif"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/stat_amigo_victorias"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/fondo_input"
-                        android:textColor="#333333"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="12dp"
-                        android:layout_marginTop="8dp"
+                        android:textColor="@color/fbi_red"
+                        android:fontFamily="monospace"
+                        android:paddingVertical="8dp"
+                        android:layout_marginTop="4dp"
                         android:textAlignment="center"
-                        android:textSize="22sp"
+                        android:textSize="32sp"
                         android:textStyle="bold"
                         android:text="0"/>
                 </LinearLayout>
@@ -188,27 +214,35 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
+            android:layout_marginStart="10dp"
             android:visibility="gone">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="16dp"
+                android:paddingEnd="10dp">
 
-                <ImageView
-                    android:id="@+id/icono_perfil_datos"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:background="@drawable/circle_shape"
-                    android:clipToOutline="true"
-                    android:scaleType="centerCrop"
-                    android:layout_alignParentStart="true"
-                    />
+                <FrameLayout
+                    android:id="@+id/polaroid_frame"
+                    android:layout_width="80dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/polaroid_bg"
+                    android:padding="6dp"
+                    android:layout_alignParentStart="true">
+                    
+                    <ImageView
+                        android:id="@+id/icono_perfil_datos"
+                        android:layout_width="match_parent"
+                        android:layout_height="70dp"
+                        android:scaleType="centerCrop"
+                        android:background="#222"/>
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@id/icono_perfil_datos"
+                    android:layout_toEndOf="@id/polaroid_frame"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="16dp"
                     android:orientation="vertical">
@@ -217,18 +251,19 @@
                         android:id="@+id/texto_nombre_datos"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:textStyle="italic"
-                        android:textColor="#555555" />
+                        android:textSize="22sp"
+                        android:fontFamily="serif"
+                        android:textStyle="bold"
+                        android:textColor="@color/ink_text" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:background="@drawable/fondo_blanco_redondeado"
-                        android:backgroundTint="#4CAF50"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/fondo_input_borde_negro"
+                        android:backgroundTint="@color/folder_manila_dark"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
                         android:gravity="center"
                         android:orientation="horizontal">
 
@@ -237,87 +272,94 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textColor="@color/white"
-                            android:textSize="14sp"
+                            android:textColor="@color/ink_text"
+                            android:fontFamily="monospace"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                         <ImageView
-                            android:layout_width="12dp"
-                            android:layout_height="14dp"
-                            android:layout_marginStart="4dp"
+                            android:layout_width="14dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="6dp"
                             android:src="@drawable/ic_bullet"
-                            app:tint="@color/white" />
+                            app:tint="@color/ink_text" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <ImageView
                     android:id="@+id/btn_editar_perfil"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_alignParentEnd="true"
-                    android:layout_alignParentTop="true"
                     android:src="@android:drawable/ic_menu_edit"
-                    app:tint="#555555" />
+                    app:tint="@color/ink_muted"
+                    android:padding="2dp"/>
             </RelativeLayout>
 
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/fondo_estadisticas">
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp"
+                android:scrollbars="none">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="4dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="Mis Estadísticas Globales"
-                        android:textStyle="bold|italic"
-                        android:textSize="18sp"
-                        android:textColor="#FFFFFF"
-                        android:layout_marginBottom="16dp"/>
+                        android:text="RESUMEN OPERATIVO"
+                        android:fontFamily="serif"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:textColor="@color/ink_muted"
+                        android:layout_marginBottom="12dp"/>
 
                     <GridLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:columnCount="2"
-                        android:rowCount="3"
                         android:alignmentMode="alignBounds"
                         android:useDefaultMargins="true">
 
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:layout_marginEnd="8dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="40dp" android:gravity="bottom" android:text="Partidas Jugadas" android:textStyle="italic" android:textColor="#FFFFFF"/>
-                            <TextView android:id="@+id/stat_mio_partidas" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:background="#E0E0E0" android:padding="4dp" android:layout_marginTop="4dp" android:textColor="#555555"/>
+                        <!-- Partidas -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:background="@drawable/bg_manila_card" android:padding="10dp" android:layout_margin="4dp">
+                            <TextView android:id="@+id/stat_mio_partidas" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:fontFamily="monospace" android:textSize="24sp" android:textColor="@color/ink_text" android:gravity="center"/>
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="PARTIDAS" android:fontFamily="serif" android:textSize="9sp" android:textColor="@color/ink_muted" android:gravity="center"/>
                         </LinearLayout>
 
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:layout_marginStart="8dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="40dp" android:gravity="bottom" android:text="% Winrate" android:textStyle="italic" android:textColor="#FFFFFF"/>
-                            <TextView android:id="@+id/stat_mio_winrate" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0.0%" android:background="#E0E0E0" android:padding="4dp" android:layout_marginTop="4dp" android:textColor="#555555"/>
+                        <!-- Winrate -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:background="@drawable/bg_manila_card" android:padding="10dp" android:layout_margin="4dp">
+                            <TextView android:id="@+id/stat_mio_winrate" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0.0%" android:fontFamily="monospace" android:textSize="24sp" android:textColor="@color/ink_text" android:gravity="center"/>
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="% ÉXITO" android:fontFamily="serif" android:textSize="9sp" android:textColor="@color/ink_muted" android:gravity="center"/>
                         </LinearLayout>
 
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:layout_marginEnd="8dp" android:layout_marginTop="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="40dp" android:gravity="bottom" android:text="Victorias" android:textStyle="italic" android:textColor="#FFFFFF"/>
-                            <TextView android:id="@+id/stat_mio_victorias" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:background="#E0E0E0" android:padding="4dp" android:layout_marginTop="4dp" android:textColor="#555555"/>
+                        <!-- Victorias -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:background="@drawable/bg_manila_card" android:padding="10dp" android:layout_margin="4dp">
+                            <TextView android:id="@+id/stat_mio_victorias" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:fontFamily="monospace" android:textSize="24sp" android:textColor="@color/agent_green" android:gravity="center"/>
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="VICTORIAS" android:fontFamily="serif" android:textSize="9sp" android:textColor="@color/ink_muted" android:gravity="center"/>
                         </LinearLayout>
 
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:layout_marginStart="8dp" android:layout_marginTop="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="40dp" android:gravity="bottom" android:text="Derrotas" android:textStyle="italic" android:textColor="#FFFFFF"/>
-                            <TextView android:id="@+id/stat_mio_derrotas" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:background="#E0E0E0" android:padding="4dp" android:layout_marginTop="4dp" android:textColor="#555555"/>
+                        <!-- Derrotas -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:background="@drawable/bg_manila_card" android:padding="10dp" android:layout_margin="4dp">
+                            <TextView android:id="@+id/stat_mio_derrotas" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:fontFamily="monospace" android:textSize="24sp" android:textColor="@color/fbi_red" android:gravity="center"/>
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="DERROTAS" android:fontFamily="serif" android:textSize="9sp" android:textColor="@color/ink_muted" android:gravity="center"/>
                         </LinearLayout>
 
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:layout_marginEnd="8dp" android:layout_marginTop="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="40dp" android:gravity="bottom" android:text="Aciertos" android:textStyle="italic" android:textColor="#FFFFFF"/>
-                            <TextView android:id="@+id/stat_mio_aciertos" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:background="#E0E0E0" android:padding="4dp" android:layout_marginTop="4dp" android:textColor="#555555"/>
+                        <!-- Aciertos -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:background="@drawable/bg_manila_card" android:padding="10dp" android:layout_margin="4dp">
+                            <TextView android:id="@+id/stat_mio_aciertos" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:fontFamily="monospace" android:textSize="24sp" android:textColor="@color/ink_text" android:gravity="center"/>
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ACIERTOS" android:fontFamily="serif" android:textSize="9sp" android:textColor="@color/ink_muted" android:gravity="center"/>
                         </LinearLayout>
 
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:layout_marginStart="8dp" android:layout_marginTop="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="40dp" android:gravity="bottom" android:text="Fallos" android:textStyle="italic" android:textColor="#FFFFFF"/>
-                            <TextView android:id="@+id/stat_mio_fallos" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:background="#E0E0E0" android:padding="4dp" android:layout_marginTop="4dp" android:textColor="#555555"/>
+                        <!-- Fallos -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_columnWeight="1" android:background="@drawable/bg_manila_card" android:padding="10dp" android:layout_margin="4dp">
+                            <TextView android:id="@+id/stat_mio_fallos" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0" android:fontFamily="monospace" android:textSize="24sp" android:textColor="@color/ink_text" android:gravity="center"/>
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="FALLOS" android:fontFamily="serif" android:textSize="9sp" android:textColor="@color/ink_muted" android:gravity="center"/>
                         </LinearLayout>
                     </GridLayout>
                 </LinearLayout>
@@ -327,13 +369,15 @@
                 android:id="@+id/btn_cerrar_sesion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/fondo_borde_negro"
-                android:text="Cerrar sesión"
-                android:textAllCaps="false"
-                android:textSize="18sp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_btn_logout"
+                android:text="CERRAR SESIÓN"
+                android:textAllCaps="true"
+                android:textSize="14sp"
+                android:fontFamily="serif"
                 android:textStyle="bold"
-                android:textColor="#000000" />
+                android:textColor="@color/white" />
         </LinearLayout>
 
     </LinearLayout>

@@ -34,12 +34,11 @@ import okhttp3.Response;
 
 public class SolicitudesActivity extends AppCompatActivity {
 
-    private View tabEnviar, tabRecibidas, tabPendientes;
-    private View layoutEnviar, layoutRecibidas, layoutPendientes;
+    private View tabEnviar, tabRecibidas;
+    private View layoutEnviar, layoutRecibidas;
 
-    private RecyclerView recyclerRecibidas, recyclerPendientes;
+    private RecyclerView recyclerRecibidas;
     private SolicitudAdapter adapterRecibidas;
-    private SolicitudPendienteAdapter adapterPendientes;
 
     private EditText etBuscarAmigo;
     private View btnEnviarSolicitud;
@@ -47,7 +46,6 @@ public class SolicitudesActivity extends AppCompatActivity {
     private TextView txtMensajeRecibidas;
 
     private List<Solicitud> listaRecibidas = new ArrayList<>();
-    private List<String> listaPendientes = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +64,9 @@ public class SolicitudesActivity extends AppCompatActivity {
     private void initViews() {
         tabEnviar = findViewById(R.id.tab_enviar);
         tabRecibidas = findViewById(R.id.tab_recibidas);
-        tabPendientes = findViewById(R.id.tab_pendientes);
 
         layoutEnviar = findViewById(R.id.layout_enviar_solicitud);
         layoutRecibidas = findViewById(R.id.layout_solicitudes_recibidas);
-        layoutPendientes = findViewById(R.id.layout_solicitudes_pendientes);
 
         etBuscarAmigo = findViewById(R.id.input_nombre_solicitud);
         btnEnviarSolicitud = findViewById(R.id.btn_enviar_solicitud);
@@ -95,75 +91,27 @@ public class SolicitudesActivity extends AppCompatActivity {
             }
         });
         recyclerRecibidas.setAdapter(adapterRecibidas);
-
-        recyclerPendientes = findViewById(R.id.recycler_solicitudes_pendientes);
-        recyclerPendientes.setLayoutManager(new LinearLayoutManager(this));
-        adapterPendientes = new SolicitudPendienteAdapter(listaPendientes, (pos, nombre) -> {});
-        recyclerPendientes.setAdapter(adapterPendientes);
     }
 
     private void setupTabs() {
         tabEnviar.setOnClickListener(v -> switchTab(1));
         tabRecibidas.setOnClickListener(v -> switchTab(2));
-        tabPendientes.setOnClickListener(v -> switchTab(3));
         switchTab(1);
     }
 
     private void switchTab(int index) {
         layoutEnviar.setVisibility(index == 1 ? View.VISIBLE : View.GONE);
         layoutRecibidas.setVisibility(index == 2 ? View.VISIBLE : View.GONE);
-        layoutPendientes.setVisibility(index == 3 ? View.VISIBLE : View.GONE);
 
-        tabEnviar.setBackgroundColor(index == 1 ? Color.parseColor("#E5F3F5") : Color.parseColor("#5C7A99"));
-        tabRecibidas.setBackgroundColor(index == 2 ? Color.parseColor("#E5F3F5") : Color.parseColor("#5C7A99"));
-        tabPendientes.setBackgroundColor(index == 3 ? Color.parseColor("#E5F3F5") : Color.parseColor("#5C7A99"));
+        tabEnviar.setBackgroundResource(index == 1 ? R.drawable.bg_tab_manila_active : R.drawable.bg_tab_manila_inactive);
+        tabRecibidas.setBackgroundResource(index == 2 ? R.drawable.bg_tab_manila_active : R.drawable.bg_tab_manila_inactive);
 
-        ((TextView) tabEnviar).setTextColor(index == 1 ? Color.parseColor("#333333") : Color.WHITE);
-        ((TextView) tabRecibidas).setTextColor(index == 2 ? Color.parseColor("#333333") : Color.WHITE);
-        ((TextView) tabPendientes).setTextColor(index == 3 ? Color.parseColor("#333333") : Color.WHITE);
+        ((TextView) tabEnviar).setTextColor(index == 1 ? Color.parseColor("#3A2A10") : Color.WHITE);
+        ((TextView) tabRecibidas).setTextColor(index == 2 ? Color.parseColor("#3A2A10") : Color.WHITE);
 
         if (index == 2) cargarSolicitudesRecibidasServidor();
-        if (index == 3) cargarSolicitudesPendientesServidor();
         if (index == 1 && txtFeedback != null) txtFeedback.setText("");
         if (txtMensajeRecibidas != null) txtMensajeRecibidas.setVisibility(View.INVISIBLE);
-    }
-
-    private void cargarSolicitudesPendientesServidor() {
-        TokenManager tm = new TokenManager(this);
-        String jwt = tm.getToken();
-        if (jwt == null) return;
-
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/amigos/solicitudes")
-                .get()
-                .addHeader("Authorization", "Bearer " + jwt)
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {}
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    String json = response.body().string();
-                    try {
-                        JSONArray array = new JSONArray(json);
-                        List<String> temp = new ArrayList<>();
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject obj = array.getJSONObject(i);
-                            temp.add(obj.getString("tag_solicitante"));
-                        }
-                        runOnUiThread(() -> {
-                            listaPendientes.clear();
-                            listaPendientes.addAll(temp);
-                            if (adapterPendientes != null) adapterPendientes.notifyDataSetChanged();
-                        });
-                    } catch (JSONException e) {}
-                }
-            }
-        });
     }
 
     private void cargarSolicitudesRecibidasServidor() {
