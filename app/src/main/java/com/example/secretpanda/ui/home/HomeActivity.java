@@ -398,6 +398,7 @@ public class HomeActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String jsonData = response.body().string();
                     try {
+                        Log.d("API_HISTORIAL", jsonData);
                         org.json.JSONArray array = new org.json.JSONArray(jsonData);
                         List<PartidaHistorial> lista = new java.util.ArrayList<>();
 
@@ -412,6 +413,14 @@ public class HomeActivity extends AppCompatActivity {
                             ph.rojoGana = obj.optBoolean("rojo_gana");
                             ph.abandono = obj.optBoolean("abandono");
 
+                            ph.estado = obj.optString("estado"); // <--- Añadido
+
+                            // Manejo correcto de null para Boolean
+                            if (obj.isNull("rojo_gana")) {
+                                ph.rojoGana = null;
+                            } else {
+                                ph.rojoGana = obj.optBoolean("rojo_gana");
+                            }
                             // Solo procesamos aciertos/fallos si es agente (RF-4)
                             if (ph.rol.equalsIgnoreCase("agente")) {
                                 ph.numAciertos = obj.optInt("num_aciertos", 0);

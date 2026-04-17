@@ -51,15 +51,19 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
         boolean victoria = (partida.equipo.equalsIgnoreCase("rojo") && partida.rojoGana) ||
                 (partida.equipo.equalsIgnoreCase("azul") && !partida.rojoGana);
 
-        if (partida.abandono) {
-            holder.txtResultado.setText("ABANDONADA");
-            holder.txtResultado.setTextColor(Color.parseColor("#808080")); // Gris
-        } else if (victoria) {
+        // Lógica de Ganador/Perdedor mejorada
+        if (partida.rojoGana == null) {
+            holder.txtResultado.setText("EMPATE / FINALIZADA");
+            holder.txtResultado.setTextColor(Color.GRAY);
+        } else if (partida.rojoGana && partida.equipo.equalsIgnoreCase("rojo")) {
             holder.txtResultado.setText("VICTORIA");
-            holder.txtResultado.setTextColor(Color.parseColor("#4CAF50")); // Verde
+            holder.txtResultado.setTextColor(Color.parseColor("#4CAF50"));
+        } else if (!partida.rojoGana && partida.equipo.equalsIgnoreCase("azul")) {
+            holder.txtResultado.setText("VICTORIA");
+            holder.txtResultado.setTextColor(Color.parseColor("#4CAF50"));
         } else {
             holder.txtResultado.setText("DERROTA");
-            holder.txtResultado.setTextColor(Color.parseColor("#F44336")); // Rojo
+            holder.txtResultado.setTextColor(Color.parseColor("#F44336"));
         }
 
         // 4. Lógica de Aciertos y Fallos (Solo para Agentes - RF-4)
