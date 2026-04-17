@@ -398,6 +398,7 @@ public class HomeActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String jsonData = response.body().string();
                     try {
+                        Log.d("Api historial", jsonData);
                         org.json.JSONArray array = new org.json.JSONArray(jsonData);
                         List<PartidaHistorial> lista = new java.util.ArrayList<>();
 
