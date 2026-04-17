@@ -5,68 +5,70 @@
     android:id="@+id/card_jugador"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="6dp"
-    app:cardBackgroundColor="#A6A6A6"
-    app:cardCornerRadius="10dp"
-    app:cardElevation="4dp"
-    app:strokeWidth="3dp"
-    app:strokeColor="#0000FF"> <RelativeLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="8dp">
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/contenedor_bandera"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_centerVertical="true"
-        app:cardCornerRadius="22dp"
-        app:cardElevation="0dp">
-
-        <ImageView
-            android:id="@+id/iv_perfil_sala"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_dialog_map" />
- </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/tv_nombre_jugador"
-        android:layout_width="wrap_content"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="@color/desk_wood"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="1.5dp"
+    app:strokeColor="#444444"> 
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="16dp"
-        android:layout_toEndOf="@id/contenedor_bandera"
-        android:fontFamily="serif"
-        android:text="RocioTryhard"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold|italic" />
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/btn_expulsar"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="4dp"
-        app:cardBackgroundColor="#FFCCCC"
-        app:cardCornerRadius="6dp"
-        app:cardElevation="0dp"
-        app:strokeColor="#FF0000"
-        app:strokeWidth="2dp">
+        android:padding="12dp">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/contenedor_bandera"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/ink_muted">
+
+            <ImageView
+                android:id="@+id/iv_perfil_sala"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_myplaces" />
+        </androidx.cardview.widget.CardView>
 
         <TextView
+            android:id="@+id/tv_nombre_jugador"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:includeFontPadding="false"
-            android:text="x"
-            android:textColor="#FF0000"
-            android:textSize="22sp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@id/contenedor_bandera"
+            android:layout_toStartOf="@id/btn_expulsar"
+            android:fontFamily="monospace"
+            android:text="Agente"
+            android:textColor="#E8DCC8"
+            android:textSize="15sp"
             android:textStyle="bold" />
-    </com.google.android.material.card.MaterialCardView>
 
-</RelativeLayout>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_expulsar"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            app:cardBackgroundColor="#331111"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#8B2020"
+            app:strokeWidth="1dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                app:tint="#8B2020" />
+        </com.google.android.material.card.MaterialCardView>
+
+    </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

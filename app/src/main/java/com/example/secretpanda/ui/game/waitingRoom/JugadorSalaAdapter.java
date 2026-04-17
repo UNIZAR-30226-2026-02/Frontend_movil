@@ -49,11 +49,11 @@ public class JugadorSalaAdapter extends RecyclerView.Adapter<JugadorSalaAdapter.
         holder.ivPerfil.setImageResource(resId);
 
         if (jugador.isEsEquipoAzul()) {
-            holder.cardJugador.setStrokeColor(android.graphics.Color.parseColor("#0000FF"));
-            holder.tvNombre.setShadowLayer(8f, 0f, 0f, android.graphics.Color.parseColor("#0000FF"));
+            holder.cardJugador.setStrokeColor(android.graphics.Color.parseColor("#80A0D0"));
+            holder.tvNombre.setShadowLayer(8f, 0f, 0f, android.graphics.Color.parseColor("#80A0D0"));
         } else {
-            holder.cardJugador.setStrokeColor(android.graphics.Color.parseColor("#FF0000"));
-            holder.tvNombre.setShadowLayer(8f, 0f, 0f, android.graphics.Color.parseColor("#FF0000"));
+            holder.cardJugador.setStrokeColor(android.graphics.Color.parseColor("#E08080"));
+            holder.tvNombre.setShadowLayer(8f, 0f, 0f, android.graphics.Color.parseColor("#E08080"));
         }
 
         if (holder.btnExpulsar != null) {
