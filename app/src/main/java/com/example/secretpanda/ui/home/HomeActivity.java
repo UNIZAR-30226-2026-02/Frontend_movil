@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -426,9 +427,9 @@ public class HomeActivity extends AppCompatActivity {
                                 ph.numAciertos = obj.optInt("num_aciertos", 0);
                                 ph.numFallos = obj.optInt("num_fallos", 0);
                             }
+                            Log.d("API_HISTORIAL", ph.id_partida + " - " + ph.codigo_partida + " - " + ph.fechaFin + " - " + ph.equipo + " - " + ph.rol);
                             lista.add(ph);
                         }
-
                         runOnUiThread(() -> {
                             if (lista.isEmpty()) {
                                 txtVacio.setVisibility(View.VISIBLE);
@@ -437,6 +438,7 @@ public class HomeActivity extends AppCompatActivity {
                                 txtVacio.setVisibility(View.GONE);
                                 recycler.setVisibility(View.VISIBLE);
                             }
+                            Log.d("API_HISTORIAL", "Lista actualizada: " + lista.size());
                             adapter.setLista(lista);
                         });
 

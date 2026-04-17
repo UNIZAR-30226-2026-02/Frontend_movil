@@ -1,6 +1,7 @@
 package com.example.secretpanda.ui.home; // ¡Asegúrate de poner tu paquete correcto!
 
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,19 +40,14 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
     @Override
     public void onBindViewHolder(@NonNull HistorialViewHolder holder, int position) {
         PartidaHistorial partida = listaPartidas.get(position);
+        Log.w("ADAPTER_PRUEBA", "Pintando la partida con código: " + partida.codigo_partida);
 
-        // 1. Mostrar la Fecha y el Código de partida
-        holder.txtFecha.setText(partida.fechaFin.split("T")[0]); // Muestra solo la fecha si viene con hora
         holder.txtCodigo.setText("Sala: " + partida.codigo_partida);
 
         // 2. Mostrar Equipo y Rol
         holder.txtRolEquipo.setText("Equipo " + partida.equipo.toUpperCase() + " - " + partida.rol.toUpperCase());
 
-        // 3. Lógica de Victoria / Derrota (RF-4)
-        boolean victoria = (partida.equipo.equalsIgnoreCase("rojo") && partida.rojoGana) ||
-                (partida.equipo.equalsIgnoreCase("azul") && !partida.rojoGana);
-
-        // Lógica de Ganador/Perdedor mejorada
+        // 3. Lógica de Ganador/Perdedor mejorada (Hemos borrado la variable 'victoria' que causaba el fallo)
         if (partida.rojoGana == null) {
             holder.txtResultado.setText("EMPATE / FINALIZADA");
             holder.txtResultado.setTextColor(Color.GRAY);
@@ -67,7 +63,7 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
         }
 
         // 4. Lógica de Aciertos y Fallos (Solo para Agentes - RF-4)
-        if (partida.rol.equalsIgnoreCase("agente")) {
+        if (partida.rol != null && partida.rol.equalsIgnoreCase("agente")) {
             holder.txtAciertos.setVisibility(View.VISIBLE);
             holder.txtAciertos.setText("Aciertos: " + partida.numAciertos + " | Fallos: " + partida.numFallos);
         } else {
