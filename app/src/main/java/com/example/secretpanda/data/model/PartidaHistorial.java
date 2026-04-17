@@ -5,7 +5,7 @@ public class PartidaHistorial {
     public String codigo_partida;
     public String fechaFin;
     public String estado;
-    public boolean rojoGana;
+    public Boolean rojoGana;
     public String equipo; // "rojo" o "azul"
     public String rol;    // "espia" o "agente"
     public boolean abandono;
