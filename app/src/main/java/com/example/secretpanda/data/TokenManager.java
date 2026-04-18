@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 public class TokenManager {
     private static final String PREF_NAME = "SecretPandaPrefs";
     private static final String KEY_JWT = "jwt_token";
+    private static final String KEY_ID_GOOGLE = "id_google";
 
     private SharedPreferences prefs;
 
@@ -13,18 +14,23 @@ public class TokenManager {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    // Guardar el token (llámalo cuando el usuario inicie sesión)
     public void saveToken(String token) {
         prefs.edit().putString(KEY_JWT, token).apply();
     }
 
-    // Recuperar el token
+    public void saveIdGoogle(String idGoogle) {
+        prefs.edit().putString(KEY_ID_GOOGLE, idGoogle).apply();
+    }
+
     public String getToken() {
         return prefs.getString(KEY_JWT, null);
     }
 
-    // Borrar el token (para cerrar sesión)
+    public String getIdGoogle() {
+        return prefs.getString(KEY_ID_GOOGLE, null);
+    }
+
     public void clearToken() {
-        prefs.edit().remove(KEY_JWT).apply();
+        prefs.edit().remove(KEY_JWT).remove(KEY_ID_GOOGLE).apply();
     }
 }

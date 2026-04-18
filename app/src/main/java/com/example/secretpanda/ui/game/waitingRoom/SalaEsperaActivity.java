@@ -200,11 +200,25 @@ public class SalaEsperaActivity extends AppCompatActivity {
                             listaJugadores.clear();
                             for (int i = 0; i < jugadoresArray.length(); i++) {
                                 JSONObject jp = jugadoresArray.getJSONObject(i);
-                                String tag = jp.has("jugador") ? jp.getJSONObject("jugador").optString("tag", "Anónimo") : jp.optString("tag", "Anónimo");
+                                JSONObject jInfo = jp.optJSONObject("jugador");
+                                
+                                String tag = "Anónimo";
+                                String foto = "1";
+                                
+                                if (jInfo != null) {
+                                    tag = jInfo.optString("tag", "Anónimo");
+                                    foto = jInfo.optString("foto_perfil", "1");
+                                } else {
+                                    tag = jp.optString("tag", "Anónimo");
+                                    foto = jp.optString("foto_perfil", "1");
+                                }
+                                
                                 String equipo = jp.optString("equipo", "ROJO");
                                 Jugador j = new Jugador(tag);
+                                j.setFotoPerfil(foto);
                                 j.setEsEquipoAzul("AZUL".equalsIgnoreCase(equipo));
                                 listaJugadores.add(j);
+                                
                                 if (tag.equals(miPropioIdGoogle)) {
                                     estoyEnEquipoAzul = "azul".equalsIgnoreCase(equipo);
                                     jugadorLocal = j;
@@ -377,11 +391,25 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                 for (int i = 0; i < array.length(); i++) {
                                     try {
                                         JSONObject jp = array.getJSONObject(i);
-                                        String tag = jp.has("jugador") ? jp.getJSONObject("jugador").optString("tag") : jp.optString("tag");
-                                        String equipo = jp.optString("equipo", "ROJO");
+                                        JSONObject jInfo = jp.optJSONObject("jugador");
+                                        
+                                        String tag = "Anónimo";
+                                        String foto = "1";
+                                        
+                                        if (jInfo != null) {
+                                            tag = jInfo.optString("tag", "Anónimo");
+                                            foto = jInfo.optString("foto_perfil", "1");
+                                        } else {
+                                            tag = jp.optString("tag", "Anónimo");
+                                            foto = jp.optString("foto_perfil", "1");
+                                        }
+                                        
                                         Jugador j = new Jugador(tag);
+                                        j.setFotoPerfil(foto);
+                                        String equipo = jp.optString("equipo", "ROJO");
                                         j.setEsEquipoAzul(equipo.equalsIgnoreCase("AZUL"));
                                         listaJugadores.add(j);
+                                        
                                         if (tag.equals(miPropioIdGoogle)) {
                                             estoyEnEquipoAzul = equipo.equalsIgnoreCase("AZUL");
                                             actualizarBotonesEquipo();

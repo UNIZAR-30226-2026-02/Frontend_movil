@@ -4,25 +4,30 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_marginBottom="12dp"
-    android:paddingStart="12dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="12dp"
-    android:paddingBottom="10dp">
+    android:layout_marginBottom="16dp"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="8dp"
+    android:elevation="2dp">
 
     <TextView
         android:id="@+id/tv_remitente"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="monospace"
         android:textStyle="bold"
-        android:textSize="12sp"
-        android:paddingBottom="2dp" />
+        android:textSize="11sp"
+        android:textColor="@color/ink_muted"
+        android:paddingBottom="4dp"
+        android:letterSpacing="0.05" />
 
     <TextView
         android:id="@+id/tv_texto_mensaje"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="15sp"
-        android:maxWidth="250dp" />
+        android:fontFamily="monospace"
+        android:textSize="14sp"
+        android:textColor="@color/ink_text"
+        android:maxWidth="280dp"
+        android:lineSpacingExtra="2dp" />
 
 </LinearLayout>

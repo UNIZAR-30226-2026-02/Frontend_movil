@@ -72,12 +72,25 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         configurarBotonesSeleccion(botonesTiempo, new int[]{30, 60, 90, 120}, true);
         seleccionarBoton(botonesTiempo[1]);
 
-        botonesJugadores = new TextView[]{
-                findViewById(R.id.btn_jug_4), findViewById(R.id.btn_jug_6),
-                findViewById(R.id.btn_jug_8), findViewById(R.id.btn_jug_10)
-        };
-        configurarBotonesSeleccion(botonesJugadores, new int[]{4, 6, 8, 10}, false);
-        seleccionarBoton(botonesJugadores[2]);
+        TextView txtCantidadJugadores = findViewById(R.id.txt_cantidad_jugadores);
+        jugadoresSeleccionados = 8;
+        txtCantidadJugadores.setText(String.valueOf(jugadoresSeleccionados));
+
+        findViewById(R.id.btn_menos_jugadores).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            if (jugadoresSeleccionados > 4) {
+                jugadoresSeleccionados--;
+                txtCantidadJugadores.setText(String.valueOf(jugadoresSeleccionados));
+            }
+        });
+
+        findViewById(R.id.btn_mas_jugadores).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            if (jugadoresSeleccionados < 16) {
+                jugadoresSeleccionados++;
+                txtCantidadJugadores.setText(String.valueOf(jugadoresSeleccionados));
+            }
+        });
 
         findViewById(R.id.btn_crear_mision_final).setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);

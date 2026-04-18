@@ -84,21 +84,20 @@ public class LoginActivity extends AppCompatActivity {
 
             // ¡BINGO! Aquí tenemos el ticket que Google nos da para este usuario
             String idToken = account.getIdToken();
+            String googleIdEstable = account.getId(); // ID único del usuario
             String email = account.getEmail();
 
             Log.d("LOGIN_GOOGLE", "¡Login en Android OK! Email: " + email);
-            Log.d("LOGIN_GOOGLE", "Ticket (idToken) para enviar al servidor: " + idToken);
+            Log.d("LOGIN_GOOGLE", "ID Estable: " + googleIdEstable);
 
-            // TODO: Aquí haremos la llamada OkHttp a tu Spring Boot (Paso 2)
-            enviarTokenAlBackend(idToken);
-
+            enviarTokenAlBackend(idToken, googleIdEstable);
         } catch (ApiException e) {
             Log.e("LOGIN_GOOGLE", "Error en Google Sign-In. Código de estado: " + e.getStatusCode());
             Toast.makeText(this, "Fallo al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void enviarTokenAlBackend(String idToken) {
+    private void enviarTokenAlBackend(String idToken, String googleIdEstable) {
         OkHttpClient client = new OkHttpClient();
         String url = "http://10.0.2.2:8080/api/auth/login";
 
@@ -138,6 +137,7 @@ public class LoginActivity extends AppCompatActivity {
                                 Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.auth.UserSelectionActivity.class);
                                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                 intent.putExtra("ID_GOOGLE", tokenFinal);
+                                intent.putExtra("GOOGLE_ID_ESTABLE", googleIdEstable);
                                 startActivity(intent);
                                 finish();
                             } else {
@@ -146,6 +146,7 @@ public class LoginActivity extends AppCompatActivity {
                                 if (!tokenJwt.isEmpty()) {
                                     com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(LoginActivity.this);
                                     tokenManager.saveToken(tokenJwt);
+                                    tokenManager.saveIdGoogle(googleIdEstable); // GUARDAMOS EL ID ESTABLE
 
                                     try {
                                         // 🕵️‍♂️ NUEVO: Extraemos el jugador y miramos si tiene partida activa

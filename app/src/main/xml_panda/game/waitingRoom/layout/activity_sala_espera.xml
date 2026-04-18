@@ -3,24 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#231F20"
+    android:background="@color/desk_wood"
     android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#8E8E8E"
-        android:padding="16dp">
+        android:background="@color/folder_manila"
+        android:padding="16dp"
+        android:elevation="4dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:fontFamily="serif"
-            android:text="Sala de espera"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold|italic" />
+            android:fontFamily="monospace"
+            android:text="SALA DE ESPERA"
+            android:textColor="@color/ink_text"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btn_abandonar"
@@ -28,20 +29,20 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/fondo_boton_mision"
-            android:fontFamily="serif"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp"
-            android:text="Abandonar"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            android:textStyle="bold|italic" />
+            android:background="@drawable/fondo_btn_volver"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:text="ABANDONAR"
+            android:textColor="@color/ink_text"
+            android:textSize="14sp"
+            android:textStyle="bold" />
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="20dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -51,22 +52,24 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="serif"
-                android:text="Código partida :"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="CÓDIGO OPERACIÓN"
+                android:textColor="@color/white"
+                android:alpha="0.7"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_codigo_partida"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="serif"
+                android:layout_marginTop="4dp"
+                android:fontFamily="monospace"
                 android:text="YMH32R"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold|italic" />
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:letterSpacing="0.2"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
@@ -87,17 +90,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:fontFamily="serif"
+                    android:fontFamily="monospace"
                     android:text="9/10"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic" />
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
                 <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:src="@android:drawable/ic_menu_myplaces"
-                    app:tint="#FFFFFF" />
+                    app:tint="@color/white" />
             </LinearLayout>
 
             <LinearLayout
@@ -112,17 +115,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:fontFamily="serif"
+                    android:fontFamily="monospace"
                     android:text="120s"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic" />
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
                 <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:src="@android:drawable/ic_menu_recent_history"
-                    app:tint="#FFFFFF" />
+                    app:tint="@color/white" />
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
@@ -130,32 +133,34 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="16dp"
+        android:layout_marginHorizontal="12dp"
         android:layout_weight="1"
-        android:background="#A6A6A6"
-        android:orientation="vertical">
+        android:background="@color/folder_manila"
+        android:orientation="vertical"
+        android:elevation="2dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#D8D8D8"
-            android:padding="8dp">
+            android:background="@color/folder_manila_dark"
+            android:padding="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:fontFamily="serif"
-                android:text="Lista de jugadores"
-                android:textColor="#000000"
-                android:textSize="18sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="PERSONAL ACTIVO"
+                android:textColor="@color/ink_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:gravity="end">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -168,22 +173,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:fontFamily="serif"
-                        android:text="Azul: 0/5"
-                        android:textColor="#0000FF"
-                        android:textSize="14sp"
-                        android:textStyle="bold|italic" />
+                        android:fontFamily="monospace"
+                        android:text="AZUL: 0/5"
+                        android:textColor="#2A3A5A"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/btn_unirse_azul"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/fondo_boton_unirse"
-                        android:fontFamily="serif"
-                        android:text="Unirse"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        android:textStyle="bold|italic" />
+                        android:fontFamily="monospace"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:text="UNIRSE"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -198,26 +205,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:fontFamily="serif"
-                        android:text="Rojo: 0/5"
-                        android:textColor="#FF0000"
-                        android:textSize="14sp"
-                        android:textStyle="bold|italic" />
+                        android:fontFamily="monospace"
+                        android:text="ROJO: 0/5"
+                        android:textColor="#8B2020"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/btn_unirse_rojo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/fondo_boton_dentro"
-                        android:fontFamily="serif"
-                        android:text="Dentro"
-                        android:textColor="#FF0000"
-                        android:shadowColor="#FFFFFF"
-                        android:shadowDx="0"
-                        android:shadowDy="0"
-                        android:shadowRadius="8"
-                        android:textSize="16sp"
-                        android:textStyle="bold|italic" />
+                        android:background="@drawable/fondo_boton_rojo"
+                        android:fontFamily="monospace"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:text="DENTRO"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
         </RelativeLayout>
@@ -236,29 +241,39 @@
             android:layout_gravity="center"
             android:layout_marginVertical="8dp"
             android:src="@android:drawable/arrow_down_float"
-            app:tint="#4D4D4D" />
+            app:tint="@color/ink_muted" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:padding="20dp">
 
         <TextView
             android:id="@+id/btn_iniciar_partida_principal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/fondo_boton_mision"
-            android:fontFamily="serif"
-            android:paddingHorizontal="32dp"
-            android:paddingVertical="12dp"
-            android:text="Iniciar\npartida"
+            android:background="@color/agent_green"
+            android:fontFamily="monospace"
+            android:paddingVertical="16dp"
+            android:text="INICIAR MISIÓN"
             android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="20sp"
-            android:textStyle="bold|italic" />
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:letterSpacing="0.1"
+            android:elevation="4dp"
+            android:textStyle="bold" />
+
+        <!-- Sello de Dossier -->
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/bg_stamp_confidential"
+            android:alpha="0.4"
+            android:rotation="-5"/>
 
     </LinearLayout>
 </LinearLayout>
