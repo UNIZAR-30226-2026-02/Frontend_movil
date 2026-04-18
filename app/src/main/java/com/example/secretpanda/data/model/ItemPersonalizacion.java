@@ -7,13 +7,20 @@ public class ItemPersonalizacion {
     private String tipo;
     private int iconoResId;
     private int precio;
+    private String valor;
 
-    public ItemPersonalizacion(String nombre, boolean bloqueado, String tipo, int iconoResId, int precio) {
+    public ItemPersonalizacion(String nombre, boolean bloqueado, String tipo, int iconoResId, int precio, String valor) {
         this.nombre = nombre;
         this.bloqueado = bloqueado;
         this.tipo = tipo;
         this.iconoResId = iconoResId;
         this.precio = precio;
+        this.valor = valor;
+    }
+
+    // Constructor de compatibilidad
+    public ItemPersonalizacion(String nombre, boolean bloqueado, String tipo, int iconoResId, int precio) {
+        this(nombre, bloqueado, tipo, iconoResId, precio, "0");
     }
 
     public String getNombre() { return nombre; }
@@ -26,10 +33,13 @@ public class ItemPersonalizacion {
     public int getIconoResId() { return iconoResId; }
     public int getPrecio() { return precio; }
 
-    public void setTipo(String tipo){ this.tipo=tipo;}
+    public void setTipo(String tipo){ this.tipo = tipo;}
 
-    public void setPrecio(int tipo){ this.precio=precio;}
+    public void setPrecio(int precio){ this.precio = precio;}
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+
+    public String getValor() { return valor; }
+    public void setValor(String valor) { this.valor = valor; }
 }

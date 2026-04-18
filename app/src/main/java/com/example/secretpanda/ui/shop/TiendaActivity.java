@@ -151,7 +151,7 @@ public class TiendaActivity extends AppCompatActivity {
                                                 tipo,    // tipo
                                                 0,           // icono (0 para que ponga la carta por defecto)
                                                 precio,     // precio en balas
-                                                ""
+                                                "0"
                                         );
                                         item.setId(idTema);
                                         barajasTienda.add(item);
