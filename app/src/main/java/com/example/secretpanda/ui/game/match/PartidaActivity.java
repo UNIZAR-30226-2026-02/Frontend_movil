@@ -67,8 +67,10 @@ public class PartidaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_partida);
 
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
-        miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         miEquipo = getIntent().getStringExtra("MI_EQUIPO");
+        
+        // Obtenemos el ID real guardado durante el login
+        miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
         
         if (idPartidaActual == -1) {
             Toast.makeText(this, "Error: Partida no encontrada", Toast.LENGTH_SHORT).show();
@@ -341,7 +343,8 @@ public class PartidaActivity extends AppCompatActivity {
         android.widget.Spinner spinnerN = dialog.findViewById(R.id.spinner_numero_pista);
         List<Integer> nums = new ArrayList<>();
         for (int i = 1; i <= 9; i++) nums.add(i);
-        android.widget.ArrayAdapter<Integer> adapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, nums);
+        android.widget.ArrayAdapter<Integer> adapter = new android.widget.ArrayAdapter<>(this, R.layout.spinner_item_pista, nums);
+        adapter.setDropDownViewResource(R.layout.spinner_item_pista);
         spinnerN.setAdapter(adapter);
         dialog.findViewById(R.id.btn_enviar_pista).setOnClickListener(v -> {
             String p = inputP.getText().toString().trim();
@@ -370,19 +373,15 @@ public class PartidaActivity extends AppCompatActivity {
             return;
         }
         Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.dialog_anadir_pista);
+        dialog.setContentView(R.layout.dialog_pista_jefe);
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-        TextView titulo = dialog.findViewById(R.id.tv_titulo_pista);
-        if (titulo != null) titulo.setText("PISTA ACTUAL");
-        android.widget.EditText inputP = dialog.findViewById(R.id.input_palabra_pista);
-        inputP.setText(palabraPistaActual);
-        inputP.setEnabled(false);
-        android.widget.Spinner spinnerN = dialog.findViewById(R.id.spinner_numero_pista);
-        List<Integer> val = new ArrayList<>(); val.add(numeroPistaActual);
-        android.widget.ArrayAdapter<Integer> adapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, val);
-        spinnerN.setAdapter(adapter);
-        spinnerN.setEnabled(false);
-        dialog.findViewById(R.id.btn_enviar_pista).setVisibility(View.GONE);
+        
+        TextView tvPalabra = dialog.findViewById(R.id.input_palabra_jefe);
+        TextView tvNumero = dialog.findViewById(R.id.input_numero_jefe);
+        
+        if (tvPalabra != null) tvPalabra.setText(palabraPistaActual.toUpperCase());
+        if (tvNumero != null) tvNumero.setText(String.valueOf(numeroPistaActual));
+        
         dialog.findViewById(R.id.btn_cerrar_pista).setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
@@ -442,26 +441,57 @@ public class PartidaActivity extends AppCompatActivity {
         stompClient.topic("/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase()).subscribe(msg -> {
             try {
                 JSONObject json = new JSONObject(msg.getPayload());
+                String idEnviado = json.optString("id_google", ""); 
+                if (idEnviado.isEmpty()) idEnviado = json.optString("id_jugador", "");
+                
+                final String finalId = idEnviado;
                 runOnUiThread(() -> {
                     historialChat.add(json);
-                    if (contenedorMensajesActual != null && !miPropioIdGoogle.equals(json.optString("id_jugador", ""))) {
-                        agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), false);
+                    if (contenedorMensajesActual != null) {
+                        boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(finalId);
+                        agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio);
                     }
                 });
-            } catch (Exception e) { }
+            } catch (Exception e) { 
+                Log.e("CHAT", "Error procesando mensaje", e); 
+            }
         });
     }
 
     private void agregarMensajeAlChat(LinearLayout c, String r, String t, boolean esMio) {
         if (c == null) return;
         View v = getLayoutInflater().inflate(R.layout.item_mensaje_chat, c, false);
-        ((TextView)v.findViewById(R.id.tv_remitente)).setText(r);
-        ((TextView)v.findViewById(R.id.tv_texto_mensaje)).setText(t);
+        
+        TextView tvRemitente = v.findViewById(R.id.tv_remitente);
+        TextView tvMensaje = v.findViewById(R.id.tv_texto_mensaje);
         View globo = v.findViewById(R.id.globo_mensaje);
+        
+        tvRemitente.setText(esMio ? "YO" : r.toUpperCase());
+        tvMensaje.setText(t);
+        
+        // Alineación y color según el emisor
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) globo.getLayoutParams();
-        lp.gravity = esMio ? Gravity.END : Gravity.START;
-        globo.setBackgroundResource(esMio ? R.drawable.fondo_mensaje_mio : R.drawable.fondo_mensaje_otro);
+        if (esMio) {
+            lp.gravity = Gravity.END;
+            lp.setMargins(dpToPx(40), 0, 0, dpToPx(12));
+            globo.setBackgroundResource(R.drawable.fondo_input_codigo); // Fondo claro (Manila)
+            tvRemitente.setTextColor(getResources().getColor(R.color.agent_green));
+        } else {
+            lp.gravity = Gravity.START;
+            lp.setMargins(0, 0, dpToPx(40), dpToPx(12));
+            globo.setBackgroundResource(R.drawable.fondo_boton_mision); // Fondo oscuro (Tinta)
+            tvRemitente.setTextColor(getResources().getColor(R.color.agent_blue));
+            tvMensaje.setTextColor(Color.WHITE); // Texto claro sobre fondo oscuro
+        }
+        globo.setLayoutParams(lp);
+        
         c.addView(v);
+        
+        // Auto-scroll al final
+        View parent = (View) c.getParent();
+        if (parent instanceof android.widget.ScrollView) {
+            parent.post(() -> ((android.widget.ScrollView)parent).fullScroll(View.FOCUS_DOWN));
+        }
     }
 
     private void mostrarDialogoChat() {
@@ -491,7 +521,8 @@ public class PartidaActivity extends AppCompatActivity {
             JSONObject j = new JSONObject();
             j.put("mensaje", m);
             stompClient.send("/app/partidas/" + idPartidaActual + "/chat", j.toString()).subscribe();
-            agregarMensajeAlChat(contenedorMensajesActual, "Yo", m, true);
+            // Eliminamos agregarMensajeAlChat de aquí para evitar duplicados, 
+            // el WebSocket se encargará de recibirlo y pintarlo.
         } catch (Exception e) { }
     }
 

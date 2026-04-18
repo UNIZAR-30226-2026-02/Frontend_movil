@@ -3,15 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#24201E">
+    android:background="@color/desk_wood">
 
     <LinearLayout
         android:id="@+id/header_partida"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#8E8E8E"
+        android:background="@color/folder_manila"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="16dp"
+        android:elevation="8dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -23,59 +24,63 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
-                android:fontFamily="serif"
+                android:background="@drawable/fondo_boton_mision"
+                android:fontFamily="monospace"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp"
-                android:text="Abandonar"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold|italic" />
+                android:text="ABANDONAR"
+                android:textColor="@color/fbi_red"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
+                android:background="@drawable/fondo_input_codigo"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="12dp"
+                android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp">
 
                 <View
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:background="#9B3838" />
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:background="@color/fbi_red" />
                 <TextView
                     android:id="@+id/tv_puntos_rojo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="8dp"
                     android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold" />
+                    android:textColor="@color/ink_text"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold"
+                    android:textSize="16sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:fontFamily="serif"
-                    android:text="vs"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold|italic" />
+                    android:layout_marginHorizontal="10dp"
+                    android:fontFamily="monospace"
+                    android:text="-"
+                    android:textColor="@color/ink_muted"
+                    android:textStyle="bold" />
 
                 <View
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:background="#38567A" />
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:background="@color/agent_blue" />
                 <TextView
                     android:id="@+id/tv_puntos_azul"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="8dp"
                     android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold" />
+                    android:textColor="@color/ink_text"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -83,24 +88,25 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
+                android:background="@drawable/fondo_boton_mision"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:src="@android:drawable/ic_menu_recent_history"
-                    app:tint="#000000" />
+                    app:tint="@color/ink_text" />
                 <TextView
                     android:id="@+id/tv_timer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:text="00:00"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/ink_text"
+                    android:fontFamily="monospace"
                     android:textStyle="bold" />
             </LinearLayout>
         </RelativeLayout>
@@ -108,54 +114,49 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="12dp">
 
             <TextView
                 android:id="@+id/tv_mi_rol"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
-                android:fontFamily="serif"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:text="Tu rol: Agente de campo"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="ROL: AGENTE DE CAMPO"
+                android:textColor="@color/ink_muted"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="serif"
-                    android:text="Turno:"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold|italic" />
+                    android:fontFamily="monospace"
+                    android:text="TURNO"
+                    android:textColor="@color/ink_muted"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <View
                     android:id="@+id/circulo_turno"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginStart="8dp"
-                    android:background="#38567A" />
+                    android:background="@color/agent_blue" />
             </LinearLayout>
         </RelativeLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="4dp">
 
             <TextView
                 android:id="@+id/tv_fase_partida"
@@ -163,41 +164,35 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
-                android:fontFamily="serif"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:text="Esperando conexión..."
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="ESPERANDO CONEXIÓN..."
+                android:textColor="@color/ink_text"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/fondo_gris_claro_redondeado"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="serif"
-                    android:text="Tu equipo:"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold|italic" />
+                    android:fontFamily="monospace"
+                    android:text="EQUIPO"
+                    android:textColor="@color/ink_muted"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <View
                     android:id="@+id/circulo_mi_equipo"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginStart="8dp"
-                    android:background="#38567A" />
+                    android:background="@color/agent_blue" />
             </LinearLayout>
         </RelativeLayout>
 
@@ -208,17 +203,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/header_partida"
-        android:layout_margin="16dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="16dp"
         android:orientation="vertical"
-        android:background="@drawable/fondo_gris_claro_redondeado"
-        android:padding="8dp">
+        android:background="@color/folder_manila"
+        android:elevation="4dp"
+        android:padding="12dp">
 
         <GridLayout
             android:id="@+id/grid_tablero"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:columnCount="4"
-            android:rowCount="5" />
+            android:rowCount="5"
+            android:alignmentMode="alignMargins"
+            android:columnOrderPreserved="false" />
 
     </LinearLayout>
 
@@ -226,23 +225,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:padding="24dp">
+        android:padding="20dp">
 
         <FrameLayout
             android:id="@+id/btn_alerta"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_alignParentStart="true"
-            android:background="@drawable/fondo_circulo_gris"
-            android:elevation="4dp">
+            android:background="@drawable/fondo_boton_mision"
+            android:elevation="6dp">
 
             <ImageView
                 android:id="@+id/icono_btn_alerta"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center"
                 android:src="@android:drawable/ic_dialog_info"
-                app:tint="#000000" />
+                app:tint="@color/ink_text" />
         </FrameLayout>
 
         <FrameLayout
@@ -254,19 +253,17 @@
             android:clipToPadding="false">
 
             <FrameLayout
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/fondo_circulo_gris"
-                android:elevation="4dp">
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/fondo_boton_mision"
+                android:elevation="6dp">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_gravity="center"
                     android:src="@android:drawable/stat_notify_chat"
-                    app:tint="#000000" />
+                    app:tint="@color/ink_text" />
             </FrameLayout>
 
             <TextView
@@ -275,12 +272,14 @@
                 android:layout_height="20dp"
                 android:layout_gravity="top|end"
                 android:background="@drawable/fondo_circulo_rojo"
-                android:elevation="5dp"
+                android:elevation="8dp"
                 android:gravity="center"
                 android:text=""
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="10sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginTop="-4dp"
+                android:layout_marginEnd="-4dp" />
         </FrameLayout>
     </RelativeLayout>
 </RelativeLayout>

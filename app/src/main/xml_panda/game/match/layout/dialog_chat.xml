@@ -3,91 +3,111 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D1D1D1"
-    android:orientation="vertical">
+    android:background="@color/desk_wood"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#B3B3B3"
-        android:padding="12dp">
+        android:layout_height="match_parent"
+        android:background="@color/folder_manila"
+        android:orientation="vertical"
+        android:elevation="8dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- CABECERA DEL CHAT -->
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:fontFamily="serif"
-            android:text="Chat"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold|italic" />
-
-        <FrameLayout
-            android:id="@+id/btn_cerrar_chat"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/fondo_gris_claro_redondeado">
+            android:background="@drawable/fondo_input_codigo"
+            android:padding="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="×"
-                android:textColor="#000000"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-    </RelativeLayout>
+                android:layout_centerVertical="true"
+                android:fontFamily="monospace"
+                android:text="COMUNICACIONES SEGURAS"
+                android:textColor="@color/ink_text"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
-    <ScrollView
-        android:id="@+id/scroll_chat"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="16dp">
+            <FrameLayout
+                android:id="@+id/btn_cerrar_chat"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/fondo_boton_mision">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="×"
+                    android:textColor="@color/fbi_red"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+        </RelativeLayout>
+
+        <!-- CONTENEDOR DE MENSAJES -->
+        <ScrollView
+            android:id="@+id/scroll_chat"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:fadeScrollbars="false"
+            android:scrollbarThumbVertical="@color/ink_muted">
+
+            <LinearLayout
+                android:id="@+id/contenedor_mensajes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="16dp" />
+
+        </ScrollView>
+
+        <!-- ZONA DE ESCRITURA -->
         <LinearLayout
-            android:id="@+id/contenedor_mensajes"
+            android:id="@+id/zona_escribir"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp"
-            android:background="#FFFFFF" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="@drawable/fondo_input_codigo">
 
-    </ScrollView>
+            <EditText
+                android:id="@+id/input_mensaje"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:background="@drawable/fondo_input_codigo"
+                android:hint="TRANSMITIR MENSAJE..."
+                android:textColorHint="@color/ink_muted"
+                android:textColor="@color/ink_text"
+                android:fontFamily="monospace"
+                android:textSize="14sp"
+                android:paddingHorizontal="16dp" />
 
-    <LinearLayout
-        android:id="@+id/zona_escribir"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="12dp">
+            <FrameLayout
+                android:id="@+id/btn_enviar_mensaje"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/fondo_boton_mision"
+                android:elevation="4dp">
 
-        <EditText
-            android:id="@+id/input_mensaje"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="@drawable/fondo_blanco_redondeado"
-            android:hint="..."
-            android:paddingHorizontal="16dp" />
-
-        <FrameLayout
-            android:id="@+id/btn_enviar_mensaje"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/fondo_boton_enviar">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_send"
-                app:tint="#FFFFFF" />
-        </FrameLayout>
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@android:drawable/ic_menu_send"
+                    app:tint="@color/agent_green" />
+            </FrameLayout>
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
