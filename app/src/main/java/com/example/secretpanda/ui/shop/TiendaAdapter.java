@@ -49,6 +49,7 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
         } else {
             holder.vistaCartas.setVisibility(View.GONE);
             holder.vistaImagen.setVisibility(View.VISIBLE);
+            holder.vistaImagen.setBackgroundColor(Integer.parseInt(item.getValor()));
             if (item.getIconoResId() != 0) holder.vistaImagen.setImageResource(item.getIconoResId());
         }
 
