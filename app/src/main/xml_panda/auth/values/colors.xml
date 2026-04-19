@@ -6,6 +6,8 @@
     <!-- Paleta de Identidad Secret Panda / FBI (Basada en Web) -->
     <color name="desk_wood">#1A1208</color> <!-- Fondo escritorio oscuro -->
     <color name="folder_manila">#F5EDD8</color> <!-- Fondo papel/carpeta principal -->
+    <color name="folder_manila_active">#F9F3E8</color> <!-- Manila más brillante para tab activa -->
+    <color name="folder_manila_inactive">#C4A060</color> <!-- Manila oscuro para tab inactiva -->
     <color name="folder_manila_dark">#E8DCC0</color> <!-- Sombra/Papel viejo -->
     <color name="folder_border">#A08050</color> <!-- Borde de carpeta/input -->
     <color name="folder_border_light">#C4A060</color> <!-- Borde más claro/acentos -->
@@ -17,6 +19,13 @@
 
     <color name="ink_text">#3A2A10</color> <!-- Color tinta antigua para texto en papel -->
     <color name="ink_muted">#8A7A60</color> <!-- Texto secundario/muted -->
+    <color name="ink_dark">#030213</color> <!-- Fondo oscuro estilo DarkCard -->
+
+    <!-- Rarezas -->
+    <color name="rarity_bronze">#CD7F32</color>
+    <color name="rarity_silver">#C0C0C0</color>
+    <color name="rarity_gold">#FFD700</color>
+    <color name="rarity_platinum">#B0C4DE</color>
 
     <!-- Colores base anteriores (mantener compatibilidad temporal) -->
     <color name="bg_dark">#1A1717</color>

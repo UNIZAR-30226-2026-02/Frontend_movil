@@ -237,6 +237,9 @@ public class PersonalizacionActivity extends AppCompatActivity {
     }
 
     private void configurarNavegacionInferior() {
+        LinearLayout btnNavPersonalizar = findViewById(R.id.nav_personalizar);
+        if (btnNavPersonalizar != null) btnNavPersonalizar.setSelected(true);
+
         LinearLayout btnNavInicio = findViewById(R.id.nav_inicio);
         if (btnNavInicio != null) {
             btnNavInicio.setOnClickListener(v -> {

@@ -3,33 +3,83 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"> <LinearLayout
-    android:id="@+id/top_bar_ranking"
-    android:layout_width="0dp"
-    android:layout_height="60dp"
-    android:background="@drawable/fondo_top_bar_clasificacion"
-    android:gravity="center"
-    android:orientation="horizontal"
-    app:layout_constraintWidth_percent="0.95"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent">
+    android:background="@drawable/bg_manila_folder">
 
-    <ImageView
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:src="@drawable/ic_trofeo"
-        app:tint="@color/white" />
+    <android.view.View
+        android:id="@+id/etiqueta_expediente_ranking"
+        android:layout_width="140dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="24dp"
+        android:background="@drawable/bg_folder_tab_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="Clasificación"
-        android:textColor="@color/white"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-</LinearLayout>
+        android:text="EXPEDIENTE_RANKING"
+        android:textColor="#2A1A08"
+        android:textSize="9sp"
+        android:fontFamily="monospace"
+        app:layout_constraintBottom_toBottomOf="@+id/etiqueta_expediente_ranking"
+        app:layout_constraintEnd_toEndOf="@+id/etiqueta_expediente_ranking"
+        app:layout_constraintStart_toStartOf="@+id/etiqueta_expediente_ranking"
+        app:layout_constraintTop_toTopOf="@+id/etiqueta_expediente_ranking" />
+
+    <LinearLayout
+        android:id="@+id/top_bar_ranking"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="12dp"
+        android:background="@android:color/transparent" android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingStart="24dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_trofeo"
+            app:tint="@color/fbi_red" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CLASIFICACIÓN"
+                android:textColor="@color/ink_text" 
+                android:fontFamily="serif" 
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Personal de inteligencia con mayor rendimiento"
+                android:textColor="@color/ink_muted"
+                android:fontFamily="monospace"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/sello_clasificado_ranking"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginBottom="24dp"
+        android:alpha="0.4"
+        android:rotation="-15"
+        android:src="@drawable/bg_stamp_confidential"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageView
         android:id="@+id/btn_cerrar_clasificacion"
@@ -37,11 +87,10 @@
         android:layout_height="40dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/fondo_boton_cerrar"
-        android:elevation="5dp"
+        android:background="@android:color/transparent" android:elevation="5dp"
         android:padding="8dp"
         android:src="@drawable/ic_cerrar_x"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/ink_text" app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -57,31 +106,28 @@
             android:layout_width="130dp"
             android:layout_height="55dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/fondo_tab_inactivo"
-            android:gravity="center"
+            android:background="@drawable/bg_manila_card" android:gravity="center"
             android:text="Amigos"
-            android:textColor="#BBBBBB"
-            android:textSize="18sp"
+            android:textColor="@color/ink_text" android:fontFamily="monospace" android:textSize="18sp"
             android:textStyle="bold"
-
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/tab_global"
-            app:layout_constraintTop_toTopOf="parent" /> <TextView
-        android:id="@+id/tab_global"
-        android:layout_width="130dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="8dp"
-        android:background="@drawable/fondo_tab_inactivo"
-        android:gravity="center"
-        android:text="Global"
-        android:textColor="#BBBBBB"
-        android:textSize="16sp"
-        android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        app:layout_constraintStart_toEndOf="@+id/tab_amigos"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" /> </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tab_global"
+            android:layout_width="130dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_manila_card" android:gravity="center"
+            android:text="Global"
+            android:textColor="@color/ink_muted" android:fontFamily="monospace" android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/tab_amigos"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/lista_clasificacion"
