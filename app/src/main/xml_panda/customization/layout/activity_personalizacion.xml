@@ -172,6 +172,16 @@
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
                 tools:listitem="@layout/item_personalizacion" />
+            <TextView
+                android:id="@+id/txt_vacio_bloqueados"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:textAlignment="center"
+                android:textColor="#808080"
+                android:textSize="16sp"
+                android:textStyle="italic"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>

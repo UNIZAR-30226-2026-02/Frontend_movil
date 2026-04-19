@@ -34,11 +34,18 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:visibility="visible">
-            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="10dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="1dp" />
-            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="5dp" android:layout_marginTop="4dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="2dp" />
-            <FrameLayout android:layout_width="35dp" android:layout_height="50dp" android:layout_marginTop="8dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="3dp">
-                <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_margin="2dp" app:cardCornerRadius="3dp" app:cardElevation="0dp" app:cardBackgroundColor="@android:color/transparent"/>
-            </FrameLayout>
+
+            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="10dp" android:background="@drawable/fondo_carta_gruesa" />
+            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="5dp" android:layout_marginTop="4dp" android:background="@drawable/fondo_carta_gruesa" />
+
+            <ImageView
+                android:id="@+id/img_carta_frontal_tienda"
+                android:layout_width="35dp"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/fondo_carta_gruesa"
+                android:scaleType="centerInside"
+                android:padding="2dp"/>
         </FrameLayout>
 
         <ImageView
