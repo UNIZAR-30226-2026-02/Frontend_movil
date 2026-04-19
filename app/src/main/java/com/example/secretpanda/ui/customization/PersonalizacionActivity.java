@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,6 +26,9 @@ import com.example.secretpanda.ui.shop.TiendaActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class PersonalizacionActivity extends AppCompatActivity {
 
@@ -41,11 +46,16 @@ public class PersonalizacionActivity extends AppCompatActivity {
     private PersonalizacionAdapter adapterPosesion;
     private PersonalizacionAdapter adapterBloqueados;
 
+    private String idGoogleEstable;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_personalizacion);
+
+        idGoogleEstable = getIntent().getStringExtra("GOOGLE_ID_ESTABLE");
 
         configurarNavegacionInferior();
 
@@ -91,7 +101,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
         if (txtSeccionActual != null) {
             String tituloActual = txtSeccionActual.getText().toString().toLowerCase();
 
-            if (tituloActual.contains("barajas")) cargarInventarioServidor("baraja");
+            if (tituloActual.contains("barajas")) cargarTemasServidor();
             else if (tituloActual.contains("borde")) cargarInventarioServidor("borde");
             else cargarInventarioServidor("fondo");
         }
@@ -118,8 +128,8 @@ public class PersonalizacionActivity extends AppCompatActivity {
         String tituloMin = titulo.toLowerCase();
 
         if (tituloMin.contains("barajas")) cargarInventarioServidor("baraja");
-        else if (tituloMin.contains("borde")) cargarInventarioServidor("borde");
-        else cargarInventarioServidor("fondo");
+        else if (tituloMin.contains("borde")) cargarInventarioServidor("carta");
+        else cargarInventarioServidor("tablero");
     }
 
     private void animarAltura(View vista, int altoFinalDp) {
@@ -226,6 +236,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
             btnNavInicio.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 Intent intent = new Intent(PersonalizacionActivity.this, HomeActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
@@ -236,6 +247,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
             btnNavTienda.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 Intent intent = new Intent(PersonalizacionActivity.this, TiendaActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
@@ -244,109 +256,75 @@ public class PersonalizacionActivity extends AppCompatActivity {
     }
 
     private void cargarInventarioServidor(String categoria) {
+        List<ItemPersonalizacion> comprados = new ArrayList<>();
+        List<Integer> idsComprados = new ArrayList<>();
+        String[] itemEquipadoNombre = {"Ninguno"};
+        int[] posEquipada = {-1};
+        List<ItemPersonalizacion> bloqueadosLocal = new ArrayList<>();
+
+        OkHttpClient client = new OkHttpClient();
+
+        // URL del endpoint (ajusta la IP si es necesario)
+        String urlInventario = "http://10.0.2.2:8080/api/personalizaciones/activas";
+
+        // Obtenemos el token para la autenticación
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
-        if (jwt == null || jwt.isEmpty()) return;
 
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        if (jwt == null || jwt.isEmpty()) {
+            return; // O redirigir al Login
+        }
 
-        //  LEER EL INVENTARIO
-        String urlInventario = "http://10.0.2.2:8080/api/jugadores/personalizaciones";
-        okhttp3.Request requestInv = new okhttp3.Request.Builder()
-                .url(urlInventario).get().addHeader("Authorization", "Bearer " + jwt).build();
+        Request request = new Request.Builder()
+                .url(urlInventario)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
 
-        client.newCall(requestInv).enqueue(new okhttp3.Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(okhttp3.Call call, java.io.IOException e) {}
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> Toast.makeText(PersonalizacionActivity.this, "Error de red al cargar la tienda", Toast.LENGTH_SHORT).show());
+            }
 
             @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response responseInv) throws java.io.IOException {
-                if (!responseInv.isSuccessful()) return;
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonRespuesta = response.body().string();
+                        Log.d("API_PERSONALIZACION", "Respuesta JSON: " + jsonRespuesta);
+                        org.json.JSONArray temasArray = new org.json.JSONArray(jsonRespuesta);
 
-                List<ItemPersonalizacion> comprados = new ArrayList<>();
-                List<Integer> idsComprados = new ArrayList<>();
-                String[] itemEquipadoNombre = {"Ninguno"};
-                int[] posEquipada = {-1};
-
-                try {
-                    org.json.JSONArray arrInv = new org.json.JSONArray(responseInv.body().string());
-                    boolean basicoEncontrado = false;
-
-                    for (int i = 0; i < arrInv.length(); i++) {
-                        org.json.JSONObject obj = arrInv.getJSONObject(i);
-                        String tipo = obj.optString("tipo", "baraja");
-
-                        if (tipo.equalsIgnoreCase(categoria)) {
-                            int id = obj.optInt("id_tema", -1);
-                            String nombre = obj.optString("nombre", "Desconocido");
-                            boolean equipado = obj.optBoolean("equipado", false);
-
-                            if (nombre.equalsIgnoreCase("Básico") || nombre.equalsIgnoreCase("Basico")) {
-                                basicoEncontrado = true;
-                            }
-
-                            ItemPersonalizacion item = new ItemPersonalizacion(nombre, false, tipo, 0, 0);
-                            item.setId(id);
-                            comprados.add(item);
-                            idsComprados.add(id);
-
-                            if (equipado) {
-                                itemEquipadoNombre[0] = nombre;
-                                posEquipada[0] = comprados.size() - 1;
-                            }
-                        }
-                    }
-
-                    if (!basicoEncontrado) {
-                        ItemPersonalizacion basico = new ItemPersonalizacion("Básico", false, categoria, 0, 0);
-                        basico.setId(-1); // Le ponemos una ID ficticia
-                        comprados.add(0, basico); // Lo ponemos de primero en la lista
-                        idsComprados.add(-1);
-
-                        if (posEquipada[0] == -1) {
-                            itemEquipadoNombre[0] = "Básico";
-                            posEquipada[0] = 0;
-                        }
-                    }
-
-                } catch (Exception e) { e.printStackTrace(); }
-
-                //  LEER LA TIENDA (Para sacar lo bloqueado)
-                String urlTienda = "http://10.0.2.2:8080/api/temas/activos";
-                okhttp3.Request requestTienda = new okhttp3.Request.Builder()
-                        .url(urlTienda).get().addHeader("Authorization", "Bearer " + jwt).build();
-
-                client.newCall(requestTienda).enqueue(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(okhttp3.Call call, java.io.IOException e) {}
-
-                    @Override
-                    public void onResponse(okhttp3.Call call, okhttp3.Response responseTienda) throws java.io.IOException {
-                        List<ItemPersonalizacion> bloqueadosLocal = new ArrayList<>();
-
-                        if (responseTienda.isSuccessful()) {
-                            try {
-                                org.json.JSONArray arrTienda = new org.json.JSONArray(responseTienda.body().string());
-                                for (int i = 0; i < arrTienda.length(); i++) {
-                                    org.json.JSONObject obj = arrTienda.getJSONObject(i);
-                                    int id = obj.optInt("id_tema", -1);
-                                    String nombre = obj.optString("nombre", "Desconocido");
-                                    String tipo = obj.optString("tipo", "baraja");
-
-
-                                    // Si el nombre es "Básico", no lo añadimos a bloqueados aunque no esté en idsComprados
-                                    if (tipo.equalsIgnoreCase(categoria) && !idsComprados.contains(id) && !nombre.equalsIgnoreCase("Basico")) {
-                                        ItemPersonalizacion item = new ItemPersonalizacion(nombre, true, tipo, 0, 0);
-                                        item.setId(id);
-                                        bloqueadosLocal.add(item);
-                                    }
-                                }
-                            } catch (Exception e) { e.printStackTrace(); }
-                        }
-
-                        //  DIBUJAR TODO EN PANTALLA
                         runOnUiThread(() -> {
-                            posesion.clear(); posesion.addAll(comprados);
+                            posesion.clear();
+                            for (int i = 0; i < temasArray.length(); i++) {
+                                try {
+                                    org.json.JSONObject temaJson = temasArray.getJSONObject(i);
+                                    Log.d("API_PERSONALIZACION", "Tema JSON: " + temaJson.toString());
+
+                                    int idTema = temaJson.optInt("id_personalizacion", -1);
+                                    String nombre = temaJson.optString("nombre", "Tema Desconocido");
+                                    int posicionGuion = nombre.indexOf("_");
+                                    String nombrePersonalizacion = nombre.substring(0, posicionGuion);
+                                    boolean comprado = temaJson.optBoolean("comprado", false);
+                                    String tipo = temaJson.optString("tipo", "baraja");
+                                    if(tipo.equals(categoria)){
+                                        if(comprado){
+                                            ItemPersonalizacion item = new ItemPersonalizacion(nombrePersonalizacion, !comprado, tipo, 0, 0);
+                                            item.setId(idTema);
+                                            comprados.add(item);
+                                            idsComprados.add(idTema);
+                                        }else {
+                                            ItemPersonalizacion item = new ItemPersonalizacion(nombrePersonalizacion, !comprado, tipo, 0, 0);
+                                            item.setId(idTema);
+                                            bloqueadosLocal.add(item);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    android.util.Log.e("API_TIENDA", "Error procesando item", e);
+                                }
+                            }
+                            posesion.addAll(comprados);
                             PersonalizacionActivity.this.bloqueados.clear();
                             PersonalizacionActivity.this.bloqueados.addAll(bloqueadosLocal);
 
@@ -360,8 +338,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
                                 if (posEquipada[0] == -1) txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
                             }
 
-                            boolean permiteSeleccion = !categoria.equals("baraja");
-                            adapterPosesion = new PersonalizacionAdapter(posesion, false, permiteSeleccion, (item, pos) -> mostrarPreview(item, pos, permiteSeleccion));
+                            adapterPosesion = new PersonalizacionAdapter(posesion, false, true, (item, pos) -> mostrarPreview(item, pos, true));
                             adapterBloqueados = new PersonalizacionAdapter(PersonalizacionActivity.this.bloqueados, true, false, (item, pos) -> mostrarPreview(item, pos, false));
 
                             if (posEquipada[0] != -1) adapterPosesion.setPosicionSeleccionada(posEquipada[0]);
@@ -369,8 +346,106 @@ public class PersonalizacionActivity extends AppCompatActivity {
                             recyclerPosesion.setAdapter(adapterPosesion);
                             recyclerBloqueados.setAdapter(adapterBloqueados);
                         });
+                    } catch (Exception e) {
+                        android.util.Log.e("API_TIENDA", "Error procesando JSON", e);
                     }
-                });
+                }
+            }
+        });
+    }
+
+    private void cargarTemasServidor(){
+
+        List<ItemPersonalizacion> comprados = new ArrayList<>();
+        List<Integer> idsComprados = new ArrayList<>();
+        String[] itemEquipadoNombre = {"Ninguno"};
+        int[] posEquipada = {-1};
+        List<ItemPersonalizacion> bloqueadosLocal = new ArrayList<>();
+
+        OkHttpClient client = new OkHttpClient();
+
+        // URL del endpoint (ajusta la IP si es necesario)
+        String url = "http://10.0.2.2:8080/api/temas/activos";
+
+        // Obtenemos el token para la autenticación
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        if (jwt == null || jwt.isEmpty()) {
+            return; // O redirigir al Login
+        }
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> Toast.makeText(PersonalizacionActivity.this, "Error de red al cargar la tienda", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonRespuesta = response.body().string();
+                        Log.d("API_TIENDA", "Respuesta JSON: " + jsonRespuesta);
+                        org.json.JSONArray temasArray = new org.json.JSONArray(jsonRespuesta);
+
+                        runOnUiThread(() -> {
+                            posesion.clear();
+                            for (int i = 0; i < temasArray.length(); i++) {
+                                try {
+                                    org.json.JSONObject temaJson = temasArray.getJSONObject(i);
+                                    Log.d("API_TIENDA", "Tema JSON: " + temaJson.toString());
+
+                                    int idTema = temaJson.optInt("id_tema", temaJson.optInt("id_tema", -1));
+                                    String nombre = temaJson.optString("nombre", "Tema Desconocido");
+                                    boolean comprado = temaJson.optBoolean("comprado", false);
+                                    String tipo = temaJson.optString("tipo", "baraja");
+                                    if(comprado){
+                                        ItemPersonalizacion item = new ItemPersonalizacion(nombre, !comprado, tipo, 0, 0);
+                                        item.setId(idTema);
+                                        comprados.add(item);
+                                        idsComprados.add(idTema);
+                                    }else {
+                                        ItemPersonalizacion item = new ItemPersonalizacion(nombre, !comprado, tipo, 0, 0);
+                                        item.setId(idTema);
+                                        bloqueadosLocal.add(item);
+                                    }
+                                } catch (Exception e) {
+                                    android.util.Log.e("API_TIENDA", "Error procesando item", e);
+                                }
+                            }
+                            posesion.addAll(comprados);
+                            PersonalizacionActivity.this.bloqueados.clear();
+                            PersonalizacionActivity.this.bloqueados.addAll(bloqueadosLocal);
+
+                            txtTematicaSeleccionada.setText(itemEquipadoNombre[0]);
+                            if (posesion.isEmpty()) {
+                                txtVacioPosesion.setVisibility(View.VISIBLE);
+                                recyclerPosesion.setVisibility(View.GONE);
+                            } else {
+                                txtVacioPosesion.setVisibility(View.GONE);
+                                recyclerPosesion.setVisibility(View.VISIBLE);
+                                if (posEquipada[0] == -1) txtTematicaSeleccionada.setText(posesion.get(0).getNombre());
+                            }
+
+                            adapterPosesion = new PersonalizacionAdapter(posesion, false, true, (item, pos) -> mostrarPreview(item, pos, true));
+                            adapterBloqueados = new PersonalizacionAdapter(PersonalizacionActivity.this.bloqueados, true, false, (item, pos) -> mostrarPreview(item, pos, false));
+
+                            if (posEquipada[0] != -1) adapterPosesion.setPosicionSeleccionada(posEquipada[0]);
+
+                            recyclerPosesion.setAdapter(adapterPosesion);
+                            recyclerBloqueados.setAdapter(adapterBloqueados);
+                        });
+                    } catch (Exception e) {
+                        android.util.Log.e("API_TIENDA", "Error procesando JSON", e);
+                    }
+                }
             }
         });
     }

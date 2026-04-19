@@ -23,6 +23,7 @@ import com.example.secretpanda.ui.home.HomeActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -36,11 +37,20 @@ public class TiendaActivity extends AppCompatActivity {
     private List<ItemPersonalizacion> bordesTienda = new ArrayList<>();
     private List<ItemPersonalizacion> fondosTienda = new ArrayList<>();
 
+    private String nombreUsuario;
+    private String idGoogle;
+    private String idGoogleEstable;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_tienda);
+
+        idGoogle = getIntent().getStringExtra("ID_GOOGLE");
+        idGoogleEstable = getIntent().getStringExtra("GOOGLE_ID_ESTABLE");
 
         txtSaldo = findViewById(R.id.txt_saldo_balas);
         configurarNavegacionInferior();
@@ -56,6 +66,8 @@ public class TiendaActivity extends AppCompatActivity {
         recyclerBarajas.setAdapter(adapterBarajas);
         recyclerBordes.setAdapter(adapterBordes);
         recyclerFondos.setAdapter(adapterFondos);
+
+        nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
         //actualizarTextoSaldo();
         cargarBalasServidor();
@@ -151,7 +163,7 @@ public class TiendaActivity extends AppCompatActivity {
                                                 tipo,    // tipo
                                                 0,           // icono (0 para que ponga la carta por defecto)
                                                 precio,     // precio en balas
-                                                ""
+                                                "0"
                                         );
                                         item.setId(idTema);
                                         barajasTienda.add(item);
@@ -176,7 +188,7 @@ public class TiendaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
 
         // URL del endpoint (ajusta la IP si es necesario)
-        String url = "http://10.0.2.2:8080/api/personalizaciones/activas    ";
+        String url = "http://10.0.2.2:8080/api/personalizaciones/activas";
 
         // Obtenemos el token para la autenticación
         TokenManager tokenManager = new TokenManager(this);
@@ -220,7 +232,7 @@ public class TiendaActivity extends AppCompatActivity {
                                     String nombre = temaJson.optString("nombre", "Tema Desconocido");
                                     int posicionGuion = nombre.indexOf("_");
                                     String nombrePersonalizacion = nombre.substring(0, posicionGuion);
-                                    int precio = temaJson.optInt("precio_palas", temaJson.optInt("precio_balas", 0));
+                                    int precio = temaJson.optInt("precio_bala", 0);
                                     boolean comprado = temaJson.optBoolean("comprado", false);
                                     String tipo = temaJson.optString("tipo", "baraja");
                                     String valor = temaJson.optString("valor_visual", "0");
@@ -267,6 +279,7 @@ public class TiendaActivity extends AppCompatActivity {
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview_tienda);
         ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item_tienda);
         LinearLayout btnComprar = dialogView.findViewById(R.id.btn_comprar_preview);
+        TextView txtPrecioBotonArriba = dialogView.findViewById(R.id.txt_precio_boton_compra_arriba);
         TextView txtPrecioBoton = dialogView.findViewById(R.id.txt_precio_boton_compra);
         TextView txtFeedback = dialogView.findViewById(R.id.txt_feedback_tienda);
 
@@ -274,7 +287,13 @@ public class TiendaActivity extends AppCompatActivity {
         txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
 
         if (item.getIconoResId() != 0) imgPreview.setImageResource(item.getIconoResId());
-        else imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+        else {
+            if (!Objects.equals(item.getValor(), "0")){
+                imgPreview.setBackgroundColor(Color.parseColor("#" + item.getValor()));
+            }else{
+                imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+            }
+        }
 
         btnComprar.setOnClickListener(v -> {
             /*
@@ -299,14 +318,17 @@ public class TiendaActivity extends AppCompatActivity {
             }*/
 
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-            String url = "http://10.0.2.2:8080/api/tienda/comprar/tema";
+            String url = "http://10.0.2.2:8080/api/tienda/comprar/" + idGoogleEstable;
 
             TokenManager tokenManager = new TokenManager(this);
             String jwt = tokenManager.getToken();
 
             org.json.JSONObject jsonBody = new org.json.JSONObject();
             try {
-                jsonBody.put("id_tema", item.getId());
+                if(item.getTipo().equals("baraja"))
+                    jsonBody.put("id_tema", item.getId());
+                else
+                    jsonBody.put("id_personalizacion", item.getId());
             } catch (Exception e) { e.printStackTrace(); }
 
             okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
@@ -318,6 +340,7 @@ public class TiendaActivity extends AppCompatActivity {
                     .build();
 
             btnComprar.setEnabled(false);
+            txtPrecioBotonArriba.setText("");
             txtPrecioBoton.setText("Comprando...");
 
             client.newCall(request).enqueue(new okhttp3.Callback() {

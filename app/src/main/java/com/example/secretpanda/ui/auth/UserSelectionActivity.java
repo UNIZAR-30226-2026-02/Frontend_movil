@@ -15,10 +15,16 @@ import com.example.secretpanda.ui.home.HomeActivity;
 public class UserSelectionActivity extends AppCompatActivity {
 
     private String nombreUsuario;
+
+    private String idGoogleEstable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.eleccion_nombre_usuario);
+
+        // Recuperamos el ID de Google que nos envió LoginActivity
+        idGoogleEstable = getIntent().getStringExtra("GOOGLE_ID_ESTABLE");
 
 
         EditText inputUsuario = findViewById(R.id.inputUsuario);
@@ -85,6 +91,7 @@ public class UserSelectionActivity extends AppCompatActivity {
                                 android.content.Intent intent = new android.content.Intent(UserSelectionActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
                                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                 intent.putExtra("DESTINO", "HOME");
+                                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
                                 startActivity(intent);
                                 finish();
                             });

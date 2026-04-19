@@ -449,7 +449,8 @@ public class PartidaActivity extends AppCompatActivity {
                     historialChat.add(json);
                     if (contenedorMensajesActual != null) {
                         boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(finalId);
-                        agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio);
+                        boolean esValido = json.optBoolean("es_valido", true);
+                        agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio, esValido);
                     }
                 });
             } catch (Exception e) { 
@@ -458,7 +459,7 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
-    private void agregarMensajeAlChat(LinearLayout c, String r, String t, boolean esMio) {
+    private void agregarMensajeAlChat(LinearLayout c, String r, String t, boolean esMio, boolean esValido) {
         if (c == null) return;
         View v = getLayoutInflater().inflate(R.layout.item_mensaje_chat, c, false);
         
@@ -467,7 +468,15 @@ public class PartidaActivity extends AppCompatActivity {
         View globo = v.findViewById(R.id.globo_mensaje);
         
         tvRemitente.setText(esMio ? "YO" : r.toUpperCase());
-        tvMensaje.setText(t);
+        
+        if (!esValido) {
+            tvMensaje.setText("[Mensaje bloqueado por lenguaje inapropiado]");
+            tvMensaje.setTextColor(Color.GRAY);
+            tvMensaje.setTypeface(null, Typeface.ITALIC);
+        } else {
+            tvMensaje.setText(t);
+            tvMensaje.setTypeface(null, Typeface.NORMAL);
+        }
         
         // Alineación y color según el emisor
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) globo.getLayoutParams();
@@ -476,12 +485,13 @@ public class PartidaActivity extends AppCompatActivity {
             lp.setMargins(dpToPx(40), 0, 0, dpToPx(12));
             globo.setBackgroundResource(R.drawable.fondo_input_codigo); // Fondo claro (Manila)
             tvRemitente.setTextColor(getResources().getColor(R.color.agent_green));
+            if (esValido) tvMensaje.setTextColor(Color.BLACK);
         } else {
             lp.gravity = Gravity.START;
             lp.setMargins(0, 0, dpToPx(40), dpToPx(12));
             globo.setBackgroundResource(R.drawable.fondo_boton_mision); // Fondo oscuro (Tinta)
             tvRemitente.setTextColor(getResources().getColor(R.color.agent_blue));
-            tvMensaje.setTextColor(Color.WHITE); // Texto claro sobre fondo oscuro
+            if (esValido) tvMensaje.setTextColor(Color.WHITE); // Texto claro sobre fondo oscuro
         }
         globo.setLayoutParams(lp);
         
@@ -503,7 +513,9 @@ public class PartidaActivity extends AppCompatActivity {
         android.widget.EditText in = d.findViewById(R.id.input_mensaje);
         if (JEFE_STRING.equalsIgnoreCase(miRol)) d.findViewById(R.id.zona_escribir).setVisibility(View.GONE);
         for (JSONObject m : historialChat) {
-            agregarMensajeAlChat(contenedorMensajesActual, m.optString("tag"), m.optString("mensaje"), miPropioIdGoogle.equals(m.optString("id_jugador")));
+            boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(m.optString("id_jugador"));
+            boolean esValido = m.optBoolean("es_valido", true);
+            agregarMensajeAlChat(contenedorMensajesActual, m.optString("tag"), m.optString("mensaje"), esMio, esValido);
         }
         d.findViewById(R.id.btn_enviar_mensaje).setOnClickListener(v -> {
             String txt = in.getText().toString().trim();

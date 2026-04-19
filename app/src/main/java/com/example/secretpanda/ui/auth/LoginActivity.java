@@ -136,7 +136,6 @@ public class LoginActivity extends AppCompatActivity {
                                 // ES NUEVO -> A elegir nombre (Registro)
                                 Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.auth.UserSelectionActivity.class);
                                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
-                                intent.putExtra("ID_GOOGLE", tokenFinal);
                                 intent.putExtra("GOOGLE_ID_ESTABLE", googleIdEstable);
                                 startActivity(intent);
                                 finish();
@@ -167,6 +166,7 @@ public class LoginActivity extends AppCompatActivity {
                                             // No estaba jugando -> A la Home
                                             intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
                                             intent.putExtra("MI_NOMBRE_USUARIO", jugadorJson.optString("tag", ""));
+                                            intent.putExtra("GOOGLE_ID_ESTABLE", googleIdEstable);
                                             intent.putExtra("DESTINO", "HOME");
                                         }
                                         startActivity(intent);

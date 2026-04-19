@@ -48,6 +48,7 @@ public class HomeActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> perfilLauncher;
 
     private String nombreUsuario;
+    private String idGoogleEstable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,7 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        idGoogleEstable = getIntent().getStringExtra("GOOGLE_ID_ESTABLE");
 
         setContentView(R.layout.home);
 
@@ -102,6 +104,8 @@ public class HomeActivity extends AppCompatActivity {
 
             // PASAMOS SOLO EL STRING (EL NOMBRE)
             intent.putExtra("NOMBRE_JUGADOR", nombreUsuario);
+            intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+
             // Abrimos la pantalla
             perfilLauncher.launch(intent);
         });
@@ -110,6 +114,8 @@ public class HomeActivity extends AppCompatActivity {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             Intent intent = new Intent(HomeActivity.this, CrearMisionOpcionesActivity.class);
             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+            intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+
             startActivity(intent);
             overridePendingTransition(0, 0); // Evitamos la animación por defecto
         });
@@ -118,6 +124,8 @@ public class HomeActivity extends AppCompatActivity {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, UnirseMisionActivity.class);
                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+
                 startActivity(intent);
 
                 overridePendingTransition(0, 0);
@@ -133,6 +141,7 @@ public class HomeActivity extends AppCompatActivity {
             btnClasificacion.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 Intent intent = new Intent(HomeActivity.this, ClasificacionActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
                 startActivity(intent);
             });
         }
@@ -146,6 +155,8 @@ public class HomeActivity extends AppCompatActivity {
             btnNavTienda.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, TiendaActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                 startActivity(intent);
 
                 overridePendingTransition(0, 0);
@@ -156,6 +167,8 @@ public class HomeActivity extends AppCompatActivity {
             btnNavPersonalizacion.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, PersonalizacionActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+
                 startActivity(intent);
 
                 overridePendingTransition(0, 0);
@@ -166,6 +179,8 @@ public class HomeActivity extends AppCompatActivity {
             btnLogros.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
                 android.content.Intent intent = new android.content.Intent(HomeActivity.this, LogrosActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+
                 startActivity(intent);
 
                 overridePendingTransition(0, 0);

@@ -12,6 +12,9 @@ public class LoadingActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private int progressStatus = 0;
 
+    private String idGoogleEstable;
+
+
     private String nombreUsuario;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +24,7 @@ public class LoadingActivity extends AppCompatActivity {
 
         progressBar = findViewById(R.id.progressBar);
 
+        idGoogleEstable = getIntent().getStringExtra("GOOGLE_ID_ESTABLE");
 
         String destino = getIntent().getStringExtra("DESTINO");
 
@@ -38,10 +42,12 @@ public class LoadingActivity extends AppCompatActivity {
             Intent intent;
             if ("HOME".equals(destino)) {
                 intent = new Intent(LoadingActivity.this, HomeActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
 
             } else {
                 intent = new Intent(LoadingActivity.this, UserSelectionActivity.class);
+                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
             }
             startActivity(intent);
