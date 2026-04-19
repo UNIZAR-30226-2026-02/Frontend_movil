@@ -3,22 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/fondo_gris_claro_redondeado"
-    android:layout_marginBottom="8dp"
+    android:background="@android:color/transparent"
+    android:layout_marginBottom="12dp"
     android:padding="12dp">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A3A2A10"
+        android:layout_marginBottom="8dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/item_historial_resultado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="VICTORIA"
+            android:textColor="@color/ink_text"
+            android:fontFamily="serif"
             android:textStyle="bold"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:letterSpacing="0.1" />
 
         <View
             android:layout_width="0dp"
@@ -30,33 +40,48 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="2023-10-25"
-            android:textStyle="italic"
-            android:textColor="#333333"/>
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:textColor="@color/ink_muted" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/item_historial_codigo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sala: ABCD"
-        android:textColor="#000000"
-        android:layout_marginTop="4dp"/>
+        android:text="SALA: ABCD"
+        android:fontFamily="monospace"
+        android:textColor="@color/ink_text"
+        android:textSize="13sp"
+        android:layout_marginTop="6dp"/>
 
     <TextView
         android:id="@+id/item_historial_rol"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Equipo ROJO - AGENTE"
-        android:textColor="#333333"
+        android:text="EQUIPO ROJO - AGENTE"
+        android:fontFamily="monospace"
+        android:textColor="@color/ink_text"
+        android:textSize="13sp"
         android:layout_marginTop="2dp"/>
 
     <TextView
         android:id="@+id/item_historial_aciertos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Aciertos: 5 | Fallos: 1"
-        android:textColor="#333333"
+        android:text="ACIERTOS: 5"
+        android:fontFamily="monospace"
+        android:textColor="@color/ink_text"
         android:textStyle="bold"
-        android:layout_marginTop="4dp"/>
+        android:textSize="13sp"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="--------------------------"
+        android:textColor="#1A000000"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"/>
 
 </LinearLayout>

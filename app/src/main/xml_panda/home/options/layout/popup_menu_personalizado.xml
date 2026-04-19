@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_manila_card"
+    android:orientation="vertical"
+    android:paddingVertical="10dp"
+    android:paddingHorizontal="12dp"
+    android:elevation="8dp">
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_opcion_musica"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="0dp"
+        android:minWidth="140dp"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:text="> Música"
+        android:textAllCaps="false"
+        android:textColor="@color/ink_text"
+        android:fontFamily="serif"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A3A2A10"
+        android:layout_marginVertical="2dp"/>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_opcion_como_jugar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="0dp"
+        android:minWidth="140dp"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:text="> Cómo jugar"
+        android:textAllCaps="false"
+        android:textColor="@color/ink_text"
+        android:fontFamily="serif"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A3A2A10"
+        android:layout_marginVertical="2dp"/>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_opcion_historial"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="0dp"
+        android:minWidth="140dp"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:text="> Partidas"
+        android:textAllCaps="false"
+        android:textColor="@color/ink_text"
+        android:fontFamily="serif"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

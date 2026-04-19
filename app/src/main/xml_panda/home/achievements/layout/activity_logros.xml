@@ -3,33 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="@drawable/bg_manila_folder"> <LinearLayout
+    android:id="@+id/top_bar_logros"
+    android:layout_width="0dp"
+    android:layout_height="60dp"
+    android:background="@android:color/transparent" android:gravity="center"
+    android:orientation="horizontal"
+    app:layout_constraintWidth_percent="0.95"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
 
-    <LinearLayout
-        android:id="@+id/top_bar_logros"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:background="@drawable/fondo_top_bar_clasificacion"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintWidth_percent="0.95"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_trofeo"
-            app:tint="@color/white" /> <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="Logros y Medallas"
-        android:textColor="@color/white"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-    </LinearLayout>
+    <ImageView
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_medal"
+        app:tint="@color/ink_text" /> <TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:text="Logros y Medallas"
+    android:textColor="@color/ink_text" android:fontFamily="serif" android:textSize="22sp"
+    android:textStyle="bold" />
+</LinearLayout>
 
     <ImageView
         android:id="@+id/btn_cerrar_logros"
@@ -37,11 +33,10 @@
         android:layout_height="40dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/fondo_boton_cerrar"
-        android:elevation="5dp"
+        android:background="@android:color/transparent" android:elevation="5dp"
         android:padding="8dp"
         android:src="@drawable/ic_cerrar_x"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/ink_text" app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -57,11 +52,9 @@
             android:layout_width="130dp"
             android:layout_height="55dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/fondo_tab_inactivo"
-            android:gravity="center"
+            android:background="@drawable/bg_manila_card" android:gravity="center"
             android:text="Logros"
-            android:textColor="#BBBBBB"
-            android:textSize="18sp"
+            android:textColor="@color/ink_text" android:fontFamily="monospace" android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
@@ -73,11 +66,9 @@
             android:layout_width="130dp"
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
-            android:background="@drawable/fondo_tab_inactivo"
-            android:gravity="center"
+            android:background="@drawable/bg_manila_card" android:gravity="center"
             android:text="Medallas"
-            android:textColor="#BBBBBB"
-            android:textSize="16sp"
+            android:textColor="@color/ink_muted" android:fontFamily="monospace" android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/tab_logros"
             app:layout_constraintEnd_toEndOf="parent"
