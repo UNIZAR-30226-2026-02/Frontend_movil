@@ -127,7 +127,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
         String tituloMin = titulo.toLowerCase();
 
-        if (tituloMin.contains("barajas")) cargarInventarioServidor("baraja");
+        if (tituloMin.contains("barajas")) cargarTemasServidor();
         else if (tituloMin.contains("borde")) cargarInventarioServidor("carta");
         else cargarInventarioServidor("tablero");
     }
