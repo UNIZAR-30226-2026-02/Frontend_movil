@@ -137,6 +137,7 @@ public class LoginActivity extends AppCompatActivity {
                                 Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.auth.UserSelectionActivity.class);
                                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                                 intent.putExtra("GOOGLE_ID_ESTABLE", googleIdEstable);
+                                intent.putExtra("ID_GOOGLE", tokenFinal);
                                 startActivity(intent);
                                 finish();
                             } else {
