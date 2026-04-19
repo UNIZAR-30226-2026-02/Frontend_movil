@@ -401,6 +401,9 @@ public class TiendaActivity extends AppCompatActivity {
     }
 
     private void configurarNavegacionInferior() {
+        LinearLayout btnNavTienda = findViewById(R.id.nav_tienda);
+        if (btnNavTienda != null) btnNavTienda.setSelected(true);
+
         LinearLayout btnNavInicio = findViewById(R.id.nav_inicio);
         if (btnNavInicio != null) btnNavInicio.setOnClickListener(v -> {
             startActivity(new Intent(TiendaActivity.this, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
