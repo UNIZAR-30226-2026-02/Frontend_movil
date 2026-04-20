@@ -57,7 +57,7 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
             holder.txtResultado.setTextColor(Color.parseColor("#F44336")); // Rojo
         }
 
-        if (partida.rol != null && (partida.rol.equalsIgnoreCase("lider") || partida.rol.equalsIgnoreCase("jefe"))) {
+        if (partida.rol != null ) {
             holder.txtAciertos.setVisibility(View.VISIBLE);
             holder.txtAciertos.setText("ACIERTOS: " + partida.numAciertos + " | FALLOS: " + partida.numFallos);
         } else {
