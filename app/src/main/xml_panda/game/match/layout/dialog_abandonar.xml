@@ -1,34 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="24dp"
-    android:background="#D1D1D1"
-    android:padding="16dp">
+    android:background="@drawable/bg_manila_card"
+    android:padding="24dp">
 
-    <FrameLayout
+    <ImageView
         android:id="@+id/btn_cerrar_abandonar"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:background="@drawable/fondo_gris_claro_redondeado">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="×"
-            android:textColor="#000000"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </FrameLayout>
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="4dp"
+        android:src="@drawable/ic_cerrar_x"
+        app:tint="@color/ink_text" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/btn_cerrar_abandonar"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -36,22 +30,38 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
+            android:fontFamily="serif"
             android:gravity="center"
-            android:text="¿Estás seguro de que quieres\nabandonar la partida en línea?"
-            android:textColor="#000000"
-            android:textSize="18sp" />
+            android:text="ADVERTENCIA DE CAMPO:\n¿CONFIRMAR ABANDONO DE MISIÓN?"
+            android:textColor="@color/ink_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btn_confirmar_abandonar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/fondo_boton_rojo"
-            android:elevation="4dp"
-            android:paddingHorizontal="48dp"
+            android:background="@drawable/bg_boton_abortar_mision"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="32dp"
             android:paddingVertical="12dp"
-            android:text="Abandonar"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp" />
+            android:text="ABORTAR MISIÓN"
+            android:textColor="#E8DCC8"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:textAllCaps="true"
+            android:elevation="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="Los datos no guardados se perderán"
+            android:textColor="@color/ink_muted"
+            android:textSize="10sp"
+            android:alpha="0.7"/>
+
     </LinearLayout>
 </RelativeLayout>

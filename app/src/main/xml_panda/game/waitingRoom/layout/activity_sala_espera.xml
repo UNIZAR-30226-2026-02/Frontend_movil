@@ -29,14 +29,20 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/fondo_btn_volver"
+
+            android:background="@drawable/bg_boton_abandonar_borde"
+
+            android:drawableStart="@drawable/ic_arrow_left"
+            android:drawablePadding="8dp"
             android:fontFamily="monospace"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:text="ABANDONAR"
-            android:textColor="@color/ink_text"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="12dp" android:paddingVertical="6dp"
+            android:text="Abandonar"
+            android:textAllCaps="true"
+            android:textColor="#8A7A60"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            app:drawableTint="#8A7A60" />
+
     </RelativeLayout>
 
     <RelativeLayout
