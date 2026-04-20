@@ -248,11 +248,17 @@ public class TiendaActivity extends AppCompatActivity {
         TextView txtPrecioBotonArriba = dialogView.findViewById(R.id.txt_precio_boton_compra_arriba);
         TextView txtPrecioBoton = dialogView.findViewById(R.id.txt_precio_boton_compra);
         TextView txtFeedback = dialogView.findViewById(R.id.txt_feedback_tienda);
-
+        TextView txtEmojiPreview = dialogView.findViewById(R.id.txt_emoji_preview_tienda);
         txtTitulo.setText(item.getNombre());
         txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
 
         if (item.getTipo().equals("baraja")) {
+            vistaCartasPreview.setVisibility(View.VISIBLE);
+            imgPreview.setVisibility(View.GONE);
+            if (txtEmojiPreview != null) {
+                txtEmojiPreview.setText(emojiPaquete(item.getNombre()));
+                txtEmojiPreview.setVisibility(View.VISIBLE);
+            }
             if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.VISIBLE);
             if (imgPreview != null) imgPreview.setVisibility(View.GONE);
 
@@ -261,6 +267,7 @@ public class TiendaActivity extends AppCompatActivity {
                 imgCartaFrontalPreview.setImageResource(R.drawable.fondo_carta_gruesa);
             }
         } else {
+            if (txtEmojiPreview != null) txtEmojiPreview.setVisibility(View.GONE);
             if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.GONE);
             if (imgPreview != null) {
                 imgPreview.setVisibility(View.VISIBLE);
@@ -412,5 +419,16 @@ public class TiendaActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+    private String emojiPaquete(String nombre) {
+        if (nombre == null) return "🎴";
+        String n = nombre.toLowerCase();
+        if (n.contains("básico") || n.contains("basico")) return "🃏";
+        if (n.contains("magia")) return "🪄";
+        if (n.contains("histórico") || n.contains("historico")) return "📜";
+        if (n.contains("submarina") || n.contains("profundo")) return "🐙";
+        if (n.contains("cyber") || n.contains("futuro") || n.contains("punk")) return "🌆";
+        if (n.contains("naturaleza") || n.contains("bambu")) return "🌿";
+        return "🎴";
     }
 }

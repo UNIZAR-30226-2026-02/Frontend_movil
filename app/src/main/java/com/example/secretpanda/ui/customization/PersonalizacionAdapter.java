@@ -58,9 +58,12 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
         if (item.getTipo().equals("baraja")) {
             holder.vistaCartas.setVisibility(View.VISIBLE);
             holder.vistaImagen.setVisibility(View.GONE);
+            holder.txtEmoji.setText(emojiPaquete(item.getNombre()));
+            holder.txtEmoji.setVisibility(View.VISIBLE);
         } else {
             holder.vistaCartas.setVisibility(View.GONE);
             holder.vistaImagen.setVisibility(View.VISIBLE);
+            holder.txtEmoji.setVisibility(View.GONE);
             if (item.getIconoResId() != 0) {
                 holder.vistaImagen.setImageResource(item.getIconoResId());
             } else if (item.getValor() != null && !item.getValor().equals("0")) {
@@ -112,6 +115,7 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
         ImageView iconoCandado;
         FrameLayout vistaCartas;
         ImageView vistaImagen;
+        TextView txtEmoji;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -120,8 +124,20 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
             iconoCandado = itemView.findViewById(R.id.icono_candado);
             vistaCartas = itemView.findViewById(R.id.vista_cartas);
             vistaImagen = itemView.findViewById(R.id.vista_imagen);
+            txtEmoji = itemView.findViewById(R.id.txt_emoji_item);
 
             ImageView imgCartaFrontal = itemView.findViewById(R.id.img_carta_frontal_preview);
         }
+    }
+    private String emojiPaquete(String nombre) {
+        if (nombre == null) return "🎴";
+        String n = nombre.toLowerCase();
+        if (n.contains("básico") || n.contains("basico")) return "🃏";
+        if (n.contains("magia")) return "🪄";
+        if (n.contains("histórico") || n.contains("historico")) return "📜";
+        if (n.contains("submarina") || n.contains("profundo")) return "🐙";
+        if (n.contains("cyber") || n.contains("futuro") || n.contains("punk")) return "🌆";
+        if (n.contains("naturaleza") || n.contains("bambu")) return "🌿";
+        return "🎴";
     }
 }
