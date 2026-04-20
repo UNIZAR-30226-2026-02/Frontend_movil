@@ -35,7 +35,7 @@ public class UserSelectionActivity extends AppCompatActivity {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             String username = inputUsuario.getText().toString().trim();
             nombreUsuario = username;
-            if (username.length() < 4) {
+            if (username.length() < 3 || username.length() > 15) {
                 Toast.makeText(this, "El nombre debe tener al menos 4 caracteres", Toast.LENGTH_SHORT).show();
                 return;
             }

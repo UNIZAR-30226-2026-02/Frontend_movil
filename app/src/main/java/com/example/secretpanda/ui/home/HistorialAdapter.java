@@ -1,4 +1,4 @@
-package com.example.secretpanda.ui.home; // ¡Asegúrate de poner tu paquete correcto!
+package com.example.secretpanda.ui.home;
 
 import android.graphics.Color;
 import android.util.Log;
@@ -10,10 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.model.PartidaHistorial;
-
-// Asegúrate de importar tu clase PartidaHistorial
-// import com.example.secretpanda.data.model.PartidaHistorial;
-
 import java.util.List;
 
 public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.HistorialViewHolder> {
@@ -26,13 +22,13 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
 
     public void setLista(List<PartidaHistorial> nuevaLista) {
         this.listaPartidas = nuevaLista;
-        notifyDataSetChanged(); // Refresca la lista visualmente
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
     public HistorialViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Asume que vas a crear un XML llamado item_historial.xml
+        // Usamos exactamente tu XML item_historial.xml
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_historial, parent, false);
         return new HistorialViewHolder(view);
     }
@@ -40,34 +36,31 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
     @Override
     public void onBindViewHolder(@NonNull HistorialViewHolder holder, int position) {
         PartidaHistorial partida = listaPartidas.get(position);
-        Log.w("ADAPTER_PRUEBA", "Pintando la partida con código: " + partida.codigo_partida);
 
-        holder.txtCodigo.setText("Sala: " + partida.codigo_partida);
+        // 1. Código y Fecha
+        holder.txtCodigo.setText("SALA: " + partida.codigo_partida);
+        holder.txtFecha.setText(partida.fechaFin != null ? partida.fechaFin : "");
 
         // 2. Mostrar Equipo y Rol
-        holder.txtRolEquipo.setText("Equipo " + partida.equipo.toUpperCase() + " - " + partida.rol.toUpperCase());
+        holder.txtRolEquipo.setText("EQUIPO " + partida.equipo.toUpperCase() + " - " + partida.rol.toUpperCase());
 
-        // 3. Lógica de Ganador/Perdedor mejorada (Hemos borrado la variable 'victoria' que causaba el fallo)
+        // 3. Lógica de Victoria / Derrota
         if (partida.rojoGana == null) {
-            holder.txtResultado.setText("EMPATE / FINALIZADA");
+            holder.txtResultado.setText("FINALIZADA");
             holder.txtResultado.setTextColor(Color.GRAY);
-        } else if (partida.rojoGana && partida.equipo.equalsIgnoreCase("rojo")) {
+        } else if ((partida.rojoGana && partida.equipo.equalsIgnoreCase("rojo")) ||
+                (!partida.rojoGana && partida.equipo.equalsIgnoreCase("azul"))) {
             holder.txtResultado.setText("VICTORIA");
-            holder.txtResultado.setTextColor(Color.parseColor("#4CAF50"));
-        } else if (!partida.rojoGana && partida.equipo.equalsIgnoreCase("azul")) {
-            holder.txtResultado.setText("VICTORIA");
-            holder.txtResultado.setTextColor(Color.parseColor("#4CAF50"));
+            holder.txtResultado.setTextColor(Color.parseColor("#4CAF50")); // Verde
         } else {
             holder.txtResultado.setText("DERROTA");
-            holder.txtResultado.setTextColor(Color.parseColor("#F44336"));
+            holder.txtResultado.setTextColor(Color.parseColor("#F44336")); // Rojo
         }
 
-        // 4. Lógica de Aciertos y Fallos (Solo para Agentes - RF-4)
-        if (partida.rol != null && partida.rol.equalsIgnoreCase("agente")) {
+        if (partida.rol != null && (partida.rol.equalsIgnoreCase("lider") || partida.rol.equalsIgnoreCase("jefe"))) {
             holder.txtAciertos.setVisibility(View.VISIBLE);
-            holder.txtAciertos.setText("Aciertos: " + partida.numAciertos + " | Fallos: " + partida.numFallos);
+            holder.txtAciertos.setText("ACIERTOS: " + partida.numAciertos + " | FALLOS: " + partida.numFallos);
         } else {
-            // Si es espía, ocultamos este TextView para que no ocupe espacio
             holder.txtAciertos.setVisibility(View.GONE);
         }
     }
@@ -77,13 +70,12 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
         return listaPartidas == null ? 0 : listaPartidas.size();
     }
 
-    // --- ViewHolder ---
     public static class HistorialViewHolder extends RecyclerView.ViewHolder {
         TextView txtResultado, txtFecha, txtCodigo, txtRolEquipo, txtAciertos;
 
         public HistorialViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Estos IDs tendrán que coincidir con tu archivo item_historial.xml
+            // Referencias exactas a tus IDs de item_historial.xml
             txtResultado = itemView.findViewById(R.id.item_historial_resultado);
             txtFecha = itemView.findViewById(R.id.item_historial_fecha);
             txtCodigo = itemView.findViewById(R.id.item_historial_codigo);
