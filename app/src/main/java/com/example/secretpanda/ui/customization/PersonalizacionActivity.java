@@ -3,6 +3,8 @@ package com.example.secretpanda.ui.customization;
 
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -57,7 +59,12 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
         idGoogleEstable = getIntent().getStringExtra("GOOGLE_ID_ESTABLE");
 
-        configurarNavegacionInferior();
+        // 1. PRIMERO inicializamos todos los elementos del diseño (IDs)
+        txtSeccionActual = findViewById(R.id.txt_seccion_actual);
+        txtTematicaSeleccionada = findViewById(R.id.txt_tematica_seleccionada);
+        txtVacioPosesion = findViewById(R.id.txt_vacio_posesion);
+        txtVacioBloqueados = findViewById(R.id.txt_vacio_bloqueados);
+        layoutTematicaSeleccionada = findViewById(R.id.layout_tematica_seleccionada);
 
         tabBarajas = findViewById(R.id.tab_barajas);
         tabBordes = findViewById(R.id.tab_bordes);
@@ -66,41 +73,40 @@ public class PersonalizacionActivity extends AppCompatActivity {
         txtTabBordes = findViewById(R.id.txt_tab_bordes);
         txtTabFondos = findViewById(R.id.txt_tab_fondos);
 
-        txtSeccionActual = findViewById(R.id.txt_seccion_actual);
-        txtTematicaSeleccionada = findViewById(R.id.txt_tematica_seleccionada);
-        txtVacioPosesion = findViewById(R.id.txt_vacio_posesion);
-        layoutTematicaSeleccionada = findViewById(R.id.layout_tematica_seleccionada);
-
         recyclerPosesion = findViewById(R.id.recycler_posesion);
         recyclerBloqueados = findViewById(R.id.recycler_bloqueados);
 
-        txtVacioBloqueados = findViewById(R.id.txt_vacio_bloqueados);
+        // 2. DESPUÉS configuramos el estado inicial
+        configurarNavegacionInferior();
+
+        txtTabBarajas.setVisibility(View.VISIBLE);
+        txtTabBordes.setVisibility(View.VISIBLE);
+        txtTabFondos.setVisibility(View.VISIBLE);
+
+        txtTabBarajas.setTextColor(Color.parseColor("#d4b878")); // Oro
+        txtTabBordes.setTextColor(Color.parseColor("#8a7a60"));  // Marrón
+        txtTabFondos.setTextColor(Color.parseColor("#8a7a60"));  // Marrón
+
+        txtSeccionActual.setText("Temática barajas");
+        tabBarajas.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#3e3224")));
 
         recyclerPosesion.setLayoutManager(new GridLayoutManager(this, 3));
         recyclerBloqueados.setLayoutManager(new GridLayoutManager(this, 3));
 
+        // Listeners
         tabBarajas.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             seleccionarPestana(tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, tabFondos, txtTabFondos, "Temática barajas");
         });
-
         tabBordes.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
-            seleccionarPestana(tabBordes, txtTabBordes, tabBarajas, txtTabBarajas, tabFondos, txtTabFondos, "Temática borde");});
-
+            seleccionarPestana(tabBordes, txtTabBordes, tabBarajas, txtTabBarajas, tabFondos, txtTabFondos, "Temática borde");
+        });
         tabFondos.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
-            seleccionarPestana(tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo");});
-
-        txtSeccionActual.setText("Temática barajas");
-        txtTabBarajas.setVisibility(View.VISIBLE);
-        txtTabBordes.setVisibility(View.GONE);
-        txtTabFondos.setVisibility(View.GONE);
-        tabBarajas.setBackgroundResource(R.drawable.fondo_tab_activo);
-        tabBordes.setBackgroundResource(R.drawable.fondo_tab_inactivo);
-        tabFondos.setBackgroundResource(R.drawable.fondo_tab_inactivo);
+            seleccionarPestana(tabFondos, txtTabFondos, tabBarajas, txtTabBarajas, tabBordes, txtTabBordes, "Temática fondo");
+        });
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -112,24 +118,32 @@ public class PersonalizacionActivity extends AppCompatActivity {
             else cargarInventarioServidor("tablero");
         }
     }
-
     private void seleccionarPestana(LinearLayout activa, TextView txtActivo,
                                     LinearLayout inactiva1, TextView txtInactivo1,
                                     LinearLayout inactiva2, TextView txtInactivo2,
                                     String titulo) {
 
         txtSeccionActual.setText(titulo);
-        txtActivo.setVisibility(View.VISIBLE);
-        txtInactivo1.setVisibility(View.GONE);
-        txtInactivo2.setVisibility(View.GONE);
 
-        activa.setBackgroundResource(R.drawable.fondo_tab_activo);
-        inactiva1.setBackgroundResource(R.drawable.fondo_tab_inactivo);
-        inactiva2.setBackgroundResource(R.drawable.fondo_tab_inactivo);
+        txtActivo.setVisibility(View.VISIBLE);
+        txtInactivo1.setVisibility(View.VISIBLE);
+        txtInactivo2.setVisibility(View.VISIBLE);
+
+        txtActivo.setTextColor(android.graphics.Color.parseColor("#d4b878"));
+        txtActivo.setTextSize(12);
+
+        txtInactivo1.setTextColor(android.graphics.Color.parseColor("#8a7a60"));
+        txtInactivo1.setTextSize(10);
+        txtInactivo2.setTextColor(android.graphics.Color.parseColor("#8a7a60"));
+        txtInactivo2.setTextSize(10);
+
+        activa.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#3e3224")));
+        inactiva1.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1e1810")));
+        inactiva2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1e1810")));
 
         animarAltura(activa, 80);
-        animarAltura(inactiva1, 50);
-        animarAltura(inactiva2, 50);
+        animarAltura(inactiva1, 65);
+        animarAltura(inactiva2, 65);
 
         String tituloMin = titulo.toLowerCase();
 
@@ -137,8 +151,7 @@ public class PersonalizacionActivity extends AppCompatActivity {
         else if (tituloMin.contains("borde")) cargarInventarioServidor("carta");
         else cargarInventarioServidor("tablero");
     }
-
-    private void animarAltura(View vista, int altoFinalDp) {
+private void animarAltura(View vista, int altoFinalDp) {
         float density = getResources().getDisplayMetrics().density;
         int finalPx = (int) (altoFinalDp * density);
 
@@ -212,12 +225,49 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
         TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo);
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview);
+
+        // Nuevas vistas
         ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item);
+        android.widget.FrameLayout vistaCartasPreview = dialogView.findViewById(R.id.vista_cartas_preview);
+        ImageView imgCartaFrontalPreview = dialogView.findViewById(R.id.img_carta_frontal_preview);
+        TextView txtEmojiPreview = dialogView.findViewById(R.id.txt_emoji_preview);
         android.widget.Button btnSeleccionar = dialogView.findViewById(R.id.btn_seleccionar_preview);
 
         txtTitulo.setText(item.getNombre());
-        if (item.getIconoResId() != 0) imgPreview.setImageResource(item.getIconoResId());
-        else imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+
+        if (item.getTipo().equals("baraja")) {
+            vistaCartasPreview.setVisibility(View.VISIBLE);
+            imgPreview.setVisibility(View.GONE);
+            if (txtEmojiPreview != null) {
+                txtEmojiPreview.setText(emojiPaquete(item.getNombre()));
+                txtEmojiPreview.setVisibility(View.VISIBLE);
+            }
+            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.VISIBLE);
+            if (imgPreview != null) imgPreview.setVisibility(View.GONE);
+
+            if (imgCartaFrontalPreview != null) {
+                imgCartaFrontalPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+            }
+        } else {
+            vistaCartasPreview.setVisibility(View.GONE);
+            if (txtEmojiPreview != null) txtEmojiPreview.setVisibility(View.GONE);
+            imgPreview.setVisibility(View.VISIBLE);
+            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.GONE);
+            if (imgPreview != null) {
+                imgPreview.setVisibility(View.VISIBLE);
+                if (item.getIconoResId() != 0) {
+                    imgPreview.setImageResource(item.getIconoResId());
+                } else if (item.getValor() != null && !item.getValor().equals("0")) {
+                    try {
+                        imgPreview.setBackgroundColor(android.graphics.Color.parseColor("#" + item.getValor()));
+                    } catch (Exception e) {
+                        imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+                    }
+                } else {
+                    imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+                }
+            }
+        }
 
         if (!permiteSeleccion || item.getTipo().equals("baraja")) {
             btnSeleccionar.setVisibility(View.GONE);
@@ -235,7 +285,6 @@ public class PersonalizacionActivity extends AppCompatActivity {
         });
         dialog.show();
     }
-
     private void configurarNavegacionInferior() {
         LinearLayout btnNavPersonalizar = findViewById(R.id.nav_personalizar);
         if (btnNavPersonalizar != null) btnNavPersonalizar.setSelected(true);
@@ -575,5 +624,16 @@ public class PersonalizacionActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+    private String emojiPaquete(String nombre) {
+        if (nombre == null) return "🎴";
+        String n = nombre.toLowerCase();
+        if (n.contains("básico") || n.contains("basico")) return "🃏";
+        if (n.contains("magia")) return "🪄";
+        if (n.contains("histórico") || n.contains("historico")) return "📜";
+        if (n.contains("submarina") || n.contains("profundo")) return "🐙";
+        if (n.contains("cyber") || n.contains("futuro") || n.contains("punk")) return "🌆";
+        if (n.contains("naturaleza") || n.contains("bambu")) return "🌿";
+        return "🎴";
     }
 }

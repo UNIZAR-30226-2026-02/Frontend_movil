@@ -24,7 +24,6 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
     private boolean permiteSeleccion;
     private OnItemClickListener listener;
 
-    // AHORA LE PASAMOS TAMBIÉN LA POSICIÓN AL HACER CLIC
     public interface OnItemClickListener {
         void onItemClick(ItemPersonalizacion item, int position);
     }
@@ -36,12 +35,11 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
         this.listener = listener;
     }
 
-    // MÉTODO NUEVO: Para que el Pop-up pueda decirle al Adapter "Pinta de verde el nº 3"
     public void setPosicionSeleccionada(int position) {
         int seleccionAnterior = posicionSeleccionada;
         posicionSeleccionada = position;
-        notifyItemChanged(seleccionAnterior);      // Quita el verde al viejo
-        notifyItemChanged(posicionSeleccionada);   // Le pone el verde al nuevo
+        notifyItemChanged(seleccionAnterior);
+        notifyItemChanged(posicionSeleccionada);
     }
 
     @NonNull
@@ -56,31 +54,50 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
         ItemPersonalizacion item = listaItems.get(position);
         holder.txtNombre.setText(item.getNombre());
 
+        // Lógica de imágenes (cartas o fondo/borde)
         if (item.getTipo().equals("baraja")) {
             holder.vistaCartas.setVisibility(View.VISIBLE);
             holder.vistaImagen.setVisibility(View.GONE);
+            holder.txtEmoji.setText(emojiPaquete(item.getNombre()));
+            holder.txtEmoji.setVisibility(View.VISIBLE);
         } else {
             holder.vistaCartas.setVisibility(View.GONE);
             holder.vistaImagen.setVisibility(View.VISIBLE);
-            if (item.getIconoResId() != 0) holder.vistaImagen.setImageResource(item.getIconoResId());
+            holder.txtEmoji.setVisibility(View.GONE);
+            if (item.getIconoResId() != 0) {
+                holder.vistaImagen.setImageResource(item.getIconoResId());
+            } else if (item.getValor() != null && !item.getValor().equals("0")) {
+                try {
+                    holder.vistaImagen.setBackgroundColor(Color.parseColor("#" + item.getValor()));
+                } catch (Exception e) {
+                    holder.vistaImagen.setImageResource(R.drawable.fondo_carta_gruesa);
+                }
+            } else {
+                holder.vistaImagen.setImageResource(R.drawable.fondo_carta_gruesa);
+            }
         }
 
         if (item.isBloqueado()) {
             holder.iconoCandado.setVisibility(View.VISIBLE);
-            holder.fondo.setBackgroundResource(R.drawable.fondo_carta_bloqueado);
-            holder.txtNombre.setTextColor(Color.parseColor("#B71C1C"));
-            holder.itemView.setOnClickListener(null); // Bloqueados no hacen nada por ahora
+            holder.fondo.setBackgroundResource(R.drawable.bg_dark_card);
+            holder.fondo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#3e3224"))); // Un poco más oscuro si está bloqueado
+            holder.txtNombre.setTextColor(Color.parseColor("#d4b878")); // Letra en oro viejo para bloqueados
+
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(item, holder.getAdapterPosition());
+            });
         } else {
             holder.iconoCandado.setVisibility(View.GONE);
-            holder.txtNombre.setTextColor(Color.BLACK);
+            holder.txtNombre.setTextColor(Color.parseColor("#e8dcc8")); // Blanco/crema para adquiridos
 
             if (permiteSeleccion && position == posicionSeleccionada && !esListaBloqueados) {
-                holder.fondo.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
+                holder.fondo.setBackgroundResource(R.drawable.borde_verde_seleccion_personalizacion); // Solo el borde si está seleccionado
+                holder.fondo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#2a2218")));
             } else {
-                holder.fondo.setBackgroundResource(R.drawable.fondo_gris_redondeado);
+                holder.fondo.setBackgroundResource(R.drawable.bg_dark_card);
+                holder.fondo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#2a2218")));
             }
 
-            // Al hacer clic, YA NO CAMBIAMOS EL COLOR AQUÍ. Solo abrimos el pop-up.
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) listener.onItemClick(item, holder.getAdapterPosition());
             });
@@ -98,6 +115,7 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
         ImageView iconoCandado;
         FrameLayout vistaCartas;
         ImageView vistaImagen;
+        TextView txtEmoji;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -106,6 +124,20 @@ public class PersonalizacionAdapter extends RecyclerView.Adapter<Personalizacion
             iconoCandado = itemView.findViewById(R.id.icono_candado);
             vistaCartas = itemView.findViewById(R.id.vista_cartas);
             vistaImagen = itemView.findViewById(R.id.vista_imagen);
+            txtEmoji = itemView.findViewById(R.id.txt_emoji_item);
+
+            ImageView imgCartaFrontal = itemView.findViewById(R.id.img_carta_frontal_preview);
         }
+    }
+    private String emojiPaquete(String nombre) {
+        if (nombre == null) return "🎴";
+        String n = nombre.toLowerCase();
+        if (n.contains("básico") || n.contains("basico")) return "🃏";
+        if (n.contains("magia")) return "🪄";
+        if (n.contains("histórico") || n.contains("historico")) return "📜";
+        if (n.contains("submarina") || n.contains("profundo")) return "🐙";
+        if (n.contains("cyber") || n.contains("futuro") || n.contains("punk")) return "🌆";
+        if (n.contains("naturaleza") || n.contains("bambu")) return "🌿";
+        return "🎴";
     }
 }

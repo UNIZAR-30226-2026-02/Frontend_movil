@@ -22,18 +22,15 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
                 <TextView
                     android:id="@+id/txt_preview_titulo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
-                    android:text="Nombre Item"
                     android:textColor="@color/white"
                     android:textSize="22sp"
                     android:fontFamily="serif"
                     android:textStyle="bold" />
-
                 <ImageView
                     android:id="@+id/btn_cerrar_preview"
                     android:layout_width="36dp"
@@ -44,6 +41,47 @@
                     android:src="@drawable/ic_cerrar_x"
                     android:padding="8dp"/>
             </RelativeLayout>
+
+            <FrameLayout
+                android:id="@+id/vista_cartas_preview"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="65dp"
+                    android:layout_height="95dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="35dp"
+                    android:rotation="15"
+                    android:src="@drawable/fondo_carta_gruesa" />
+
+                <ImageView
+                    android:layout_width="65dp"
+                    android:layout_height="95dp"
+                    android:layout_gravity="center"
+                    android:layout_marginEnd="35dp"
+                    android:rotation="-15"
+                    android:src="@drawable/fondo_carta_gruesa" />
+
+                <ImageView
+                    android:id="@+id/img_carta_frontal_preview"
+                    android:layout_width="75dp"
+                    android:layout_height="105dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/fondo_carta_gruesa" />
+
+                <TextView
+                    android:id="@+id/txt_emoji_preview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="5dp"
+                    android:elevation="5dp"
+                    android:textSize="40sp" />
+            </FrameLayout>
 
             <ImageView
                 android:id="@+id/img_preview_item"
@@ -62,9 +100,7 @@
                 android:textAllCaps="false"
                 android:textColor="@color/black"
                 android:textStyle="bold"
-                android:textSize="18sp" />
-
+                android:textSize="16sp"/>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-
 </RelativeLayout>

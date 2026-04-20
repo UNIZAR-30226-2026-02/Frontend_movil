@@ -3,62 +3,85 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/fondo_item_personalizacion"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    android:background="@drawable/fondo_gris_redondeado"
-    android:elevation="4dp"
+    android:layout_height="150dp"
+    android:layout_margin="4dp"
+    android:background="@drawable/bg_dark_card"
+    android:backgroundTint="#2a2218"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="10dp">
-
-    <TextView
-        android:id="@+id/txt_nombre_item"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="serif"
-        android:text="Item"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
+    android:padding="8dp">
 
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="8dp">
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginBottom="8dp">
 
         <FrameLayout
             android:id="@+id/vista_cartas"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:visibility="visible">
 
-            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="10dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="1dp" />
-            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="5dp" android:layout_marginTop="4dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="2dp" />
-            <FrameLayout android:layout_width="35dp" android:layout_height="50dp" android:layout_marginTop="8dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="3dp">
-                <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_margin="2dp" app:cardCornerRadius="3dp" app:cardElevation="0dp" app:cardBackgroundColor="@android:color/transparent"/>
-            </FrameLayout>
+            <ImageView
+                android:layout_width="45dp"
+                android:layout_height="65dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="15dp"
+                android:rotation="15"
+                android:src="@drawable/fondo_carta_gruesa" />
+
+            <ImageView
+                android:layout_width="45dp"
+                android:layout_height="65dp"
+                android:layout_gravity="center"
+                android:layout_marginEnd="15dp"
+                android:rotation="-15"
+                android:src="@drawable/fondo_carta_gruesa" />
+
+            <ImageView
+                android:id="@+id/img_carta_frontal"
+                android:layout_width="50dp"
+                android:layout_height="75dp"
+                android:layout_gravity="center"
+                android:src="@drawable/fondo_carta_gruesa" />
+
+            <TextView
+                android:id="@+id/txt_emoji_item"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="2dp"
+                android:elevation="4dp"
+                android:textSize="24sp" />
         </FrameLayout>
 
         <ImageView
             android:id="@+id/vista_imagen"
-            android:layout_width="65dp"
-            android:layout_height="80dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_gravity="center"
-            android:background="@drawable/fondo_blanco_redondeado"
-            android:elevation="2dp"
             android:visibility="gone" />
 
         <ImageView
             android:id="@+id/icono_candado"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_gravity="center"
-            android:elevation="4dp"
+            android:elevation="6dp"
             android:src="@drawable/ic_candado"
+            app:tint="#8b2020"
             android:visibility="gone" />
-
     </FrameLayout>
+
+    <TextView
+        android:id="@+id/txt_nombre_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-condensed"
+        android:gravity="center"
+        android:textAllCaps="true"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
 </LinearLayout>
