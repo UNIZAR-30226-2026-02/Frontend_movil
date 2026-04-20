@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <color name="mercado_negro_bg">#120e0a</color>
+    <color name="mercado_bg_pantalla">#120e0a</color>
+    <color name="mercado_bg_modal">#1e1810</color>
+    <color name="mercado_bg_tarjeta">#2a2218</color>
+    <color name="mercado_borde">#5a4a30</color>
+    <color name="mercado_texto_principal">#e8dcc8</color>
+    <color name="mercado_texto_secundario">#8a7a60</color>
+    <color name="mercado_oro">#d4b878</color>
+    <color name="mercado_verde_ok">#50a050</color>
+    <color name="mercado_rojo_error">#8b2020</color>
+    <color name="mercado_btn_comprar">#2a5a2a</color>
+</resources>

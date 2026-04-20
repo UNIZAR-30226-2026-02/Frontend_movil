@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/layout_raiz_tienda"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1716">
+    android:background="#120e0a">
 
     <RelativeLayout
-        android:id="@+id/top_bar_tienda"
+        android:id="@+id/layout_cabecera"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/fondo_gris_redondeado"
-        android:paddingHorizontal="16dp">
+        android:layout_height="80dp"
+        android:padding="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:fontFamily="serif"
-            android:text="Tienda"
-            android:textColor="#FFFFFF"
-            android:textSize="24sp"
-            android:textStyle="bold|italic" />
+            android:layout_centerVertical="true"
+            android:fontFamily="sans-serif-condensed"
+            android:text="MERCADO NEGRO"
+            android:textColor="#e8dcc8"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -33,100 +27,105 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="@drawable/ic_square_bg"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#2a2218"
             android:gravity="center"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="4dp">
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_bullet"
+                app:tint="#d4b878" />
 
             <TextView
                 android:id="@+id/txt_saldo_balas"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="..."
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <ImageView
-                android:layout_width="14dp"
-                android:layout_height="18dp"
                 android:layout_marginStart="6dp"
-                android:src="@drawable/ic_bullet"
-                app:tint="@color/black" />
+                android:fontFamily="monospace"
+                android:text="0"
+                android:textColor="#d4b878"
+                android:textSize="16sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </RelativeLayout>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/top_bar_tienda"
-        android:layout_above="@id/bottom_navigation_bar"
-        android:layout_marginTop="8dp">
+        android:layout_above="@+id/layout_nav_inferior"
+        android:layout_below="@id/layout_cabecera">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="20dp">
+            android:padding="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="Nuevas Barajas"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold|italic" />
+                android:fontFamily="monospace"
+                android:text="PAQUETES DE CARTAS"
+                android:textColor="#8b2020"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_tienda_barajas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="Bordes Exclusivos"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold|italic" />
+                android:layout_marginTop="24dp"
+                android:fontFamily="monospace"
+                android:text="MARCOS DE CARTAS"
+                android:textColor="#d4af37"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_tienda_bordes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="Fondos de tablero"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold|italic" />
+                android:layout_marginTop="24dp"
+                android:fontFamily="monospace"
+                android:text="FONDOS DE TABLERO"
+                android:textColor="#8b5a8b"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_tienda_fondos"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3" />
-
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <include
-        android:id="@+id/bottom_navigation_bar"
+        android:id="@+id/layout_nav_inferior"
         layout="@layout/layout_bottom_navigation_shop"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_alignParentBottom="true" />
+
 </RelativeLayout>

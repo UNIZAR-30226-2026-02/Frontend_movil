@@ -1,54 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
     android:layout_height="wrap_content"
-    android:gravity="center">
+    android:background="@drawable/bg_modal_mercado"
+    android:orientation="vertical"
+    android:padding="24dp">
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="320dp"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        app:cardCornerRadius="16dp"
-        app:cardBackgroundColor="#2C2C2C">
+        android:layout_marginBottom="16dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/txt_preview_titulo_tienda"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp"
-            android:gravity="center">
+            android:layout_centerVertical="true"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="0.1"
+            android:text="CONFIRMAR COMPRA"
+            android:textColor="@color/mercado_texto_principal"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:id="@+id/txt_preview_titulo_tienda" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:textColor="@color/white" android:textSize="22sp" android:fontFamily="serif" android:textStyle="bold" />
-                <ImageView android:id="@+id/btn_cerrar_preview_tienda" android:layout_width="36dp" android:layout_height="36dp" android:layout_alignParentEnd="true" android:background="@drawable/fondo_boton_cerrar" android:src="@drawable/ic_cerrar_x" android:padding="8dp"/>
-            </RelativeLayout>
+        <ImageView
+            android:id="@+id/btn_cerrar_preview_tienda"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_cerrar_x"
+            android:tint="@color/mercado_texto_secundario" />
+    </RelativeLayout>
 
-            <ImageView android:id="@+id/img_preview_item_tienda" android:layout_width="160dp" android:layout_height="200dp" android:layout_marginTop="24dp" android:layout_marginBottom="24dp" android:scaleType="fitCenter" />
+    <FrameLayout
+        android:id="@+id/vista_cartas_preview"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone">
 
-            <LinearLayout
-                android:id="@+id/btn_comprar_preview"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@drawable/button_home"
-                android:backgroundTint="#4CAF50"
-                android:gravity="center"
-                android:orientation="horizontal">
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="90dp"
+            android:layout_gravity="center"
+            android:layout_marginStart="25dp"
+            android:rotation="15"
+            android:src="@drawable/fondo_carta_gruesa" />
 
-                <TextView android:id="@+id/txt_precio_boton_compra_arriba" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Comprar por " android:textColor="@color/white" android:textStyle="bold" android:textSize="18sp" />
-                <TextView android:id="@+id/txt_precio_boton_compra" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="500" android:textColor="@color/white" android:textStyle="bold" android:textSize="18sp" />
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:layout_marginStart="4dp" android:src="@drawable/ic_bullet" app:tint="#FFD700"/>
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="90dp"
+            android:layout_gravity="center"
+            android:layout_marginEnd="25dp"
+            android:rotation="-15"
+            android:src="@drawable/fondo_carta_gruesa" />
 
-            </LinearLayout>
-            <TextView
-                android:id="@+id/txt_feedback_tienda"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:visibility="gone"
-                android:textStyle="bold"
-                android:textAlignment="center"/>
+        <ImageView
+            android:id="@+id/img_carta_frontal_preview"
+            android:layout_width="65dp"
+            android:layout_height="95dp"
+            android:layout_gravity="center"
+            android:src="@drawable/fondo_carta_gruesa" />
+    </FrameLayout>
 
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-</RelativeLayout>
+    <ImageView
+        android:id="@+id/img_preview_item_tienda"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/txt_feedback_tienda"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="monospace"
+        android:gravity="center"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/btn_comprar_preview"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/bg_btn_comprar_mercado"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/txt_precio_boton_compra_arriba"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="0.1"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txt_precio_boton_compra"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="0.1"
+            android:text="CONFIRMAR"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>
