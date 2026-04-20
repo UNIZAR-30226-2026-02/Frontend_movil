@@ -302,14 +302,16 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void manejarClickCarta(int idCarta, String palabra, boolean revelada) {
+        // Si la carta ya está revelada (descubierta), no hacemos nada
         if (revelada) return;
+
+        // Comprobamos si el jugador cumple todos los requisitos para poder votar ahora mismo
         boolean esMiTurno = miEquipo.equalsIgnoreCase(equipoTurnoActual);
         boolean soyAgente = AGENTE_STRING.equalsIgnoreCase(miRol);
-        if (soyAgente && esMiTurno && hayPistaActiva && !miVotoEnviado) {
-            enviarVoto(idCarta);
-        } else {
-            mostrarPreviewCarta(palabra);
-        }
+        boolean puedeVotarEnEsteMomento = soyAgente && esMiTurno && hayPistaActiva && !miVotoEnviado;
+
+        // Siempre abrimos la vista previa ampliada, pasándole el ID de la carta y si puede votar
+        mostrarPreviewCarta(idCarta, palabra, puedeVotarEnEsteMomento);
     }
 
     private void enviarVoto(int idCarta) {
@@ -565,11 +567,34 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
-    private void mostrarPreviewCarta(String p) {
+    private void mostrarPreviewCarta(int idCarta, String palabra, boolean mostrarBotonVotar) {
         Dialog d = new Dialog(this);
         d.setContentView(R.layout.dialog_preview_carta);
-        d.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-        ((TextView)d.findViewById(R.id.tv_palabra_preview)).setText(p);
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+        }
+
+        // Ponemos la palabra
+        TextView tvPalabra = d.findViewById(R.id.tv_palabra_preview);
+        if (tvPalabra != null) {
+            tvPalabra.setText(palabra.toUpperCase());
+        }
+
+        TextView btnVotar = d.findViewById(R.id.btn_votar_preview);
+        if (btnVotar != null) {
+            if (mostrarBotonVotar) {
+                btnVotar.setVisibility(View.VISIBLE);
+                btnVotar.setOnClickListener(v -> {
+                    com.example.secretpanda.ui.EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+                    enviarVoto(idCarta); // Vota directamente a la carta
+                    d.dismiss();         // Cierra la lupa
+                });
+            } else {
+                btnVotar.setVisibility(View.GONE);
+            }
+        }
+
         d.findViewById(R.id.btn_cerrar_preview).setOnClickListener(v -> d.dismiss());
         d.show();
     }
