@@ -1,16 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout_raiz_personalizacion"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1716">
+    android:background="#120e0a">
 
-    <ScrollView
+    <RelativeLayout
+        android:id="@+id/layout_cabecera"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:padding="16dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:fontFamily="sans-serif-condensed"
+            android:text="EQUIPO E INVENTARIO"
+            android:textColor="#e8dcc8"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bottom_navigation_bar">
+        android:layout_above="@id/bottom_navigation_bar"
+        android:layout_below="@id/layout_cabecera"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -18,70 +35,59 @@
             android:orientation="vertical"
             android:paddingBottom="20dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:background="@drawable/fondo_gris_redondeado"
-                android:fontFamily="serif"
-                android:gravity="center"
-                android:text="Personalización"
-                android:textColor="#FFFFFF"
-                android:textSize="24sp"
-                android:textStyle="bold|italic" />
-
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layout_botones_pestanas"
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="0dp">
+                android:layout_marginTop="8dp">
 
                 <LinearLayout
                     android:id="@+id/tab_barajas"
                     android:layout_width="100dp"
                     android:layout_height="80dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/fondo_tab_activo"
+                    android:background="@drawable/bg_dark_card"
+                    android:backgroundTint="#3e3224"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/tab_bordes"
                     app:layout_constraintTop_toTopOf="parent">
-                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/baraja"  />
-                    <TextView android:id="@+id/txt_tab_barajas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Barajas" android:textColor="@color/white" android:textSize="14sp" android:textStyle="bold" android:visibility="visible" />
+                    <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/baraja" app:tint="#d4b878" />
+                    <TextView android:id="@+id/txt_tab_barajas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="BARAJAS" android:textColor="#d4b878" android:textSize="12sp" android:fontFamily="monospace" android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/tab_bordes"
                     android:layout_width="100dp"
-                    android:layout_height="50dp"
+                    android:layout_height="65dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/fondo_tab_inactivo"
+                    android:background="@drawable/bg_dark_card"
+                    android:backgroundTint="#1e1810"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintStart_toEndOf="@+id/tab_barajas"
                     app:layout_constraintEnd_toStartOf="@+id/tab_fondos"
                     app:layout_constraintTop_toTopOf="parent">
-                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/borde_carta" />
-                    <TextView android:id="@+id/txt_tab_bordes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Bordes" android:textColor="@color/white" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/borde_carta" app:tint="#8a7a60" />
+                    <TextView android:id="@+id/txt_tab_bordes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="BORDES" android:textColor="#8a7a60" android:textSize="10sp" android:fontFamily="monospace" android:visibility="gone" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/tab_fondos"
                     android:layout_width="100dp"
-                    android:layout_height="50dp"
-                    android:background="@drawable/fondo_tab_inactivo"
+                    android:layout_height="65dp"
+                    android:background="@drawable/bg_dark_card"
+                    android:backgroundTint="#1e1810"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintStart_toEndOf="@+id/tab_bordes"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
-                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/fondo_tablero" />
-                    <TextView android:id="@+id/txt_tab_fondos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Fondos" android:textColor="@color/white" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" />
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/fondo_tablero" app:tint="#8a7a60" />
+                    <TextView android:id="@+id/txt_tab_fondos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="FONDOS" android:textColor="#8a7a60" android:textSize="10sp" android:fontFamily="monospace" android:visibility="gone" />
                 </LinearLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -91,9 +97,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:gravity="center"
-                android:text="Temática barajas"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:text="TEMÁTICA BARAJAS"
+                android:fontFamily="monospace"
+                android:textColor="#e8dcc8"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -104,21 +111,21 @@
                 android:gravity="center"
                 android:orientation="horizontal"
                 android:visibility="gone">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Temática seleccionada: "
-                    android:textColor="@color/white"
-                    android:textSize="16sp" />
-
+                    android:text="EQUIPADO: "
+                    android:fontFamily="monospace"
+                    android:textColor="#8a7a60"
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/txt_tematica_seleccionada"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ninguna"
+                    android:text="NINGUNA"
+                    android:fontFamily="monospace"
                     android:textColor="#4CAF50"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -126,11 +133,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="En posesión"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold|italic" />
+                android:layout_marginTop="24dp"
+                android:text="EN POSESIÓN"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="#50a050"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txt_vacio_posesion"
@@ -139,9 +147,10 @@
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:text="Aún no has adquirido ninguna temática de este tipo."
-                android:textColor="#888888"
-                android:textSize="16sp"
+                android:text="El inventario está vacío."
+                android:fontFamily="monospace"
+                android:textColor="#8a7a60"
+                android:textSize="12sp"
                 android:textStyle="italic"
                 android:visibility="gone" />
 
@@ -149,46 +158,49 @@
                 android:id="@+id/recycler_posesion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                app:spanCount="3"
-                tools:listitem="@layout/item_personalizacion" />
+                app:spanCount="3" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="No desbloqueadas"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold|italic" />
+                android:layout_marginTop="24dp"
+                android:text="MERCADO NEGRO"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="#8b2020"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_bloqueados"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                app:spanCount="3"
-                tools:listitem="@layout/item_personalizacion" />
             <TextView
                 android:id="@+id/txt_vacio_bloqueados"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                android:textAlignment="center"
-                android:textColor="#808080"
-                android:textSize="16sp"
+                android:gravity="center"
+                android:fontFamily="monospace"
+                android:textColor="#8a7a60"
+                android:textSize="12sp"
                 android:textStyle="italic"
                 android:visibility="gone" />
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_bloqueados"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="3" />
+
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <include
         android:id="@+id/bottom_navigation_bar"
-        layout="@layout/item_bottom_navigation_personalizacion"
+        layout="@layout/layout_bottom_navigation_personalizacion"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_alignParentBottom="true" />

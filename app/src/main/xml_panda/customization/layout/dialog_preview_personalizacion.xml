@@ -45,6 +45,38 @@
                     android:padding="8dp"/>
             </RelativeLayout>
 
+            <FrameLayout
+                android:id="@+id/vista_cartas_preview"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="65dp"
+                    android:layout_height="95dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="35dp"
+                    android:rotation="15"
+                    android:src="@drawable/fondo_carta_gruesa" />
+
+                <ImageView
+                    android:layout_width="65dp"
+                    android:layout_height="95dp"
+                    android:layout_gravity="center"
+                    android:layout_marginEnd="35dp"
+                    android:rotation="-15"
+                    android:src="@drawable/fondo_carta_gruesa" />
+
+                <ImageView
+                    android:id="@+id/img_carta_frontal_preview"
+                    android:layout_width="75dp"
+                    android:layout_height="105dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/fondo_carta_gruesa" />
+            </FrameLayout>
+
             <ImageView
                 android:id="@+id/img_preview_item"
                 android:layout_width="160dp"
@@ -62,9 +94,8 @@
                 android:textAllCaps="false"
                 android:textColor="@color/black"
                 android:textStyle="bold"
-                android:textSize="18sp" />
+                android:textSize="16sp"/>
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-
 </RelativeLayout>

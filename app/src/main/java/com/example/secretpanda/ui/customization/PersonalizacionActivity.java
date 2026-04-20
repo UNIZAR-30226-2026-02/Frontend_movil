@@ -119,26 +119,28 @@ public class PersonalizacionActivity extends AppCompatActivity {
                                     String titulo) {
 
         txtSeccionActual.setText(titulo);
+
+        // Mostrar texto solo en la activa
         txtActivo.setVisibility(View.VISIBLE);
         txtInactivo1.setVisibility(View.GONE);
         txtInactivo2.setVisibility(View.GONE);
 
-        activa.setBackgroundResource(R.drawable.fondo_tab_activo);
-        inactiva1.setBackgroundResource(R.drawable.fondo_tab_inactivo);
-        inactiva2.setBackgroundResource(R.drawable.fondo_tab_inactivo);
+        activa.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#3e3224")));
 
+        inactiva1.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1e1810")));
+        inactiva2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1e1810")));
+
+        // Animar alturas
         animarAltura(activa, 80);
-        animarAltura(inactiva1, 50);
-        animarAltura(inactiva2, 50);
+        animarAltura(inactiva1, 65);
+        animarAltura(inactiva2, 65);
 
         String tituloMin = titulo.toLowerCase();
 
         if (tituloMin.contains("barajas")) cargarTemasServidor();
         else if (tituloMin.contains("borde")) cargarInventarioServidor("carta");
         else cargarInventarioServidor("tablero");
-    }
-
-    private void animarAltura(View vista, int altoFinalDp) {
+    }    private void animarAltura(View vista, int altoFinalDp) {
         float density = getResources().getDisplayMetrics().density;
         int finalPx = (int) (altoFinalDp * density);
 
@@ -212,12 +214,40 @@ public class PersonalizacionActivity extends AppCompatActivity {
 
         TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo);
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview);
+
+        // Nuevas vistas
         ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item);
+        android.widget.FrameLayout vistaCartasPreview = dialogView.findViewById(R.id.vista_cartas_preview);
+        ImageView imgCartaFrontalPreview = dialogView.findViewById(R.id.img_carta_frontal_preview);
+
         android.widget.Button btnSeleccionar = dialogView.findViewById(R.id.btn_seleccionar_preview);
 
         txtTitulo.setText(item.getNombre());
-        if (item.getIconoResId() != 0) imgPreview.setImageResource(item.getIconoResId());
-        else imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+
+        if (item.getTipo().equals("baraja")) {
+            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.VISIBLE);
+            if (imgPreview != null) imgPreview.setVisibility(View.GONE);
+
+            if (imgCartaFrontalPreview != null) {
+                imgCartaFrontalPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+            }
+        } else {
+            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.GONE);
+            if (imgPreview != null) {
+                imgPreview.setVisibility(View.VISIBLE);
+                if (item.getIconoResId() != 0) {
+                    imgPreview.setImageResource(item.getIconoResId());
+                } else if (item.getValor() != null && !item.getValor().equals("0")) {
+                    try {
+                        imgPreview.setBackgroundColor(android.graphics.Color.parseColor("#" + item.getValor()));
+                    } catch (Exception e) {
+                        imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+                    }
+                } else {
+                    imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+                }
+            }
+        }
 
         if (!permiteSeleccion || item.getTipo().equals("baraja")) {
             btnSeleccionar.setVisibility(View.GONE);
@@ -235,7 +265,6 @@ public class PersonalizacionActivity extends AppCompatActivity {
         });
         dialog.show();
     }
-
     private void configurarNavegacionInferior() {
         LinearLayout btnNavPersonalizar = findViewById(R.id.nav_personalizar);
         if (btnNavPersonalizar != null) btnNavPersonalizar.setSelected(true);
