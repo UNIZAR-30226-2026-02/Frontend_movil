@@ -154,7 +154,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
                         intent.putExtra("ID_PARTIDA", idPartida);
-                        intent.putExtra("MI_NOMBRE_USUARIO", miPropioIdGoogle);
+                        intent.putExtra("MI_NOMBRE_USUARIO", jugadorLocal != null ? jugadorLocal.getTag() : miPropioIdGoogle);
                         intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "azul" : "rojo");
                         startActivity(intent);
                         finish();
@@ -412,7 +412,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
                         intent.putExtra("ID_PARTIDA", idPartida);
-                        intent.putExtra("MI_NOMBRE_USUARIO", miPropioIdGoogle);
+                        intent.putExtra("MI_NOMBRE_USUARIO", jugadorLocal != null ? jugadorLocal.getTag() : miPropioIdGoogle);
                         intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "AZUL" : "ROJO");
                         intent.putExtra("ES_LIDER", true);
                         startActivity(intent);
