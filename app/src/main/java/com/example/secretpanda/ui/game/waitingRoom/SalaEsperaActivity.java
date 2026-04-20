@@ -74,12 +74,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sala_espera);
 
         esLider = getIntent().getBooleanExtra("ES_LIDER", false);
-        esPrivada = getIntent().getBooleanExtra("ES_PRIVADA", false);
-        maxJugadores = getIntent().getIntExtra("MAX_JUGADORES", 8);
-        String tiempoTurno = getIntent().getStringExtra("TIEMPO_TURNO");
-        if (tiempoTurno == null) {
-            tiempoTurno = "60";
-        }
 
         idPartida = getIntent().getIntExtra("ID_PARTIDA", -1);
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
@@ -94,8 +88,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         btnUnirseRojo = findViewById(R.id.btn_unirse_rojo);
         tvTiempoSala = findViewById(R.id.tv_tiempo_sala);
 
-        if (tvTiempoSala != null) tvTiempoSala.setText(tiempoTurno + "s");
-
+        cargarLobbyInicial();
 
         btnUnirseAzul.setOnClickListener(v -> {
             if (!estoyEnEquipoAzul) {
@@ -139,7 +132,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
         });
         rvJugadores.setAdapter(adapter);
         conectarWebSocketLobby();
-        cargarLobbyInicial();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -192,7 +184,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
                         if (json.has("max_jugadores")) {
                             maxJugadores = json.getInt("max_jugadores");
-                            actualizarContadores(listaJugadores);
                         }
 
                         if (json.has("jugadores")) {
@@ -224,9 +215,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                     jugadorLocal = j;
                                     actualizarBotonesEquipo();
                                 }
-                            }
-                            if(json.getBoolean("es_publica")){
-
                             }
                             adapter.notifyDataSetChanged();
                             actualizarContadores(listaJugadores);
@@ -370,19 +358,32 @@ public class SalaEsperaActivity extends AppCompatActivity {
         Request request = new Request.Builder().url("http://10.0.2.2:8080/api/partidas/" + idPartida + "/lobby")
                 .get().addHeader("Authorization", "Bearer " + jwt).build();
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) { }
+            @Override public void onFailure(Call call, IOException e) {
+                Log.e("WS_LOBBY", "Error HTTP", e);
+            }
             @Override public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful() && response.body() != null) {
+                    String responseData = response.body().string();
+                    Log.d("WS_LOBBY", "Response: " + responseData);
                     try {
-                        JSONObject json = new JSONObject(response.body().string());
+                        Log.d("WS_LOBBY", "Prueba");
+
+                        JSONObject json = new JSONObject(responseData);
                         TextView tvCodigoPartida = findViewById(R.id.tv_codigo_partida);
                         View layoutCodigoEntero = (View) tvCodigoPartida.getParent();
+
+                        Log.d("WS_LOBBY", "Es privada: " + json.getBoolean("es_publica"));
 
                         if (json.getBoolean("es_publica")) {
                             layoutCodigoEntero.setVisibility(View.GONE);
                         } else {
                             layoutCodigoEntero.setVisibility(View.VISIBLE);
                             tvCodigoPartida.setText(json.optString("codigo_partida", ""));
+                        }
+                        int nuevoTiempo = json.optInt("tiempo_espera", -1);
+                        if (nuevoTiempo != -1 && tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempo + "s");
+                        if (json.has("max_jugadores")) {
+                            maxJugadores = json.getInt("max_jugadores");
                         }
                         org.json.JSONArray array = json.optJSONArray("jugadores");
                         if (array != null) {
@@ -414,13 +415,17 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                             estoyEnEquipoAzul = equipo.equalsIgnoreCase("AZUL");
                                             actualizarBotonesEquipo();
                                         }
-                                    } catch (Exception e) { }
+                                    } catch (Exception e) {
+                                        Log.e("WS_LOBBY", "Error JSON", e);
+                                    }
                                 }
                                 adapter.notifyDataSetChanged();
                                 actualizarContadores(listaJugadores);
                             });
                         }
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        Log.e("WS_LOBBY", "Error JSON", e);
+                    }
                 }
             }
         });
