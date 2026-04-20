@@ -1,63 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="32dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="@drawable/fondo_popup_redondeado"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:elevation="12dp">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/tv_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="@drawable/fondo_popup_redondeado"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:elevation="10dp">
+        android:text="INSPECCIONAR CARTA"
+        android:textColor="@color/agent_blue"
+        android:textSize="14sp"
+        android:fontFamily="monospace"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
 
-        <ImageView
-            android:id="@+id/btn_cerrar_preview"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="end"
-            android:src="@drawable/ic_cerrar_x"
-            android:padding="4dp"
-            android:clickable="true"
-            android:focusable="true"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD"
+        android:layout_marginBottom="24dp"/>
 
-        <ImageView
-            android:id="@+id/img_preview_carta"
-            android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:layout_marginTop="8dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/img_1" />
+    <TextView
+        android:id="@+id/tv_palabra_preview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#2C3E50"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.1"
+        android:layout_marginBottom="32dp"
+        android:text="PALABRA"/>
 
-        <TextView
-            android:id="@+id/tv_palabra_preview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:gravity="center"
-            android:textColor="#000000"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+    <TextView
+        android:id="@+id/btn_votar_preview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/fondo_boton_votar"
+        android:paddingVertical="16dp"
+        android:text="ENVIAR VOTO"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:elevation="4dp"
+        android:visibility="visible"
+        android:layout_marginBottom="12dp"/>
 
-        <TextView
-            android:id="@+id/btn_votar_preview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="24dp"
-            android:layout_marginBottom="8dp"
-            android:background="@color/agent_green"
-            android:elevation="4dp"
-            android:fontFamily="monospace"
-            android:gravity="center"
-            android:paddingVertical="12dp"
-            android:text="VOTAR CARTA"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+    <TextView
+        android:id="@+id/btn_cerrar_preview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="12dp"
+        android:text="VOLVER"
+        android:textColor="#7F8C8D"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"/>
 
-    </LinearLayout>
-</FrameLayout>
+</LinearLayout>
