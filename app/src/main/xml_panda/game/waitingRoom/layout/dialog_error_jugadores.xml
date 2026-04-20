@@ -1,43 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="300dp"
+    android:layout_width="320dp"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
-    android:background="@drawable/fondo_gris_redondeado"
+    android:background="@drawable/fondo_carpeta_manila"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center">
+    android:padding="20dp">
 
+    <!-- Sello de Clasificado -->
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fontFamily="serif"
-        android:text="Error"
-        android:textColor="#FFFFFF"
-        android:textSize="26sp"
-        android:textStyle="bold|italic"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="serif"
-        android:text="Faltan jugadores para poder iniciar la partida. Se requieren 4 jugadores mínimo."
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
+        android:text="TOP SECRET"
+        android:textColor="#B03A2E"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
         android:gravity="center"
-        android:layout_marginBottom="24dp" />
+        android:background="#22B03A2E"
+        android:padding="4dp"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="AVISO: PERSONAL INSUFICIENTE"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="La misión requiere un mínimo de 4 agentes autorizados. Por favor, reclute más personal antes de proceder."
+        android:textColor="#333333"
+        android:textSize="16sp"
+        android:fontFamily="serif"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="30dp" />
 
     <Button
         android:id="@+id/btn_cerrar_error"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/fondo_boton_mision"
-        android:fontFamily="serif"
-        android:paddingHorizontal="32dp"
-        android:text="Cerrar"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        android:textStyle="bold|italic" />
+        android:backgroundTint="#2C3E50"
+        android:text="CERRAR ARCHIVO"
+        android:textColor="#FFFFFF"
+        android:fontFamily="monospace"
+        android:textStyle="bold" />
 
 </LinearLayout>
