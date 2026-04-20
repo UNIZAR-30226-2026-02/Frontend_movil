@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -85,44 +86,14 @@ public class TiendaActivity extends AppCompatActivity {
     }
 
     private void cargarTemasTienda() {
-        /*
-        //Esto es hardcodeado
-        List<ItemPersonalizacion> todos = InventarioGlobal.getInstance().getTodosLosItems();
-
-        List<ItemPersonalizacion> barajasTienda = new ArrayList<>();
-        List<ItemPersonalizacion> bordesTienda = new ArrayList<>();
-        List<ItemPersonalizacion> fondosTienda = new ArrayList<>();
-
-        for (ItemPersonalizacion item : todos) {
-            if (item.getPrecio() > 0) {
-                if (item.getTipo().equals("baraja")) barajasTienda.add(item);
-                else if (item.getTipo().equals("borde")) bordesTienda.add(item);
-                else if (item.getTipo().equals("fondo")) fondosTienda.add(item);
-            }
-        }
-
-        adapterBarajas = new TiendaAdapter(barajasTienda, (item, position) -> mostrarPreviewCompra(item, position, adapterBarajas));
-        adapterBordes = new TiendaAdapter(bordesTienda, (item, position) -> mostrarPreviewCompra(item, position, adapterBordes));
-        adapterFondos = new TiendaAdapter(fondosTienda, (item, position) -> mostrarPreviewCompra(item, position, adapterFondos));
-
-        recyclerBarajas.setAdapter(adapterBarajas);
-        recyclerBordes.setAdapter(adapterBordes);
-        recyclerFondos.setAdapter(adapterFondos);*/
-
-        OkHttpClient client = new OkHttpClient();
-
-        // URL del endpoint (ajusta la IP si es necesario)
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
         String url = "http://10.0.2.2:8080/api/temas/activos";
 
-        // Obtenemos el token para la autenticación
-        TokenManager tokenManager = new TokenManager(this);
+        com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
         String jwt = tokenManager.getToken();
+        if (jwt == null || jwt.isEmpty()) return;
 
-        if (jwt == null || jwt.isEmpty()) {
-            return; // O redirigir al Login
-        }
-
-        Request request = new Request.Builder()
+        okhttp3.Request request = new okhttp3.Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Authorization", "Bearer " + jwt)
@@ -131,7 +102,7 @@ public class TiendaActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                runOnUiThread(() -> Toast.makeText(TiendaActivity.this, "Error de red al cargar la tienda", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> android.widget.Toast.makeText(TiendaActivity.this, "Error de red al cargar la tienda", android.widget.Toast.LENGTH_SHORT).show());
             }
 
             @Override
@@ -139,50 +110,41 @@ public class TiendaActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String jsonRespuesta = response.body().string();
-                        Log.d("API_TIENDA", "Respuesta JSON: " + jsonRespuesta);
                         org.json.JSONArray temasArray = new org.json.JSONArray(jsonRespuesta);
 
                         runOnUiThread(() -> {
                             barajasTienda.clear();
-
                             for (int i = 0; i < temasArray.length(); i++) {
                                 try {
                                     org.json.JSONObject temaJson = temasArray.getJSONObject(i);
-
-                                    Log.d("API_TIENDA", "Tema JSON: " + temaJson.toString());
-
                                     int idTema = temaJson.optInt("id_tema", temaJson.optInt("id_tema", -1));
                                     String nombre = temaJson.optString("nombre", "Tema Desconocido");
                                     int precio = temaJson.optInt("precio_balas", temaJson.optInt("precio_balas", 0));
                                     boolean comprado = temaJson.optBoolean("comprado", false);
                                     String tipo = temaJson.optString("tipo", "baraja");
-                                    if (!comprado){
-                                        ItemPersonalizacion item = new ItemPersonalizacion(
-                                                nombre,
-                                                !comprado,        // bloqueado por defecto en la tienda
-                                                tipo,    // tipo
-                                                0,           // icono (0 para que ponga la carta por defecto)
-                                                precio,     // precio en balas
-                                                "0"
-                                        );
-                                        item.setId(idTema);
-                                        barajasTienda.add(item);
 
-                                    }
+                                    com.example.secretpanda.data.model.ItemPersonalizacion item = new com.example.secretpanda.data.model.ItemPersonalizacion(
+                                            nombre,
+                                            !comprado,
+                                            tipo,
+                                            0,
+                                            precio,
+                                            "0" // Esto fuerza que tanto en la lista como en el popup se vea fondo_carta_gruesa
+                                    );
+                                    item.setId(idTema);
+                                    barajasTienda.add(item);
+
                                 } catch (Exception e) {
                                     android.util.Log.e("API_TIENDA", "Error procesando item", e);
                                 }
                             }
                             adapterBarajas.notifyDataSetChanged();
                         });
-                    } catch (Exception e) {
-                        android.util.Log.e("API_TIENDA", "Error procesando JSON", e);
-                    }
+                    } catch (Exception e) { e.printStackTrace(); }
                 }
             }
         });
     }
-
     private void cargarBordesYFondos() {
 
         OkHttpClient client = new OkHttpClient();
@@ -237,7 +199,6 @@ public class TiendaActivity extends AppCompatActivity {
                                     String tipo = temaJson.optString("tipo", "baraja");
                                     String valor = temaJson.optString("valor_visual", "0");
 
-                                    if (!comprado){
                                         ItemPersonalizacion item = new ItemPersonalizacion(
                                                 nombrePersonalizacion,
                                                 !comprado,        // bloqueado por defecto en la tienda
@@ -251,7 +212,7 @@ public class TiendaActivity extends AppCompatActivity {
                                         if (tipo.equalsIgnoreCase("carta")) bordesTienda.add(item);
                                         else fondosTienda.add(item);
 
-                                    }
+
                                 } catch (Exception e) {
                                     android.util.Log.e("API_TIENDA", "Error procesando item", e);
                                 }
@@ -277,7 +238,12 @@ public class TiendaActivity extends AppCompatActivity {
 
         TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo_tienda);
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview_tienda);
+
+        // Nuevas referencias al XML
         ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item_tienda);
+        FrameLayout vistaCartasPreview = dialogView.findViewById(R.id.vista_cartas_preview);
+        ImageView imgCartaFrontalPreview = dialogView.findViewById(R.id.img_carta_frontal_preview);
+
         LinearLayout btnComprar = dialogView.findViewById(R.id.btn_comprar_preview);
         TextView txtPrecioBotonArriba = dialogView.findViewById(R.id.txt_precio_boton_compra_arriba);
         TextView txtPrecioBoton = dialogView.findViewById(R.id.txt_precio_boton_compra);
@@ -286,37 +252,33 @@ public class TiendaActivity extends AppCompatActivity {
         txtTitulo.setText(item.getNombre());
         txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
 
-        if (item.getIconoResId() != 0) imgPreview.setImageResource(item.getIconoResId());
-        else {
-            if (!Objects.equals(item.getValor(), "0")){
-                imgPreview.setBackgroundColor(Color.parseColor("#" + item.getValor()));
-            }else{
-                imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+        if (item.getTipo().equals("baraja")) {
+            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.VISIBLE);
+            if (imgPreview != null) imgPreview.setVisibility(View.GONE);
+
+            // Forzamos la carta normal para la baraja
+            if (imgCartaFrontalPreview != null) {
+                imgCartaFrontalPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+            }
+        } else {
+            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.GONE);
+            if (imgPreview != null) {
+                imgPreview.setVisibility(View.VISIBLE);
+                if (item.getIconoResId() != 0) {
+                    imgPreview.setImageResource(item.getIconoResId());
+                } else if (!Objects.equals(item.getValor(), "0")) {
+                    try {
+                        imgPreview.setBackgroundColor(Color.parseColor("#" + item.getValor()));
+                    } catch (Exception e) {
+                        imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+                    }
+                } else {
+                    imgPreview.setImageResource(R.drawable.fondo_carta_gruesa);
+                }
             }
         }
 
         btnComprar.setOnClickListener(v -> {
-            /*
-            //hardcode
-            Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
-
-            if (jugador.getBalas() >= item.getPrecio()) {
-                // 1. Restamos balas al Jugador y actualizamos marcador
-                jugador.setBalas(jugador.getBalas() - item.getPrecio());
-                actualizarTextoSaldo();
-
-                // 2. Desbloqueamos el ítem
-                item.setBloqueado(false);
-
-                // 3. Avisamos al adaptador
-                adaptadorOrigen.notifyItemChanged(position);
-
-                Toast.makeText(this, "¡Has adquirido " + item.getNombre() + "!", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-            } else {
-                Toast.makeText(this, "No tienes suficientes balas.", Toast.LENGTH_SHORT).show();
-            }*/
-
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
             String url = "http://10.0.2.2:8080/api/tienda/comprar/" + idGoogleEstable;
 
@@ -378,7 +340,6 @@ public class TiendaActivity extends AppCompatActivity {
                                 txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
                                 btnComprar.setVisibility(View.GONE); // Ocultamos el botón tras comprar
 
-                                // Cerramos después de 1.5 segundos para que vean el éxito
                                 new android.os.Handler().postDelayed(dialog::dismiss, 1500);
 
                             } catch (Exception e) { e.printStackTrace(); }
@@ -399,8 +360,10 @@ public class TiendaActivity extends AppCompatActivity {
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
-
     private void configurarNavegacionInferior() {
+        LinearLayout btnNavTienda = findViewById(R.id.nav_tienda);
+        if (btnNavTienda != null) btnNavTienda.setSelected(true);
+
         LinearLayout btnNavInicio = findViewById(R.id.nav_inicio);
         if (btnNavInicio != null) btnNavInicio.setOnClickListener(v -> {
             startActivity(new Intent(TiendaActivity.this, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));

@@ -163,6 +163,11 @@ public class HomeActivity extends AppCompatActivity {
             });
         }
         View btnNavPersonalizacion = findViewById(R.id.nav_personalizar);
+        View btnNavInicio = findViewById(R.id.nav_inicio);
+        if (btnNavInicio != null) {
+            btnNavInicio.setSelected(true);
+        }
+
         if (btnNavPersonalizacion != null) {
             btnNavPersonalizacion.setOnClickListener(v -> {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);

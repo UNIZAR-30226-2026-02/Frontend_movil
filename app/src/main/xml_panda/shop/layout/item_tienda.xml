@@ -1,104 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/fondo_item_tienda"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    android:background="@drawable/fondo_gris_redondeado"
-    android:elevation="4dp"
+    android:layout_margin="4dp"
+    android:background="@drawable/bg_dark_card"
+    android:backgroundTint="#2a2218"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="8dp">
+
+    <FrameLayout
+        android:id="@+id/vista_cartas_tienda"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:id="@+id/img_carta_trasera_tienda_2"
+            android:layout_width="40dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_marginStart="15dp"
+            android:rotation="15"
+            android:src="@drawable/fondo_carta_gruesa" />
+
+        <ImageView
+            android:id="@+id/img_carta_trasera_tienda"
+            android:layout_width="40dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_marginEnd="15dp"
+            android:rotation="-15"
+            android:src="@drawable/fondo_carta_gruesa" />
+
+        <ImageView
+            android:id="@+id/img_carta_frontal_tienda"
+            android:layout_width="45dp"
+            android:layout_height="65dp"
+            android:layout_gravity="center"
+            android:src="@drawable/fondo_carta_gruesa" />
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/vista_imagen_tienda"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/txt_nombre_item_tienda"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="serif"
-        android:text="Item"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
-
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="8dp">
-
-        <FrameLayout
-            android:id="@+id/vista_cartas_tienda"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:visibility="visible">
-            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="10dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="1dp" />
-            <View android:layout_width="35dp" android:layout_height="50dp" android:layout_marginStart="5dp" android:layout_marginTop="4dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="2dp" />
-            <FrameLayout android:layout_width="35dp" android:layout_height="50dp" android:layout_marginTop="8dp" android:background="@drawable/fondo_carta_gruesa" android:elevation="3dp">
-                <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_margin="2dp" app:cardCornerRadius="3dp" app:cardElevation="0dp" app:cardBackgroundColor="@android:color/transparent"/>
-            </FrameLayout>
-        </FrameLayout>
-
-        <ImageView
-            android:id="@+id/vista_imagen_tienda"
-            android:layout_width="65dp"
-            android:layout_height="80dp"
-            android:layout_gravity="center"
-            android:background="@drawable/fondo_blanco_redondeado"
-            android:elevation="2dp"
-            android:visibility="gone" />
-    </FrameLayout>
-
-    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp">
+        android:fontFamily="sans-serif-condensed"
+        android:gravity="center"
+        android:textAllCaps="true"
+        android:textColor="#e8dcc8"
+        android:textSize="11sp"
+        android:textStyle="bold" />
 
-        <LinearLayout
-            android:id="@+id/layout_precio_tienda"
+    <LinearLayout
+        android:id="@+id/layout_precio_tienda"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_bullet" />
+
+        <TextView
+            android:id="@+id/txt_precio_item_tienda"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center"
-            android:background="@drawable/ic_square_bg"
-            android:backgroundTint="#FFFFFF"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="2dp">
+            android:layout_marginStart="4dp"
+            android:fontFamily="monospace"
+            android:textColor="#d4b878"
+            android:textSize="12sp" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/txt_precio_item_tienda"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="500"
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                android:textSize="12sp"/>
+    <LinearLayout
+        android:id="@+id/layout_comprado_tienda"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:visibility="gone">
 
-            <ImageView
-                android:layout_width="10dp"
-                android:layout_height="14dp"
-                android:layout_marginStart="4dp"
-                android:src="@drawable/ic_bullet"
-                app:tint="@color/black" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/layout_comprado_tienda"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✓ ¡En posesión!"
-                android:textColor="#4CAF50"
-                android:textStyle="bold"
-                android:textSize="12sp"/>
-        </LinearLayout>
-    </FrameLayout>
+            android:fontFamily="monospace"
+            android:text="ADQUIRIDO"
+            android:textColor="#50a050"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 </LinearLayout>

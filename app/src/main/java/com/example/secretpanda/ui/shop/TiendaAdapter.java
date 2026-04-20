@@ -46,6 +46,19 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
         if (item.getTipo().equals("baraja")) {
             holder.vistaCartas.setVisibility(View.VISIBLE);
             holder.vistaImagen.setVisibility(View.GONE);
+
+            if (item.getValor() != null && !item.getValor().equals("0") && !item.getValor().isEmpty()) {
+                int resId = holder.itemView.getContext().getResources().getIdentifier(
+                        item.getValor(), "drawable", holder.itemView.getContext().getPackageName());
+
+                if (resId != 0) {
+                    holder.imgCartaFrontal.setImageResource(resId);
+                } else {
+                    holder.imgCartaFrontal.setImageResource(R.drawable.fondo_carta_gruesa);
+                }
+            } else {
+                holder.imgCartaFrontal.setImageResource(R.drawable.fondo_carta_gruesa);
+            }
         } else {
             holder.vistaCartas.setVisibility(View.GONE);
             holder.vistaImagen.setVisibility(View.VISIBLE);
@@ -84,6 +97,8 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
         FrameLayout vistaCartas;
         ImageView vistaImagen;
 
+        ImageView imgCartaFrontal;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             fondo = itemView.findViewById(R.id.fondo_item_tienda);
@@ -93,6 +108,7 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
             vistaImagen = itemView.findViewById(R.id.vista_imagen_tienda);
             layoutPrecio = itemView.findViewById(R.id.layout_precio_tienda);
             layoutComprado = itemView.findViewById(R.id.layout_comprado_tienda);
+            imgCartaFrontal = itemView.findViewById(R.id.img_carta_frontal_tienda);
         }
     }
 }
