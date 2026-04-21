@@ -49,8 +49,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private List<Jugador> listaJugadores;
 
     private boolean estoyEnEquipoAzul;
-    private TextView btnUnirseAzul;
-    private TextView btnUnirseRojo;
+    private TextView btnGestionarEquipo;
     private Jugador jugadorLocal;
 
     private int idPartida = -1;
@@ -61,6 +60,10 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private int maxJugadores = 8;
     private boolean esLider = false;
     private Dialog dialogoCarga;
+
+    // 🔥 VARIABLES DECLARADAS AQUÍ 🔥
+    private int jugadoresAzul = 0;
+    private int jugadoresRojo = 0;
 
     private StompClient stompClient;
 
@@ -79,27 +82,18 @@ public class SalaEsperaActivity extends AppCompatActivity {
         tvContadorAzul = findViewById(R.id.tv_contador_azul);
         tvContadorRojo = findViewById(R.id.tv_contador_rojo);
         tvContadorTotal = findViewById(R.id.tv_jugadores_sala);
-        btnUnirseAzul = findViewById(R.id.btn_unirse_azul);
-        btnUnirseRojo = findViewById(R.id.btn_unirse_rojo);
         tvTiempoSala = findViewById(R.id.tv_tiempo_sala);
+
+        btnGestionarEquipo = findViewById(R.id.btn_gestionar_equipo);
+        btnGestionarEquipo.setOnClickListener(v -> {
+            com.example.secretpanda.ui.EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            mostrarDialogoCambiarEquipo();
+        });
+
 
         cargarLobbyInicial();
 
-        btnUnirseAzul.setOnClickListener(v -> {
-            if (!estoyEnEquipoAzul) {
-                estoyEnEquipoAzul = true;
-                actualizarBotonesEquipo();
-                cambiarEquipoEnBackend("azul");
-            }
-        });
 
-        btnUnirseRojo.setOnClickListener(v -> {
-            if (estoyEnEquipoAzul) {
-                estoyEnEquipoAzul = false;
-                actualizarBotonesEquipo();
-                cambiarEquipoEnBackend("rojo");
-            }
-        });
 
         rvJugadores = findViewById(R.id.rv_jugadores);
         rvJugadores.setLayoutManager(new LinearLayoutManager(this));
@@ -222,7 +216,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 if (tag.equals(miPropioIdGoogle)) {
                     estoyEnEquipoAzul = "azul".equalsIgnoreCase(equipo);
                     jugadorLocal = j;
-                    actualizarBotonesEquipo();
                 }
             }
         } catch (Exception e) {
@@ -317,21 +310,48 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
     private void actualizarContadores(List<Jugador> lista) {
         int azul = 0, rojo = 0;
-        for (Jugador j : lista) { if (j.isEsEquipoAzul()) azul++; else rojo++; }
-        if (tvContadorAzul != null) tvContadorAzul.setText("Azul: " + azul + "/" + (maxJugadores/2));
-        if (tvContadorRojo != null) tvContadorRojo.setText("Rojo: " + rojo + "/" + (maxJugadores/2));
-        if (tvContadorTotal != null) tvContadorTotal.setText(lista.size() + "/" + maxJugadores);
-    }
+        for (Jugador j : lista) {
+            if (j.isEsEquipoAzul()) azul++;
+            else rojo++;
+        }
 
-    private void actualizarBotonesEquipo() {
-        if (estoyEnEquipoAzul) {
-            setModoDentro(btnUnirseAzul, "#3366CC"); // agent_blue
-            setModoUnirse(btnUnirseRojo, "#8B2020", "UNIRSE AL EQUIPO ROJO"); // fbi_red
-        } else {
-            setModoDentro(btnUnirseRojo, "#8B2020");
-            setModoUnirse(btnUnirseAzul, "#3366CC", "UNIRSE AL EQUIPO AZUL");
+        jugadoresAzul = azul;
+        jugadoresRojo = rojo;
+
+        int maxPorEquipo = maxJugadores - 2;
+        if (maxPorEquipo < 2) maxPorEquipo = 2; // Seguro de fallos
+
+        // ACTUALIZAR EQUIPO AZUL
+        if (tvContadorAzul != null) {
+            tvContadorAzul.setText("AZUL: " + azul + "/" + maxPorEquipo);
+            if (azul < 2 || azul > maxPorEquipo) {
+                tvContadorAzul.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante de ALERTA
+            } else {
+                tvContadorAzul.setTextColor(Color.parseColor("#3366CC")); // Azul de Agente (Válido)
+            }
+        }
+
+        // ACTUALIZAR EQUIPO ROJO
+        if (tvContadorRojo != null) {
+            tvContadorRojo.setText("ROJO: " + rojo + "/" + maxPorEquipo);
+            if (rojo < 2 || rojo > maxPorEquipo) {
+                tvContadorRojo.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante de ALERTA
+            } else {
+                tvContadorRojo.setTextColor(Color.parseColor("#8B2020")); // Rojo oscuro FBI (Válido)
+            }
+        }
+
+        if (tvContadorTotal != null) {
+            tvContadorTotal.setText(lista.size() + "/" + maxJugadores);
+            if (lista.size() < 4) {
+                tvContadorTotal.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante
+            } else {
+                tvContadorTotal.setTextColor(Color.WHITE); // Blanco (Válido)
+            }
         }
     }
+
+
 
     private void setModoDentro(TextView btn, String colorHex) {
         btn.setText("DENTRO");
@@ -431,5 +451,44 @@ public class SalaEsperaActivity extends AppCompatActivity {
         super.onDestroy();
         if (stompClient != null && stompClient.isConnected()) stompClient.disconnect();
         if (dialogoCarga != null && dialogoCarga.isShowing()) dialogoCarga.dismiss();
+    }
+
+    private void mostrarDialogoCambiarEquipo() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_cambiar_equipo);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+        }
+
+        TextView btnAzul = dialog.findViewById(R.id.btn_unirse_azul_popup);
+        TextView btnRojo = dialog.findViewById(R.id.btn_unirse_rojo_popup);
+        TextView btnCerrar = dialog.findViewById(R.id.btn_cerrar_cambio);
+
+        if (estoyEnEquipoAzul) {
+            btnAzul.setAlpha(0.5f);
+            btnAzul.setText("YA ESTÁS EN EL\nEQUIPO AZUL");
+        } else {
+            btnRojo.setAlpha(0.5f);
+            btnRojo.setText("YA ESTÁS EN EL\nEQUIPO ROJO");
+        }
+
+        btnAzul.setOnClickListener(v -> {
+            if (!estoyEnEquipoAzul) {
+                estoyEnEquipoAzul = true;
+                cambiarEquipoEnBackend("azul");
+                dialog.dismiss();
+            }
+        });
+
+        btnRojo.setOnClickListener(v -> {
+            if (estoyEnEquipoAzul) {
+                estoyEnEquipoAzul = false;
+                cambiarEquipoEnBackend("rojo");
+                dialog.dismiss();
+            }
+        });
+
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 }

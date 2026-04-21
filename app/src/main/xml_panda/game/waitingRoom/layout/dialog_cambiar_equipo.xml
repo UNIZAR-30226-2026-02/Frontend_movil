@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_manila_folder"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:text="ASIGNACIÓN DE CAMPO"
+        android:textColor="@color/ink_text"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:id="@+id/btn_unirse_azul_popup"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/fondo_boton_unirse"
+        android:backgroundTint="@color/agent_blue"
+        android:gravity="center"
+        android:text="UNIRSE AL\nEQUIPO AZUL"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp" />
+
+    <TextView
+        android:id="@+id/btn_unirse_rojo_popup"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/fondo_boton_rojo"
+        android:backgroundTint="@color/fbi_red"
+        android:gravity="center"
+        android:text="UNIRSE AL\nEQUIPO ROJO"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="20dp"
+        android:elevation="4dp" />
+
+    <TextView
+        android:id="@+id/btn_cerrar_cambio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="CANCELAR"
+        android:textColor="@color/ink_muted"
+        android:fontFamily="monospace"
+        android:textStyle="bold"
+        android:padding="8dp" />
+
+</LinearLayout>
