@@ -3,11 +3,11 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2026-04-20T17:14:56.264627400Z">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-04-20T20:58:25.229835500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone_2_3.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\dblas\.android\avd\Medium_Phone_2.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,12 +15,12 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone_2_3.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone_3.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone_2_3.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
@@ -30,7 +30,7 @@
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone_5.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\jorge\.android\avd\Medium_Phone_3.avd" />
               </handle>
             </Target>
           </targets>

@@ -59,7 +59,7 @@
         android:id="@+id/item_historial_rol"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="EQUIPO ROJO - AGENTE"
+        android:text="EQUIPO ROJO - LIDER"
         android:fontFamily="monospace"
         android:textColor="@color/ink_text"
         android:textSize="13sp"
@@ -69,12 +69,13 @@
         android:id="@+id/item_historial_aciertos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ACIERTOS: 5"
+        android:text="ACIERTOS: 5 | FALLOS: 2"
         android:fontFamily="monospace"
         android:textColor="@color/ink_text"
         android:textStyle="bold"
         android:textSize="13sp"
-        android:layout_marginTop="2dp"/>
+        android:layout_marginTop="2dp"
+        android:visibility="gone"/>
 
     <TextView
         android:layout_width="wrap_content"

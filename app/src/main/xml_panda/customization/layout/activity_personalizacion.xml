@@ -56,7 +56,7 @@
                     app:layout_constraintEnd_toStartOf="@+id/tab_bordes"
                     app:layout_constraintTop_toTopOf="parent">
                     <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/baraja" app:tint="#d4b878" />
-                    <TextView android:id="@+id/txt_tab_barajas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="BARAJAS" android:textColor="#d4b878" android:textSize="12sp" android:fontFamily="monospace" android:textStyle="bold" />
+                    <TextView android:id="@+id/txt_tab_barajas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="BARAJAS" android:textColor="#d4b878" android:textSize="12sp" android:fontFamily="monospace" android:textStyle="bold" android:visibility="visible"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -72,7 +72,7 @@
                     app:layout_constraintEnd_toStartOf="@+id/tab_fondos"
                     app:layout_constraintTop_toTopOf="parent">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/borde_carta" app:tint="#8a7a60" />
-                    <TextView android:id="@+id/txt_tab_bordes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="BORDES" android:textColor="#8a7a60" android:textSize="10sp" android:fontFamily="monospace" android:visibility="gone" />
+                    <TextView android:id="@+id/txt_tab_bordes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="BORDES" android:textColor="#8a7a60" android:textSize="10sp" android:fontFamily="monospace" android:visibility="visible" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -87,7 +87,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/fondo_tablero" app:tint="#8a7a60" />
-                    <TextView android:id="@+id/txt_tab_fondos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="FONDOS" android:textColor="#8a7a60" android:textSize="10sp" android:fontFamily="monospace" android:visibility="gone" />
+                    <TextView android:id="@+id/txt_tab_fondos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="FONDOS" android:textColor="#8a7a60" android:textSize="10sp" android:fontFamily="monospace" android:visibility="visible" />
                 </LinearLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
 

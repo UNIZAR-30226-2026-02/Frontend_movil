@@ -47,6 +47,9 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
             holder.vistaCartas.setVisibility(View.VISIBLE);
             holder.vistaImagen.setVisibility(View.GONE);
 
+            holder.txtEmoji.setText(emojiPaquete(item.getNombre()));
+            holder.txtEmoji.setVisibility(View.VISIBLE);
+
             if (item.getValor() != null && !item.getValor().equals("0") && !item.getValor().isEmpty()) {
                 int resId = holder.itemView.getContext().getResources().getIdentifier(
                         item.getValor(), "drawable", holder.itemView.getContext().getPackageName());
@@ -60,6 +63,7 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
                 holder.imgCartaFrontal.setImageResource(R.drawable.fondo_carta_gruesa);
             }
         } else {
+            holder.txtEmoji.setVisibility(View.GONE);
             holder.vistaCartas.setVisibility(View.GONE);
             holder.vistaImagen.setVisibility(View.VISIBLE);
             int colorParseado = android.graphics.Color.parseColor("#" + item.getValor());
@@ -98,6 +102,7 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
         ImageView vistaImagen;
 
         ImageView imgCartaFrontal;
+        TextView txtEmoji;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -109,6 +114,18 @@ public class TiendaAdapter extends RecyclerView.Adapter<TiendaAdapter.ViewHolder
             layoutPrecio = itemView.findViewById(R.id.layout_precio_tienda);
             layoutComprado = itemView.findViewById(R.id.layout_comprado_tienda);
             imgCartaFrontal = itemView.findViewById(R.id.img_carta_frontal_tienda);
+            txtEmoji = itemView.findViewById(R.id.txt_emoji_tienda);
         }
+    }
+    private String emojiPaquete(String nombre) {
+        if (nombre == null) return "🎴";
+        String n = nombre.toLowerCase();
+        if (n.contains("básico") || n.contains("basico")) return "🃏";
+        if (n.contains("magia")) return "🪄";
+        if (n.contains("histórico") || n.contains("historico")) return "📜";
+        if (n.contains("submarina") || n.contains("profundo")) return "🐙";
+        if (n.contains("cyber") || n.contains("futuro") || n.contains("punk")) return "🌆";
+        if (n.contains("naturaleza") || n.contains("bambu")) return "🌿";
+        return "🎴";
     }
 }

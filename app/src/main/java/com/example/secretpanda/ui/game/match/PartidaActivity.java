@@ -50,7 +50,7 @@ public class PartidaActivity extends AppCompatActivity {
 
     private StompClient stompClient;
     private int idPartidaActual;
-    private String miEquipo, miRol, miPropioIdGoogle;
+    private String miEquipo, miRol, miPropioIdGoogle, miTag;
     
     private String equipoTurnoActual = "";
     private String faseTurno = ""; 
@@ -69,6 +69,7 @@ public class PartidaActivity extends AppCompatActivity {
 
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
         miEquipo = getIntent().getStringExtra("MI_EQUIPO");
+        miTag = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         
         // Obtenemos el ID real guardado durante el login
         miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
@@ -192,8 +193,8 @@ public class PartidaActivity extends AppCompatActivity {
             } else {
                 miVotoEnviado = false;
                 for (int i = 0; i < votos.length(); i++) {
-                    String idVotante = votos.getJSONObject(i).optString("id_google", "");
-                    if (miPropioIdGoogle.equals(idVotante)) miVotoEnviado = true;
+                    String tagVotante = votos.getJSONObject(i).optString("tag", "");
+                    if (miTag != null && miTag.equalsIgnoreCase(tagVotante)) miVotoEnviado = true;
                 }
             }
 
@@ -210,7 +211,7 @@ public class PartidaActivity extends AppCompatActivity {
         if (circuloTurno != null) {
             circuloTurno.setBackgroundColor(equipoTurnoActual.equalsIgnoreCase("ROJO") ? Color.RED : Color.BLUE);
         }
-        if (hayPistaActiva) {
+        if (hayPistaActiva || "votando".equalsIgnoreCase(faseTurno)) {
             tvFasePartida.setText("PISTA: " + palabraPistaActual.toUpperCase() + " (" + numeroPistaActual + ")");
         } else {
             String msg = equipoTurnoActual.equalsIgnoreCase(miEquipo) ? "TU TURNO: DA UNA PISTA" : "ESPERANDO AL JEFE " + equipoTurnoActual.toUpperCase();
@@ -218,7 +219,7 @@ public class PartidaActivity extends AppCompatActivity {
         }
         tvMiRol.setText("ROL: " + miRol);
         
-        boolean puedoDarPista = JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !hayPistaActiva;
+        boolean puedoDarPista = JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !"votando".equalsIgnoreCase(faseTurno);
         iconoBtnAlerta.setImageResource(puedoDarPista ? R.drawable.ic_anadir_pista : android.R.drawable.ic_menu_view);
     }
 
@@ -252,7 +253,8 @@ public class PartidaActivity extends AppCompatActivity {
                     JSONObject voto = votos.getJSONObject(v);
                     if (voto.optInt("id_carta_tablero") == idCarta) {
                         numVotos++;
-                        if (miPropioIdGoogle.equals(voto.optString("id_google"))) yoVotoAqui = true;
+                        String tagVotante = voto.optString("tag", "");
+                        if (miTag != null && miTag.equals(tagVotante)) yoVotoAqui = true;
                     }
                 }
 
@@ -304,13 +306,26 @@ public class PartidaActivity extends AppCompatActivity {
 
     private void manejarClickCarta(int idCarta, String palabra, boolean revelada) {
         if (revelada) return;
-        boolean esMiTurno = miEquipo.equalsIgnoreCase(equipoTurnoActual);
-        boolean soyAgente = AGENTE_STRING.equalsIgnoreCase(miRol);
-        if (soyAgente && esMiTurno && hayPistaActiva && !miVotoEnviado) {
-            enviarVoto(idCarta);
-        } else {
-            mostrarPreviewCarta(palabra);
+
+        // NORMALIZACIÓN DE STRINGS para evitar errores de mayúsculas o espacios
+        String equipoNormalizado = (miEquipo != null) ? miEquipo.trim().toLowerCase() : "";
+        String turnoNormalizado = (equipoTurnoActual != null) ? equipoTurnoActual.trim().toLowerCase() : "";
+        String faseNormalizada = (faseTurno != null) ? faseTurno.trim().toLowerCase() : "";
+        
+        boolean esMiTurno = equipoNormalizado.equals(turnoNormalizado);
+        boolean soyJefe = JEFE_STRING.equalsIgnoreCase(miRol) || "lider".equalsIgnoreCase(miRol);
+        boolean soyAgente = !soyJefe; // Por defecto, si no eres jefe, eres agente
+        
+        // El botón aparece si es fase de votación (o hay pista) y es mi turno
+        boolean faseVotacion = faseNormalizada.contains("votan") || hayPistaActiva;
+        boolean puedeVotarEnEsteMomento = soyAgente && esMiTurno && faseVotacion && !miVotoEnviado;
+
+        if (!puedeVotarEnEsteMomento && esMiTurno && faseVotacion) {
+            // Si aun así no puede, es que ya ha votado o hay un error de rol
+            Log.d("VOTO", "Bloqueado: soyAgente=" + soyAgente + ", miVotoEnviado=" + miVotoEnviado);
         }
+
+        mostrarPreviewCarta(idCarta, palabra, puedeVotarEnEsteMomento);
     }
 
     private void enviarVoto(int idCarta) {
@@ -566,12 +581,39 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
-    private void mostrarPreviewCarta(String p) {
+    private void mostrarPreviewCarta(int idCarta, String palabra, boolean mostrarBotonVotar) {
         Dialog d = new Dialog(this);
         d.setContentView(R.layout.dialog_preview_carta);
-        d.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-        ((TextView)d.findViewById(R.id.tv_palabra_preview)).setText(p);
-        d.findViewById(R.id.btn_cerrar_preview).setOnClickListener(v -> d.dismiss());
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+            d.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvPalabra = d.findViewById(R.id.tv_palabra_preview);
+        if (tvPalabra != null) {
+            tvPalabra.setText(palabra.toUpperCase());
+        }
+
+        TextView btnVotar = d.findViewById(R.id.btn_votar_preview);
+        if (btnVotar != null) {
+            if (mostrarBotonVotar) {
+                btnVotar.setVisibility(View.VISIBLE);
+                btnVotar.setOnClickListener(v -> {
+                    EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+                    enviarVoto(idCarta);
+                    d.dismiss();
+                });
+            } else {
+                btnVotar.setVisibility(View.GONE);
+            }
+        }
+
+        View btnCerrar = d.findViewById(R.id.btn_cerrar_preview);
+        if (btnCerrar != null) {
+            btnCerrar.setOnClickListener(v -> d.dismiss());
+        }
+        
         d.show();
     }
 

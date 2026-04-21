@@ -29,14 +29,20 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/fondo_btn_volver"
+
+            android:background="@drawable/bg_boton_abandonar_borde"
+
+            android:drawableStart="@drawable/ic_arrow_left"
+            android:drawablePadding="8dp"
             android:fontFamily="monospace"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:text="ABANDONAR"
-            android:textColor="@color/ink_text"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="12dp" android:paddingVertical="6dp"
+            android:text="Abandonar"
+            android:textAllCaps="true"
+            android:textColor="#8A7A60"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            app:drawableTint="#8A7A60" />
+
     </RelativeLayout>
 
     <RelativeLayout
@@ -149,13 +155,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/layout_contadores_unirse"
                 android:fontFamily="monospace"
-                android:text="PERSONAL ACTIVO"
+                android:text="PERSONAL\nACTIVO"
                 android:textColor="@color/ink_text"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="-2dp" />
 
             <LinearLayout
+                android:id="@+id/layout_contadores_unirse"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -175,28 +185,29 @@
                         android:layout_marginEnd="8dp"
                         android:fontFamily="monospace"
                         android:text="AZUL: 0/5"
-                        android:textColor="#2A3A5A"
+                        android:textColor="@color/agent_blue"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/btn_unirse_azul"
-                        android:layout_width="wrap_content"
+                        android:layout_width="180dp"
                         android:layout_height="wrap_content"
                         android:background="@drawable/fondo_boton_unirse"
                         android:fontFamily="monospace"
                         android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
-                        android:text="UNIRSE"
+                        android:paddingVertical="6dp"
+                        android:gravity="center"
+                        android:text="UNIRSE AL EQUIPO AZUL"
                         android:textColor="@color/white"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -207,21 +218,22 @@
                         android:layout_marginEnd="8dp"
                         android:fontFamily="monospace"
                         android:text="ROJO: 0/5"
-                        android:textColor="#8B2020"
+                        android:textColor="@color/fbi_red"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/btn_unirse_rojo"
-                        android:layout_width="wrap_content"
+                        android:layout_width="180dp"
                         android:layout_height="wrap_content"
                         android:background="@drawable/fondo_boton_rojo"
                         android:fontFamily="monospace"
                         android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
-                        android:text="DENTRO"
+                        android:paddingVertical="6dp"
+                        android:gravity="center"
+                        android:text="UNIRSE AL EQUIPO ROJO"
                         android:textColor="@color/white"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
@@ -266,7 +278,6 @@
             android:elevation="4dp"
             android:textStyle="bold" />
 
-        <!-- Sello de Dossier -->
         <ImageView
             android:layout_width="100dp"
             android:layout_height="50dp"
@@ -274,6 +285,5 @@
             android:src="@drawable/bg_stamp_confidential"
             android:alpha="0.4"
             android:rotation="-5"/>
-
     </LinearLayout>
 </LinearLayout>
