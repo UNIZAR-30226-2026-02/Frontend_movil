@@ -140,16 +140,18 @@ public class SalaEsperaActivity extends AppCompatActivity {
         String destinoTopic = "/topic/partidas/" + idPartida + "/lobby";
         stompClient.topic(destinoTopic).subscribe(stompMessage -> {
             String payload = stompMessage.getPayload();
-            if ("FINALIZADA".equalsIgnoreCase(payload)) {
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
-                    finish();
-                });
-                return;
-            }
             try {
                 JSONObject json = new JSONObject(payload);
                 String estado = json.optString("estado", "");
+
+                // Si la partida se marca como finalizada (ej: el lider abandona), cerramos el lobby
+                if ("finalizada".equalsIgnoreCase(estado)) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
+                        finish();
+                    });
+                    return;
+                }
 
                 if ("en_curso".equalsIgnoreCase(estado)) {
                     runOnUiThread(() -> {

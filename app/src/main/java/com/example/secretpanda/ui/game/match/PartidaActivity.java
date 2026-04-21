@@ -409,7 +409,9 @@ public class PartidaActivity extends AppCompatActivity {
                 .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/participantes/rol")
                 .addHeader("Authorization", "Bearer " + token).build();
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) { }
+            @Override public void onFailure(Call call, IOException e) {
+                com.example.secretpanda.data.ErrorUtils.showConnectionError(PartidaActivity.this, e);
+            }
             @Override public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     try {
@@ -419,6 +421,8 @@ public class PartidaActivity extends AppCompatActivity {
                         miEquipo = json.optString("equipo", miEquipo);
                         runOnUiThread(() -> actualizarInterfazGlobal());
                     } catch (Exception e) { }
+                } else {
+                    com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
                 }
             }
         });
@@ -431,13 +435,17 @@ public class PartidaActivity extends AppCompatActivity {
                 .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/estado")
                 .addHeader("Authorization", "Bearer " + token).build();
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) { }
+            @Override public void onFailure(Call call, IOException e) {
+                com.example.secretpanda.data.ErrorUtils.showConnectionError(PartidaActivity.this, e);
+            }
             @Override public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     try {
                         JSONObject json = new JSONObject(response.body().string());
                         runOnUiThread(() -> aplicarEstadoTotal(json));
                     } catch (Exception e) { }
+                } else {
+                    com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
                 }
             }
         });
