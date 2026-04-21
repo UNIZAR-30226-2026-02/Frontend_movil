@@ -6,14 +6,14 @@
     android:layout_margin="16dp"
     android:background="@color/folder_manila"
     android:orientation="vertical"
-    android:padding="2dp">
+    android:padding="2dp"
+    android:elevation="12dp">
 
-    <!-- Borde decorativo interno -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="20dp"
         android:background="@drawable/fondo_input_codigo">
 
         <RelativeLayout
@@ -21,24 +21,37 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp">
 
-            <TextView
-                android:id="@+id/tv_titulo_pista"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
+                android:orientation="vertical"
                 android:layout_toStartOf="@id/btn_cerrar_pista"
-                android:layout_marginEnd="8dp"
-                android:fontFamily="monospace"
-                android:text="NUEVA PISTA"
-                android:textColor="@color/ink_text"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.05" />
+                android:layout_alignParentStart="true">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="INTELLIGENCE REPORT"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold"
+                    android:textColor="@color/ink_text"
+                    android:textSize="18sp"
+                    android:letterSpacing="0.05" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="FIELD AGENT BRIEFING"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/ink_muted"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <FrameLayout
                 android:id="@+id/btn_cerrar_pista"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="@drawable/fondo_boton_mision">
@@ -47,12 +60,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="×"
+                    android:text="X"
                     android:textColor="@color/fbi_red"
-                    android:textSize="24sp"
+                    android:textSize="20sp"
+                    android:fontFamily="monospace"
                     android:textStyle="bold" />
             </FrameLayout>
         </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/ink_muted"
+            android:layout_marginBottom="24dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,23 +84,25 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:fontFamily="monospace"
-                android:text="CODIFICACIÓN (PALABRA)"
-                android:textColor="@color/ink_muted"
-                android:textSize="12sp"
+                android:text="[CODENAME_ENTRY]"
+                android:textColor="@color/fbi_red"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/input_palabra_pista"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginBottom="20dp"
-                android:background="@drawable/fondo_input_codigo"
-                android:hint="Ej: AGENTE"
+                android:layout_height="55dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/fondo_boton_mision"
+                android:hint="ENTER CODEWORD"
+                android:textColorHint="@color/ink_muted"
                 android:inputType="textCapCharacters"
                 android:paddingHorizontal="16dp"
                 android:textColor="@color/ink_text"
                 android:fontFamily="monospace"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:letterSpacing="0.1" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -99,39 +121,50 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:fontFamily="monospace"
-                        android:text="CANTIDAD OBJETIVOS"
-                        android:textColor="@color/ink_muted"
-                        android:textSize="12sp"
+                        android:text="[OBJECTIVE_COUNT]"
+                        android:textColor="@color/fbi_red"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <Spinner
                         android:id="@+id/spinner_numero_pista"
                         android:layout_width="match_parent"
-                        android:layout_height="50dp"
-                        android:background="@drawable/fondo_input_codigo"
-                        android:paddingHorizontal="8dp"
+                        android:layout_height="55dp"
+                        android:background="@drawable/fondo_boton_mision"
+                        android:paddingHorizontal="12dp"
                         android:popupBackground="@color/folder_manila" />
                 </LinearLayout>
 
                 <View
-                    android:layout_width="16dp"
+                    android:layout_width="20dp"
                     android:layout_height="1px" />
 
                 <FrameLayout
                     android:id="@+id/btn_enviar_pista"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:background="@drawable/fondo_boton_mision"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="@drawable/fondo_boton_votar"
                     android:elevation="4dp">
 
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:layout_gravity="center"
                         android:src="@android:drawable/ic_menu_send"
-                        app:tint="@color/agent_green" />
+                        app:tint="#FFFFFF" />
                 </FrameLayout>
             </LinearLayout>
         </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="RESTRICTED ACCESS - TOP SECRET"
+            android:fontFamily="monospace"
+            android:textSize="9sp"
+            android:textColor="@color/ink_muted"
+            android:gravity="center"
+            android:letterSpacing="0.2" />
     </LinearLayout>
 </LinearLayout>

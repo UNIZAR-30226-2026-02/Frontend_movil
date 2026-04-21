@@ -20,6 +20,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.ui.EfectosManager;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,7 +53,7 @@ public class PartidaActivity extends AppCompatActivity {
 
     private StompClient stompClient;
     private int idPartidaActual;
-    private String miEquipo, miRol, miPropioIdGoogle, miTag;
+    private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
     
     private String equipoTurnoActual = "";
     private String faseTurno = ""; 
@@ -68,8 +71,12 @@ public class PartidaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_partida);
 
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
-        miEquipo = getIntent().getStringExtra("MI_EQUIPO");
-        miTag = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        
+        String equipoExtra = getIntent().getStringExtra("MI_EQUIPO");
+        if (equipoExtra != null) miEquipo = equipoExtra;
+        
+        String tagExtra = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        if (tagExtra != null) miTag = tagExtra;
         
         // Obtenemos el ID real guardado durante el login
         miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
@@ -168,8 +175,14 @@ public class PartidaActivity extends AppCompatActivity {
             }
 
             equipoTurnoActual = json.optString("equipo_turno_actual", equipoTurnoActual);
-            String miEquipoReal = json.optString("mi_equipo", miEquipo);
-            if (!miEquipoReal.isEmpty()) miEquipo = miEquipoReal;
+            
+            // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
+            if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
+                String nuevoEquipo = json.optString("mi_equipo");
+                if (!nuevoEquipo.isEmpty()) {
+                    miEquipo = nuevoEquipo;
+                }
+            }
 
             faseTurno = json.optString("fase_turno", "JEFE_PISTA");
 
@@ -275,27 +288,71 @@ public class PartidaActivity extends AppCompatActivity {
 
                 FrameLayout fondo = new FrameLayout(this);
                 fondo.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+
+                // 1. CAPA DE FONDO (Color base o Imagen)
+                boolean esImagen = palabra.startsWith("http") || palabra.contains("/") || palabra.endsWith(".png") || palabra.endsWith(".jpg");
+                
                 if (revelada) {
-                    fondo.setBackgroundColor(obtenerColorTipo(tipo));
+                    if (esImagen) {
+                        // Si es imagen revelada, ponemos la imagen y luego un filtro encima
+                        android.widget.ImageView iv = new android.widget.ImageView(this);
+                        iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+                        iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this)
+                            .load(palabra)
+                            .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
+                            .placeholder(android.R.color.darker_gray)
+                            .error(android.R.color.darker_gray)
+                            .into(iv);
+                        fondo.addView(iv);
+
+                        // Filtro semitransparente (60% de opacidad del color del equipo)
+                        View filtro = new View(this);
+                        filtro.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+                        int colorTipo = obtenerColorTipo(tipo);
+                        int colorConAlpha = Color.argb(150, Color.red(colorTipo), Color.green(colorTipo), Color.blue(colorTipo));
+                        filtro.setBackgroundColor(colorConAlpha);
+                        fondo.addView(filtro);
+                    } else {
+                        fondo.setBackgroundColor(obtenerColorTipo(tipo));
+                    }
                 } else {
                     fondo.setBackgroundColor(Color.parseColor("#2C3E50"));
-                    if (JEFE_STRING.equalsIgnoreCase(miRol)) {
-                        View line = new View(this);
-                        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, dpToPx(6));
-                        lp.gravity = Gravity.BOTTOM;
-                        line.setLayoutParams(lp);
-                        line.setBackgroundColor(obtenerColorTipo(tipo));
-                        fondo.addView(line);
+                    
+                    if (esImagen) {
+                        android.widget.ImageView iv = new android.widget.ImageView(this);
+                        iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+                        iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this)
+                            .load(palabra)
+                            .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
+                            .placeholder(android.R.color.darker_gray)
+                            .error(android.R.color.darker_gray)
+                            .into(iv);
+                        fondo.addView(iv);
                     }
                 }
 
-                TextView tv = new TextView(this);
-                tv.setText(palabra.toUpperCase());
-                tv.setTextColor(Color.WHITE);
-                tv.setGravity(Gravity.CENTER);
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setTextSize(12);
-                fondo.addView(tv);
+                // 2. CAPA DE INFORMACIÓN PARA EL JEFE (Línea de color si no está revelada)
+                if (!revelada && JEFE_STRING.equalsIgnoreCase(miRol)) {
+                    View line = new View(this);
+                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, dpToPx(8));
+                    lp.gravity = Gravity.BOTTOM;
+                    line.setLayoutParams(lp);
+                    line.setBackgroundColor(obtenerColorTipo(tipo));
+                    fondo.addView(line);
+                }
+
+                // 3. CAPA DE TEXTO (Solo si NO es imagen o si es Jefe para identificar)
+                if (!esImagen) {
+                    TextView tv = new TextView(this);
+                    tv.setText(palabra.toUpperCase());
+                    tv.setTextColor(Color.WHITE);
+                    tv.setGravity(Gravity.CENTER);
+                    tv.setTypeface(null, Typeface.BOLD);
+                    tv.setTextSize(12);
+                    fondo.addView(tv);
+                }
 
                 contenedor.addView(fondo);
                 contenedor.setOnClickListener(v -> manejarClickCarta(idCarta, palabra, revelada));
@@ -305,24 +362,21 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void manejarClickCarta(int idCarta, String palabra, boolean revelada) {
-        if (revelada) return;
+        boolean puedeVotarEnEsteMomento = false;
 
-        // NORMALIZACIÓN DE STRINGS para evitar errores de mayúsculas o espacios
-        String equipoNormalizado = (miEquipo != null) ? miEquipo.trim().toLowerCase() : "";
-        String turnoNormalizado = (equipoTurnoActual != null) ? equipoTurnoActual.trim().toLowerCase() : "";
-        String faseNormalizada = (faseTurno != null) ? faseTurno.trim().toLowerCase() : "";
-        
-        boolean esMiTurno = equipoNormalizado.equals(turnoNormalizado);
-        boolean soyJefe = JEFE_STRING.equalsIgnoreCase(miRol) || "lider".equalsIgnoreCase(miRol);
-        boolean soyAgente = !soyJefe; // Por defecto, si no eres jefe, eres agente
-        
-        // El botón aparece si es fase de votación (o hay pista) y es mi turno
-        boolean faseVotacion = faseNormalizada.contains("votan") || hayPistaActiva;
-        boolean puedeVotarEnEsteMomento = soyAgente && esMiTurno && faseVotacion && !miVotoEnviado;
-
-        if (!puedeVotarEnEsteMomento && esMiTurno && faseVotacion) {
-            // Si aun así no puede, es que ya ha votado o hay un error de rol
-            Log.d("VOTO", "Bloqueado: soyAgente=" + soyAgente + ", miVotoEnviado=" + miVotoEnviado);
+        if (!revelada) {
+            // NORMALIZACIÓN DE STRINGS para evitar errores de mayúsculas o espacios
+            String equipoNormalizado = (miEquipo != null) ? miEquipo.trim().toLowerCase() : "";
+            String turnoNormalizado = (equipoTurnoActual != null) ? equipoTurnoActual.trim().toLowerCase() : "";
+            String faseNormalizada = (faseTurno != null) ? faseTurno.trim().toLowerCase() : "";
+            
+            boolean esMiTurno = equipoNormalizado.equals(turnoNormalizado);
+            boolean soyJefe = JEFE_STRING.equalsIgnoreCase(miRol) || "lider".equalsIgnoreCase(miRol);
+            boolean soyAgente = !soyJefe; // Por defecto, si no eres jefe, eres agente
+            
+            // El botón aparece si es fase de votación (o hay pista) y es mi turno
+            boolean faseVotacion = faseNormalizada.contains("votan") || hayPistaActiva;
+            puedeVotarEnEsteMomento = soyAgente && esMiTurno && faseVotacion && !miVotoEnviado;
         }
 
         mostrarPreviewCarta(idCarta, palabra, puedeVotarEnEsteMomento);
@@ -599,8 +653,26 @@ public class PartidaActivity extends AppCompatActivity {
         }
 
         TextView tvPalabra = d.findViewById(R.id.tv_palabra_preview);
-        if (tvPalabra != null) {
-            tvPalabra.setText(palabra.toUpperCase());
+        android.widget.ImageView ivCarta = d.findViewById(R.id.iv_carta_preview);
+
+        boolean esImagen = palabra.startsWith("http") || palabra.contains("/") || palabra.endsWith(".png") || palabra.endsWith(".jpg");
+
+        if (esImagen) {
+            if (tvPalabra != null) tvPalabra.setVisibility(View.GONE);
+            if (ivCarta != null) {
+                ivCarta.setVisibility(View.VISIBLE);
+                Glide.with(this)
+                    .load(palabra)
+                    .placeholder(android.R.color.darker_gray)
+                    .error(android.R.color.darker_gray)
+                    .into(ivCarta);
+            }
+        } else {
+            if (tvPalabra != null) {
+                tvPalabra.setVisibility(View.VISIBLE);
+                tvPalabra.setText(palabra.toUpperCase());
+            }
+            if (ivCarta != null) ivCarta.setVisibility(View.GONE);
         }
 
         TextView btnVotar = d.findViewById(R.id.btn_votar_preview);
