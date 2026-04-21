@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.EfectosManager;
@@ -358,7 +359,7 @@ public class HomeActivity extends AppCompatActivity {
         if (token == null) return;
 
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url("http://10.0.2.2:8080/api/jugadores")
+                .url(NetworkConfig.BASE_URL + "/jugadores")
                 .get()
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
@@ -396,7 +397,7 @@ public class HomeActivity extends AppCompatActivity {
     }
     private void cargarHistorialServidor(HistorialAdapter adapter, TextView txtVacio, RecyclerView recycler) {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores/historial";
+        String url = NetworkConfig.BASE_URL + "/jugadores/historial";
 
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();

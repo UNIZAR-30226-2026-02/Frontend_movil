@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
@@ -90,7 +91,7 @@ public class FinPartidaActivity extends AppCompatActivity {
 
     private void fetchResultadosWeb() {
         // LLAMADA 1: Obtener estadísticas finales de la partida (SINGULAR: /partida/{id}/fin)
-        String urlFin = "http://10.0.2.2:8080/api/partida/" + idPartida + "/fin";
+        String urlFin = NetworkConfig.BASE_URL + "/partida/" + idPartida + "/fin";
         
         Request reqFin = new Request.Builder()
                 .url(urlFin)
@@ -116,7 +117,7 @@ public class FinPartidaActivity extends AppCompatActivity {
                     JSONObject datosFinales = new JSONObject(jsonFinString);
 
                     // LLAMADA 2: Obtener de qué equipo soy yo (PLURAL: /partidas/{id}/participantes/rol)
-                    String urlRol = "http://10.0.2.2:8080/api/partidas/" + idPartida + "/participantes/rol";
+                    String urlRol = NetworkConfig.BASE_URL + "/partidas/" + idPartida + "/participantes/rol";
                     Request reqRol = new Request.Builder()
                             .url(urlRol)
                             .addHeader("Authorization", "Bearer " + token)

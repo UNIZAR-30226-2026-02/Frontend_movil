@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
@@ -325,7 +326,7 @@ private void animarAltura(View vista, int altoFinalDp) {
         String jwt = tokenManager.getToken();
         if (jwt == null || jwt.isEmpty()) return;
 
-        String urlInventario = "http://10.0.2.2:8080/api/jugadores/personalizaciones";
+        String urlInventario = NetworkConfig.BASE_URL + "/jugadores/personalizaciones";
         Request requestInv = new Request.Builder()
                 .url(urlInventario).get().addHeader("Authorization", "Bearer " + jwt).build();
 
@@ -377,7 +378,7 @@ private void animarAltura(View vista, int altoFinalDp) {
     }
 
     private void cargarRestoPersonalizacionesTienda(OkHttpClient client, String jwt, String categoria, List<ItemPersonalizacion> comprados, List<Integer> idsComprados, String[] itemEquipadoNombre, int[] posEquipada) {
-        String urlTienda = "http://10.0.2.2:8080/api/personalizaciones/activas";
+        String urlTienda = NetworkConfig.BASE_URL + "/personalizaciones/activas";
         Request requestTienda = new Request.Builder()
                 .url(urlTienda).get().addHeader("Authorization", "Bearer " + jwt).build();
 
@@ -473,7 +474,7 @@ private void animarAltura(View vista, int altoFinalDp) {
         posesion.clear();
         bloqueados.clear();
 
-        String urlInventario = "http://10.0.2.2:8080/api/jugadores/temas";
+        String urlInventario = NetworkConfig.BASE_URL + "/jugadores/temas";
         Request requestInv = new Request.Builder()
                 .url(urlInventario).get().addHeader("Authorization", "Bearer " + jwt).build();
 
@@ -505,7 +506,7 @@ private void animarAltura(View vista, int altoFinalDp) {
     }
 
     private void cargarBarajasNoAdquiridas(OkHttpClient client, String jwt) {
-        String urlTienda = "http://10.0.2.2:8080/api/temas/activos";
+        String urlTienda = NetworkConfig.BASE_URL + "/temas/activos";
         Request requestTienda = new Request.Builder()
                 .url(urlTienda).get().addHeader("Authorization", "Bearer " + jwt).build();
 
@@ -584,7 +585,7 @@ private void animarAltura(View vista, int altoFinalDp) {
         if (jwt == null) return;
 
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores/equipar";
+        String url = NetworkConfig.BASE_URL + "/jugadores/equipar";
         org.json.JSONObject jsonBody = new org.json.JSONObject();
         try {
             jsonBody.put("id_personalizacion", idPersonalizacion);

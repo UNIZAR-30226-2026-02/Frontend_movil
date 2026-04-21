@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.game.join.TematicasDialogFragment;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
@@ -123,7 +124,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
             RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
             
             Request request = new Request.Builder()
-                    .url("http://10.0.2.2:8080/api/partidas/")
+                    .url(NetworkConfig.BASE_URL + "/partidas/")
                     .post(body)
                     .addHeader("Authorization", "Bearer " + token)
                     .build();
@@ -195,7 +196,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/jugadores/temas")
+                .url(NetworkConfig.BASE_URL + "/jugadores/temas")
                 .addHeader("Authorization", "Bearer " + token).build();
 
         client.newCall(request).enqueue(new Callback() {

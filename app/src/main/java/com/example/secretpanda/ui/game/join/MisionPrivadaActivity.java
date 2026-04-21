@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.EfectosManager;
 
@@ -65,7 +66,7 @@ public class MisionPrivadaActivity extends AppCompatActivity {
 
     private void conectarASalaPrivada(String codigo) {
         // Pon tu IP o dominio de tu servidor backend aquí
-        String url = "http://10.0.2.2:8080/api/partidas/" + codigo.trim() + "/unirse/privada";
+        String url = NetworkConfig.BASE_URL + "/partidas/" + codigo.trim() + "/unirse/privada";
 
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();

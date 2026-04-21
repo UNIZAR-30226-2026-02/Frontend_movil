@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 
@@ -99,7 +100,7 @@ public class ClasificacionActivity extends AppCompatActivity {
         List<StompHeader> cabeceras = new ArrayList<>();
         cabeceras.add(new StompHeader("Authorization", "Bearer " + token));
 
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws/websocket");
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
 
         stompClient.lifecycle().subscribe(lifecycleEvent -> {
             switch (lifecycleEvent.getType()) {
@@ -157,7 +158,7 @@ public class ClasificacionActivity extends AppCompatActivity {
     // LLAMADAS REST AL BACKEND
     private void cargarRankingGlobal() {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/leaderboard/global";
+        String url = NetworkConfig.BASE_URL + "/leaderboard/global";
 
         String token = tokenManager.getToken();
         if (token == null) return;
@@ -201,7 +202,7 @@ public class ClasificacionActivity extends AppCompatActivity {
 
     private void cargarRankingAmigos() {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/leaderboard/amigos";
+        String url = NetworkConfig.BASE_URL + "/leaderboard/amigos";
 
         String token = tokenManager.getToken();
         if (token == null) return;

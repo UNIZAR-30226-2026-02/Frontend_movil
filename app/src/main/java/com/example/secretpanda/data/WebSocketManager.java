@@ -1,5 +1,6 @@
 package com.example.secretpanda.data;
 
+import com.example.secretpanda.data.NetworkConfig;
 import android.annotation.SuppressLint;
 import android.util.Log;
 
@@ -16,8 +17,8 @@ import ua.naiksoftware.stomp.dto.StompHeader;
 public class WebSocketManager {
 
     private static final String TAG = "WebSocketManager";
-    // Cambia esta URL por la de tu servidor backend (ej. ws://10.0.2.2:8080/ws/websocket para el emulador)
-    private static final String WEBSOCKET_URL = "ws://10.0.2.2:8080/ws/websocket";
+    // Usamos la URL centralizada de NetworkConfig
+    private static final String WEBSOCKET_URL = NetworkConfig.WS_URL;
 
     private static WebSocketManager instance;
     private StompClient stompClient;

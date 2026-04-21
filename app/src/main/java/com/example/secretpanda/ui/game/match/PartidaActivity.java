@@ -18,7 +18,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.ui.EfectosManager;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -49,7 +53,7 @@ public class PartidaActivity extends AppCompatActivity {
 
     private StompClient stompClient;
     private int idPartidaActual;
-    private String miEquipo, miRol, miPropioIdGoogle;
+    private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
     
     private String equipoTurnoActual = "";
     private String faseTurno = ""; 
@@ -67,7 +71,12 @@ public class PartidaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_partida);
 
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
-        miEquipo = getIntent().getStringExtra("MI_EQUIPO");
+        
+        String equipoExtra = getIntent().getStringExtra("MI_EQUIPO");
+        if (equipoExtra != null) miEquipo = equipoExtra;
+        
+        String tagExtra = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        if (tagExtra != null) miTag = tagExtra;
         
         // Obtenemos el ID real guardado durante el login
         miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
@@ -108,7 +117,7 @@ public class PartidaActivity extends AppCompatActivity {
         List<StompHeader> headers = new ArrayList<>();
         if (token != null) headers.add(new StompHeader("Authorization", "Bearer " + token));
 
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws/websocket");
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
         stompClient.lifecycle().subscribe(lifecycleEvent -> {
             if (lifecycleEvent.getType() == ua.naiksoftware.stomp.dto.LifecycleEvent.Type.OPENED) {
                 runOnUiThread(() -> {
@@ -166,8 +175,14 @@ public class PartidaActivity extends AppCompatActivity {
             }
 
             equipoTurnoActual = json.optString("equipo_turno_actual", equipoTurnoActual);
-            String miEquipoReal = json.optString("mi_equipo", miEquipo);
-            if (!miEquipoReal.isEmpty()) miEquipo = miEquipoReal;
+            
+            // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
+            if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
+                String nuevoEquipo = json.optString("mi_equipo");
+                if (!nuevoEquipo.isEmpty()) {
+                    miEquipo = nuevoEquipo;
+                }
+            }
 
             faseTurno = json.optString("fase_turno", "JEFE_PISTA");
 
@@ -191,8 +206,8 @@ public class PartidaActivity extends AppCompatActivity {
             } else {
                 miVotoEnviado = false;
                 for (int i = 0; i < votos.length(); i++) {
-                    String idVotante = votos.getJSONObject(i).optString("id_google", "");
-                    if (miPropioIdGoogle.equals(idVotante)) miVotoEnviado = true;
+                    String tagVotante = votos.getJSONObject(i).optString("tag", "");
+                    if (miTag != null && miTag.equalsIgnoreCase(tagVotante)) miVotoEnviado = true;
                 }
             }
 
@@ -209,7 +224,7 @@ public class PartidaActivity extends AppCompatActivity {
         if (circuloTurno != null) {
             circuloTurno.setBackgroundColor(equipoTurnoActual.equalsIgnoreCase("ROJO") ? Color.RED : Color.BLUE);
         }
-        if (hayPistaActiva) {
+        if (hayPistaActiva || "votando".equalsIgnoreCase(faseTurno)) {
             tvFasePartida.setText("PISTA: " + palabraPistaActual.toUpperCase() + " (" + numeroPistaActual + ")");
         } else {
             String msg = equipoTurnoActual.equalsIgnoreCase(miEquipo) ? "TU TURNO: DA UNA PISTA" : "ESPERANDO AL JEFE " + equipoTurnoActual.toUpperCase();
@@ -217,7 +232,7 @@ public class PartidaActivity extends AppCompatActivity {
         }
         tvMiRol.setText("ROL: " + miRol);
         
-        boolean puedoDarPista = JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !hayPistaActiva;
+        boolean puedoDarPista = JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !"votando".equalsIgnoreCase(faseTurno);
         iconoBtnAlerta.setImageResource(puedoDarPista ? R.drawable.ic_anadir_pista : android.R.drawable.ic_menu_view);
     }
 
@@ -251,7 +266,8 @@ public class PartidaActivity extends AppCompatActivity {
                     JSONObject voto = votos.getJSONObject(v);
                     if (voto.optInt("id_carta_tablero") == idCarta) {
                         numVotos++;
-                        if (miPropioIdGoogle.equals(voto.optString("id_google"))) yoVotoAqui = true;
+                        String tagVotante = voto.optString("tag", "");
+                        if (miTag != null && miTag.equals(tagVotante)) yoVotoAqui = true;
                     }
                 }
 
@@ -272,27 +288,71 @@ public class PartidaActivity extends AppCompatActivity {
 
                 FrameLayout fondo = new FrameLayout(this);
                 fondo.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+
+                // 1. CAPA DE FONDO (Color base o Imagen)
+                boolean esImagen = palabra.startsWith("http") || palabra.contains("/") || palabra.endsWith(".png") || palabra.endsWith(".jpg");
+                
                 if (revelada) {
-                    fondo.setBackgroundColor(obtenerColorTipo(tipo));
+                    if (esImagen) {
+                        // Si es imagen revelada, ponemos la imagen y luego un filtro encima
+                        android.widget.ImageView iv = new android.widget.ImageView(this);
+                        iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+                        iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this)
+                            .load(palabra)
+                            .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
+                            .placeholder(android.R.color.darker_gray)
+                            .error(android.R.color.darker_gray)
+                            .into(iv);
+                        fondo.addView(iv);
+
+                        // Filtro semitransparente (60% de opacidad del color del equipo)
+                        View filtro = new View(this);
+                        filtro.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+                        int colorTipo = obtenerColorTipo(tipo);
+                        int colorConAlpha = Color.argb(150, Color.red(colorTipo), Color.green(colorTipo), Color.blue(colorTipo));
+                        filtro.setBackgroundColor(colorConAlpha);
+                        fondo.addView(filtro);
+                    } else {
+                        fondo.setBackgroundColor(obtenerColorTipo(tipo));
+                    }
                 } else {
                     fondo.setBackgroundColor(Color.parseColor("#2C3E50"));
-                    if (JEFE_STRING.equalsIgnoreCase(miRol)) {
-                        View line = new View(this);
-                        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, dpToPx(6));
-                        lp.gravity = Gravity.BOTTOM;
-                        line.setLayoutParams(lp);
-                        line.setBackgroundColor(obtenerColorTipo(tipo));
-                        fondo.addView(line);
+                    
+                    if (esImagen) {
+                        android.widget.ImageView iv = new android.widget.ImageView(this);
+                        iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+                        iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this)
+                            .load(palabra)
+                            .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
+                            .placeholder(android.R.color.darker_gray)
+                            .error(android.R.color.darker_gray)
+                            .into(iv);
+                        fondo.addView(iv);
                     }
                 }
 
-                TextView tv = new TextView(this);
-                tv.setText(palabra.toUpperCase());
-                tv.setTextColor(Color.WHITE);
-                tv.setGravity(Gravity.CENTER);
-                tv.setTypeface(null, Typeface.BOLD);
-                tv.setTextSize(12);
-                fondo.addView(tv);
+                // 2. CAPA DE INFORMACIÓN PARA EL JEFE (Línea de color si no está revelada)
+                if (!revelada && JEFE_STRING.equalsIgnoreCase(miRol)) {
+                    View line = new View(this);
+                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, dpToPx(8));
+                    lp.gravity = Gravity.BOTTOM;
+                    line.setLayoutParams(lp);
+                    line.setBackgroundColor(obtenerColorTipo(tipo));
+                    fondo.addView(line);
+                }
+
+                // 3. CAPA DE TEXTO (Solo si NO es imagen o si es Jefe para identificar)
+                if (!esImagen) {
+                    TextView tv = new TextView(this);
+                    tv.setText(palabra.toUpperCase());
+                    tv.setTextColor(Color.WHITE);
+                    tv.setGravity(Gravity.CENTER);
+                    tv.setTypeface(null, Typeface.BOLD);
+                    tv.setTextSize(12);
+                    fondo.addView(tv);
+                }
 
                 contenedor.addView(fondo);
                 contenedor.setOnClickListener(v -> manejarClickCarta(idCarta, palabra, revelada));
@@ -302,14 +362,24 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void manejarClickCarta(int idCarta, String palabra, boolean revelada) {
-        if (revelada) return;
-        boolean esMiTurno = miEquipo.equalsIgnoreCase(equipoTurnoActual);
-        boolean soyAgente = AGENTE_STRING.equalsIgnoreCase(miRol);
-        if (soyAgente && esMiTurno && hayPistaActiva && !miVotoEnviado) {
-            enviarVoto(idCarta);
-        } else {
-            mostrarPreviewCarta(palabra);
+        boolean puedeVotarEnEsteMomento = false;
+
+        if (!revelada) {
+            // NORMALIZACIÓN DE STRINGS para evitar errores de mayúsculas o espacios
+            String equipoNormalizado = (miEquipo != null) ? miEquipo.trim().toLowerCase() : "";
+            String turnoNormalizado = (equipoTurnoActual != null) ? equipoTurnoActual.trim().toLowerCase() : "";
+            String faseNormalizada = (faseTurno != null) ? faseTurno.trim().toLowerCase() : "";
+            
+            boolean esMiTurno = equipoNormalizado.equals(turnoNormalizado);
+            boolean soyJefe = JEFE_STRING.equalsIgnoreCase(miRol) || "lider".equalsIgnoreCase(miRol);
+            boolean soyAgente = !soyJefe; // Por defecto, si no eres jefe, eres agente
+            
+            // El botón aparece si es fase de votación (o hay pista) y es mi turno
+            boolean faseVotacion = faseNormalizada.contains("votan") || hayPistaActiva;
+            puedeVotarEnEsteMomento = soyAgente && esMiTurno && faseVotacion && !miVotoEnviado;
         }
+
+        mostrarPreviewCarta(idCarta, palabra, puedeVotarEnEsteMomento);
     }
 
     private void enviarVoto(int idCarta) {
@@ -390,10 +460,12 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/participantes/rol")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/participantes/rol")
                 .addHeader("Authorization", "Bearer " + token).build();
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) { }
+            @Override public void onFailure(Call call, IOException e) {
+                com.example.secretpanda.data.ErrorUtils.showConnectionError(PartidaActivity.this, e);
+            }
             @Override public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     try {
@@ -403,6 +475,8 @@ public class PartidaActivity extends AppCompatActivity {
                         miEquipo = json.optString("equipo", miEquipo);
                         runOnUiThread(() -> actualizarInterfazGlobal());
                     } catch (Exception e) { }
+                } else {
+                    com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
                 }
             }
         });
@@ -412,16 +486,20 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/estado")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/estado")
                 .addHeader("Authorization", "Bearer " + token).build();
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) { }
+            @Override public void onFailure(Call call, IOException e) {
+                com.example.secretpanda.data.ErrorUtils.showConnectionError(PartidaActivity.this, e);
+            }
             @Override public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     try {
                         JSONObject json = new JSONObject(response.body().string());
                         runOnUiThread(() -> aplicarEstadoTotal(json));
                     } catch (Exception e) { }
+                } else {
+                    com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
                 }
             }
         });
@@ -557,7 +635,7 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/participantes")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/participantes")
                 .delete().addHeader("Authorization", "Bearer " + jwt).build();
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) { finish(); }
@@ -565,12 +643,57 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
-    private void mostrarPreviewCarta(String p) {
+    private void mostrarPreviewCarta(int idCarta, String palabra, boolean mostrarBotonVotar) {
         Dialog d = new Dialog(this);
         d.setContentView(R.layout.dialog_preview_carta);
-        d.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-        ((TextView)d.findViewById(R.id.tv_palabra_preview)).setText(p);
-        d.findViewById(R.id.btn_cerrar_preview).setOnClickListener(v -> d.dismiss());
+
+        if (d.getWindow() != null) {
+            d.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+            d.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvPalabra = d.findViewById(R.id.tv_palabra_preview);
+        android.widget.ImageView ivCarta = d.findViewById(R.id.iv_carta_preview);
+
+        boolean esImagen = palabra.startsWith("http") || palabra.contains("/") || palabra.endsWith(".png") || palabra.endsWith(".jpg");
+
+        if (esImagen) {
+            if (tvPalabra != null) tvPalabra.setVisibility(View.GONE);
+            if (ivCarta != null) {
+                ivCarta.setVisibility(View.VISIBLE);
+                Glide.with(this)
+                    .load(palabra)
+                    .placeholder(android.R.color.darker_gray)
+                    .error(android.R.color.darker_gray)
+                    .into(ivCarta);
+            }
+        } else {
+            if (tvPalabra != null) {
+                tvPalabra.setVisibility(View.VISIBLE);
+                tvPalabra.setText(palabra.toUpperCase());
+            }
+            if (ivCarta != null) ivCarta.setVisibility(View.GONE);
+        }
+
+        TextView btnVotar = d.findViewById(R.id.btn_votar_preview);
+        if (btnVotar != null) {
+            if (mostrarBotonVotar) {
+                btnVotar.setVisibility(View.VISIBLE);
+                btnVotar.setOnClickListener(v -> {
+                    EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+                    enviarVoto(idCarta);
+                    d.dismiss();
+                });
+            } else {
+                btnVotar.setVisibility(View.GONE);
+            }
+        }
+
+        View btnCerrar = d.findViewById(R.id.btn_cerrar_preview);
+        if (btnCerrar != null) {
+            btnCerrar.setOnClickListener(v -> d.dismiss());
+        }
+        
         d.show();
     }
 

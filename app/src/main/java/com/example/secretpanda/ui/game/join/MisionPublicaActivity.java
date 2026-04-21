@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
 import com.example.secretpanda.ui.EfectosManager;
@@ -88,7 +89,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
                 // 1. PREPARAMOS LA LLAMADA AL SERVIDOR PARA UNIRNOS
                 OkHttpClient client = new OkHttpClient();
-                String url = "http://10.0.2.2:8080/api/partidas/" + idPartidaClicada + "/unirse/publica";
+                String url = NetworkConfig.BASE_URL + "/partidas/" + idPartidaClicada + "/unirse/publica";
 
                 TokenManager tokenManager = new TokenManager(this);
                 String token = tokenManager.getToken();
@@ -249,7 +250,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
         // Importante: "/ws/websocket" debe coincidir con tu registerStompEndpoints en Spring Boot
         mStompClient = ua.naiksoftware.stomp.Stomp.over(
                 ua.naiksoftware.stomp.Stomp.ConnectionProvider.OKHTTP,
-                "ws://10.0.2.2:8080/ws/websocket"
+                NetworkConfig.WS_URL
         );
 
         // 2. Obtener el Token usando la Opción B (la que te funcionó)
@@ -298,7 +299,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
 
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/jugadores/temas") // Verifica que esta ruta sea correcta
+                .url(NetworkConfig.BASE_URL + "/jugadores/temas") // Verifica que esta ruta sea correcta
                 .header("Authorization", "Bearer " + token)
                 .build();
 
@@ -347,7 +348,7 @@ public class MisionPublicaActivity extends AppCompatActivity {
 
         // Llama al @GetMapping("/publicas") que creamos ayer en el servidor
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/publicas")
+                .url(NetworkConfig.BASE_URL + "/partidas/publicas")
                 .header("Authorization", "Bearer " + token)
                 .build();
 

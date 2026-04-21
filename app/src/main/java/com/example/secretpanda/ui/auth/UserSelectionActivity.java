@@ -8,6 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.model.Jugador; // ¡Importante importar el modelo!
 import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
@@ -35,8 +36,12 @@ public class UserSelectionActivity extends AppCompatActivity {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             String username = inputUsuario.getText().toString().trim();
             nombreUsuario = username;
-            if (username.length() < 4) {
-                Toast.makeText(this, "El nombre debe tener al menos 4 caracteres", Toast.LENGTH_SHORT).show();
+            if (username.length() < 3) {
+                Toast.makeText(this, "El nombre debe tener al menos 3 caracteres", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (username.length() > 15) {
+                Toast.makeText(this, "El nombre no debe tener mas de 15 caracteres", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -52,7 +57,7 @@ public class UserSelectionActivity extends AppCompatActivity {
 
             // PREPARAMOS LA LLAMADA AL BACKEND PARA REGISTRAR
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-            String url = "http://10.0.2.2:8080/api/auth/registro";
+            String url = NetworkConfig.BASE_URL + "/auth/registro";
 
             // Construimos el JSON con los dos datos que exige el backend
             String json = "{\"id_google\":\"" + idGoogle + "\", \"tag\":\"" + username + "\"}";
@@ -66,10 +71,8 @@ public class UserSelectionActivity extends AppCompatActivity {
             client.newCall(request).enqueue(new okhttp3.Callback() {
                 @Override
                 public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                    runOnUiThread(() -> {
-                        Toast.makeText(UserSelectionActivity.this, "Error de conexión", Toast.LENGTH_SHORT).show();
-                        btnAceptar.setEnabled(true);
-                    });
+                    com.example.secretpanda.data.ErrorUtils.showConnectionError(UserSelectionActivity.this, e);
+                    runOnUiThread(() -> btnAceptar.setEnabled(true));
                 }
 
                 @Override
@@ -79,14 +82,12 @@ public class UserSelectionActivity extends AppCompatActivity {
                             String jsonRespuesta = response.body().string();
                             org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
 
-                            // Extraemos el JWT definitivo
+                            // Extraer JWT y guardar en local
                             String tokenJwt = jsonObject.getString("token");
-
-                            //  Lo guardamos en la app
                             com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(UserSelectionActivity.this);
                             tokenManager.saveToken(tokenJwt);
 
-                            // Saltamos a la Home
+                            // Navegar a pantalla de carga
                             runOnUiThread(() -> {
                                 android.content.Intent intent = new android.content.Intent(UserSelectionActivity.this, com.example.secretpanda.ui.LoadingActivity.class);
                                 intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
@@ -102,11 +103,8 @@ public class UserSelectionActivity extends AppCompatActivity {
                             });
                         }
                     } else {
-                        runOnUiThread(() -> {
-                            // Si falla, suele ser porque el 'tag' ya está en uso en la BD
-                            Toast.makeText(UserSelectionActivity.this, "Error en registro. Quizás el nombre ya existe.", Toast.LENGTH_SHORT).show();
-                            btnAceptar.setEnabled(true);
-                        });
+                        com.example.secretpanda.data.ErrorUtils.showErrorMessage(UserSelectionActivity.this, response);
+                        runOnUiThread(() -> btnAceptar.setEnabled(true));
                     }
                 }
             });
