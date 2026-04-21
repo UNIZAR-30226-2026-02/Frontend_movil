@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Solicitud;
 
@@ -121,7 +122,7 @@ public class SolicitudesActivity extends AppCompatActivity {
 
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/amigos/solicitudes")
+                .url(NetworkConfig.BASE_URL + "/amigos/solicitudes")
                 .get()
                 .addHeader("Authorization", "Bearer " + jwt)
                 .build();
@@ -175,7 +176,7 @@ public class SolicitudesActivity extends AppCompatActivity {
 
         RequestBody body = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/amigos/solicitudes")
+                .url(NetworkConfig.BASE_URL + "/amigos/solicitudes")
                 .put(body)
                 .addHeader("Authorization", "Bearer " + jwt)
                 .build();
@@ -226,7 +227,7 @@ public class SolicitudesActivity extends AppCompatActivity {
 
         RequestBody body = RequestBody.create(bodyJson.toString(), MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/amigos/solicitudes")
+                .url(NetworkConfig.BASE_URL + "/amigos/solicitudes")
                 .post(body)
                 .addHeader("Authorization", "Bearer " + jwt)
                 .build();

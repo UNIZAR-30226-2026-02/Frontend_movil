@@ -18,6 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.ui.EfectosManager;
 
 import org.json.JSONArray;
@@ -108,7 +109,7 @@ public class PartidaActivity extends AppCompatActivity {
         List<StompHeader> headers = new ArrayList<>();
         if (token != null) headers.add(new StompHeader("Authorization", "Bearer " + token));
 
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws/websocket");
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
         stompClient.lifecycle().subscribe(lifecycleEvent -> {
             if (lifecycleEvent.getType() == ua.naiksoftware.stomp.dto.LifecycleEvent.Type.OPENED) {
                 runOnUiThread(() -> {
@@ -390,7 +391,7 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/participantes/rol")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/participantes/rol")
                 .addHeader("Authorization", "Bearer " + token).build();
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) { }
@@ -412,7 +413,7 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/estado")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/estado")
                 .addHeader("Authorization", "Bearer " + token).build();
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) { }
@@ -557,7 +558,7 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/partidas/" + idPartidaActual + "/participantes")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/participantes")
                 .delete().addHeader("Authorization", "Bearer " + jwt).build();
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) { finish(); }

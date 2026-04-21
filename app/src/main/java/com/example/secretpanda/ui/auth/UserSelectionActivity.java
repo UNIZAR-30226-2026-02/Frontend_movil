@@ -8,6 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.model.Jugador; // ¡Importante importar el modelo!
 import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
@@ -52,7 +53,7 @@ public class UserSelectionActivity extends AppCompatActivity {
 
             // PREPARAMOS LA LLAMADA AL BACKEND PARA REGISTRAR
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-            String url = "http://10.0.2.2:8080/api/auth/registro";
+            String url = NetworkConfig.BASE_URL + "/auth/registro";
 
             // Construimos el JSON con los dos datos que exige el backend
             String json = "{\"id_google\":\"" + idGoogle + "\", \"tag\":\"" + username + "\"}";

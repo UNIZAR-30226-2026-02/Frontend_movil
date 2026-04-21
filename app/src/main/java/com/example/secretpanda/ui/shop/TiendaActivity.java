@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.GestorEstadisticas;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
@@ -87,7 +88,7 @@ public class TiendaActivity extends AppCompatActivity {
 
     private void cargarTemasTienda() {
         okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/temas/activos";
+        String url = NetworkConfig.BASE_URL + "/temas/activos";
 
         com.example.secretpanda.data.TokenManager tokenManager = new com.example.secretpanda.data.TokenManager(this);
         String jwt = tokenManager.getToken();
@@ -150,7 +151,7 @@ public class TiendaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
 
         // URL del endpoint (ajusta la IP si es necesario)
-        String url = "http://10.0.2.2:8080/api/personalizaciones/activas";
+        String url = NetworkConfig.BASE_URL + "/personalizaciones/activas";
 
         // Obtenemos el token para la autenticación
         TokenManager tokenManager = new TokenManager(this);
@@ -280,7 +281,7 @@ public class TiendaActivity extends AppCompatActivity {
 
         btnComprar.setOnClickListener(v -> {
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-            String url = "http://10.0.2.2:8080/api/tienda/comprar/" + idGoogleEstable;
+            String url = NetworkConfig.BASE_URL + "/tienda/comprar/" + idGoogleEstable;
 
             TokenManager tokenManager = new TokenManager(this);
             String jwt = tokenManager.getToken();
@@ -384,7 +385,7 @@ public class TiendaActivity extends AppCompatActivity {
 
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/api/jugadores")
+                .url(NetworkConfig.BASE_URL + "/jugadores")
                 .get()
                 .addHeader("Authorization", "Bearer " + jwt)
                 .build();

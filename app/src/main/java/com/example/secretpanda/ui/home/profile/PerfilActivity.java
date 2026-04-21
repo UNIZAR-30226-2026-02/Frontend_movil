@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.home.GestorImagenes;
@@ -151,7 +152,7 @@ public class PerfilActivity extends AppCompatActivity {
         if (jwt == null || jwt.isEmpty()) return;
 
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/amigos";
+        String url = NetworkConfig.BASE_URL + "/amigos";
 
         Request request = new Request.Builder()
                 .url(url)
@@ -300,7 +301,7 @@ public class PerfilActivity extends AppCompatActivity {
 
     private void cargarDatosPerfil() {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores";
+        String url = NetworkConfig.BASE_URL + "/jugadores";
 
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
@@ -382,7 +383,7 @@ public class PerfilActivity extends AppCompatActivity {
 
     private void actualizarPerfilServidor(String nuevoTag, String nombreImagen) {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores";
+        String url = NetworkConfig.BASE_URL + "/jugadores";
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
 

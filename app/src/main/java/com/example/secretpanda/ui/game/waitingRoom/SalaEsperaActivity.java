@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.EfectosManager;
@@ -243,7 +244,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     }
 
     private void conectarWebSocketLobby() {
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws/websocket");
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
         String jwt = new TokenManager(this).getToken();
         List<StompHeader> headers = new ArrayList<>();
         if (jwt != null) headers.add(new StompHeader("Authorization", "Bearer " + jwt));
@@ -355,7 +356,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private void cargarLobbyInicial() {
         OkHttpClient client = new OkHttpClient();
         String jwt = new TokenManager(this).getToken();
-        Request request = new Request.Builder().url("http://10.0.2.2:8080/api/partidas/" + idPartida + "/lobby")
+        Request request = new Request.Builder().url(NetworkConfig.BASE_URL + "/partidas/" + idPartida + "/lobby")
                 .get().addHeader("Authorization", "Bearer " + jwt).build();
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) {
@@ -434,7 +435,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private void iniciarPartidaHTTP() {
         OkHttpClient client = new OkHttpClient();
         String jwt = new TokenManager(this).getToken();
-        Request request = new Request.Builder().url("http://10.0.2.2:8080/api/partida/" + idPartida + "/iniciar")
+        Request request = new Request.Builder().url(NetworkConfig.BASE_URL + "/partida/" + idPartida + "/iniciar")
                 .put(RequestBody.create(new byte[0])).addHeader("Authorization", "Bearer " + jwt).build();
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) { }

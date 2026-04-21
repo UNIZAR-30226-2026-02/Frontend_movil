@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.ui.EfectosManager;
 import com.example.secretpanda.ui.LoadingActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -99,7 +100,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void enviarTokenAlBackend(String idToken, String googleIdEstable) {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/auth/login";
+        String url = NetworkConfig.BASE_URL + "/auth/login";
 
         // Construimos el JSON exactamente como lo pide tu AuthController
         String json = "{\"id_google\":\"" + idToken + "\"}";

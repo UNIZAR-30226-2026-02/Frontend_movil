@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.secretpanda.R;
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Logro;
 
@@ -80,7 +81,7 @@ public class LogrosActivity extends AppCompatActivity {
     // ==========================================
     private void cargarDatosReales() {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://10.0.2.2:8080/api/jugadores/logros";
+        String url = NetworkConfig.BASE_URL + "/jugadores/logros";
         String token = new TokenManager(this).getToken();
 
         if (token == null) {
