@@ -417,6 +417,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
                         intent.putExtra("ID_PARTIDA", idPartida);
                         intent.putExtra("MI_NOMBRE_USUARIO", jugadorLocal != null ? jugadorLocal.getTag() : miPropioIdGoogle);
                         intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "AZUL" : "ROJO");
+                        intent.putExtra("JUGADORES_AZUL", tvContadorAzul.getText().toString());
+                        intent.putExtra("JUGADORES_ROJO", tvContadorRojo.getText().toString());
+                        intent.putExtra("JUGADORES_TOTAL", tvContadorTotal.getText().toString());
                         intent.putExtra("ES_LIDER", true);
                         startActivity(intent);
                         finish();

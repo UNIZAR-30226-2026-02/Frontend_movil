@@ -53,6 +53,11 @@ public class PartidaActivity extends AppCompatActivity {
 
     private StompClient stompClient;
     private int idPartidaActual;
+    private int cartas_rojas_restantes, cartas_azules_restantes;
+    private int max_Jugadores;
+    private int jugadores_Rojo, jugadores_Azul;
+
+    private static final int NUM_CARTAS = 8;
     private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
     
     private String equipoTurnoActual = "";
@@ -71,7 +76,10 @@ public class PartidaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_partida);
 
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
-        
+        max_Jugadores = getIntent().getIntExtra("JUGADORES_TOTAL", 0);
+        jugadores_Rojo = getIntent().getIntExtra("JUGADORES_ROJO", 0);
+        jugadores_Azul = getIntent().getIntExtra("JUGADORES_AZUL", 0);
+
         String equipoExtra = getIntent().getStringExtra("MI_EQUIPO");
         if (equipoExtra != null) miEquipo = equipoExtra;
         
@@ -186,9 +194,21 @@ public class PartidaActivity extends AppCompatActivity {
 
             faseTurno = json.optString("fase_turno", "JEFE_PISTA");
 
-            tvPuntosRojo.setText(String.valueOf(json.optInt("puntos_rojo", 0)));
-            tvPuntosAzul.setText(String.valueOf(json.optInt("puntos_azul", 0)));
+            cartas_rojas_restantes = json.optInt("cartas_rojas_restantes", 0);
+            cartas_azules_restantes = json.optInt("cartas_azules_restantes", 0);
+            if(!(max_Jugadores % 2 == 0)){
+                if(jugadores_Rojo > jugadores_Azul){
+                    tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1 - cartas_rojas_restantes));
+                    tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
+                }else{
+                    tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
+                    tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
+                }
+            }else{
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
 
+            }
             if (json.has("pista_actual") && !json.isNull("pista_actual")) {
                 JSONObject pista = json.getJSONObject("pista_actual");
                 palabraPistaActual = pista.optString("palabra_pista", "");

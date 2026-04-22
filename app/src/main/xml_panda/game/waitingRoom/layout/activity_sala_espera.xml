@@ -39,9 +39,9 @@
             android:paddingHorizontal="12dp" android:paddingVertical="6dp"
             android:text="Abandonar"
             android:textAllCaps="true"
-            android:textColor="#8A7A60"
+            android:textColor="#FFFFFF"
             android:textSize="14sp"
-            app:drawableTint="#8A7A60" />
+            app:drawableTint="@color/white" />
 
     </RelativeLayout>
 
