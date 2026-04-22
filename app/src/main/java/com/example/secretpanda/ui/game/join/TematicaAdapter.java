@@ -25,7 +25,6 @@ public class TematicaAdapter extends RecyclerView.Adapter<TematicaAdapter.Temati
     @NonNull
     @Override
     public TematicaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Usamos la tarjeta individual que creamos en los pasos anteriores
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_tematica_tarjeta, parent, false);
         return new TematicaViewHolder(view);
     }
@@ -33,10 +32,13 @@ public class TematicaAdapter extends RecyclerView.Adapter<TematicaAdapter.Temati
     @Override
     public void onBindViewHolder(@NonNull TematicaViewHolder holder, int position) {
         String tematica = listaTematicas.get(position);
+
         holder.tvNombre.setText(tematica);
 
-        // Al pulsar en una tarjeta, se avisa a la pantalla y se cierra el diálogo
+        holder.txtEmoji.setText(emojiPaquete(tematica));
+
         holder.itemView.setOnClickListener(v -> {
+            com.example.secretpanda.ui.EfectosManager.reproducir(v.getContext(), R.raw.sonido_click);
             if (listener != null) {
                 listener.onTematicaSelected(tematica);
             }
@@ -51,12 +53,29 @@ public class TematicaAdapter extends RecyclerView.Adapter<TematicaAdapter.Temati
         return listaTematicas.size();
     }
 
+    private String emojiPaquete(String nombre) {
+        if (nombre == null) return "🎴";
+        String n = nombre.toLowerCase();
+        if (n.contains("básico") || n.contains("basico")) return "🃏";
+        if (n.contains("magia")) return "🪄";
+        if (n.contains("histórico") || n.contains("historico")) return "📜";
+        if (n.contains("submarina") || n.contains("profundo")) return "🐙";
+        if (n.contains("cyber") || n.contains("futuro") || n.contains("punk")) return "🌆";
+        if (n.contains("naturaleza") || n.contains("bambu")) return "🌿";
+
+        if (n.contains("Todas")) return "🌍";
+
+        return "🎴"; // Por defecto
+    }
+
     class TematicaViewHolder extends RecyclerView.ViewHolder {
         TextView tvNombre;
+        TextView txtEmoji;
 
         public TematicaViewHolder(@NonNull View itemView) {
             super(itemView);
             tvNombre = itemView.findViewById(R.id.tv_nombre_tematica);
+            txtEmoji = itemView.findViewById(R.id.txt_emoji_tematica); // 🔥 Lo enlazamos
         }
     }
 }

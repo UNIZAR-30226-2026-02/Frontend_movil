@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="NumericButtonStyle">
+        <item name="android:layout_width">45dp</item>
+        <item name="android:layout_height">45dp</item>
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:background">@drawable/selector_boton_numero</item>
+        <item name="android:textColor">@color/color_texto_boton_num</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <style name="TacticalInputStyle">
+        <item name="android:background">@drawable/fondo_input_oscuro</item>
+        <item name="android:textColor">#e8dcc8</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:padding">12dp</item>
+    </style>
+</resources>

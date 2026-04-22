@@ -3,6 +3,7 @@ package com.example.secretpanda.ui.game.match;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
@@ -50,6 +52,7 @@ public class PartidaActivity extends AppCompatActivity {
     private View btnAlerta, btnChat, circuloTurno, circuloMiEquipo;
     private android.widget.ImageView iconoBtnAlerta;
     private GridLayout gridTablero;
+    private com.example.secretpanda.data.CustomizationManager customizationManager;
 
     private StompClient stompClient;
     private int idPartidaActual;
@@ -89,6 +92,9 @@ public class PartidaActivity extends AppCompatActivity {
         // Obtenemos el ID real guardado durante el login
         miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
         
+        customizationManager = new com.example.secretpanda.data.CustomizationManager(this);
+        cargarPersonalizaciones();
+
         if (idPartidaActual == -1) {
             Toast.makeText(this, "Error: Partida no encontrada", Toast.LENGTH_SHORT).show();
             finish();
@@ -298,12 +304,13 @@ public class PartidaActivity extends AppCompatActivity {
                 p.setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3));
                 contenedor.setLayoutParams(p);
 
+                int marcoColor = customizationManager.getBorderColor();
                 if (!revelada && numVotos > 0) {
                     contenedor.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
                     contenedor.setBackgroundColor(yoVotoAqui ? Color.parseColor("#4CAF50") : Color.parseColor("#FFC107"));
                 } else {
-                    contenedor.setPadding(dpToPx(1), dpToPx(1), dpToPx(1), dpToPx(1));
-                    contenedor.setBackgroundColor(Color.DKGRAY);
+                    contenedor.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+                    contenedor.setBackgroundColor(marcoColor);
                 }
 
                 FrameLayout fondo = new FrameLayout(this);
@@ -425,22 +432,36 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
+    private int numeroPistaSeleccionado = 1;
+
     private void mostrarDialogoAnadirPista() {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_anadir_pista);
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
         android.widget.EditText inputP = dialog.findViewById(R.id.input_palabra_pista);
-        android.widget.Spinner spinnerN = dialog.findViewById(R.id.spinner_numero_pista);
-        List<Integer> nums = new ArrayList<>();
-        for (int i = 1; i <= 9; i++) nums.add(i);
-        android.widget.ArrayAdapter<Integer> adapter = new android.widget.ArrayAdapter<>(this, R.layout.spinner_item_pista, nums);
-        adapter.setDropDownViewResource(R.layout.spinner_item_pista);
-        spinnerN.setAdapter(adapter);
+        
+        numeroPistaSeleccionado = 1;
+        for (int i = 1; i <= 8; i++) {
+            final int val = i;
+            int id = getResources().getIdentifier("btn_num_" + i, "id", getPackageName());
+            View b = dialog.findViewById(id);
+            if (b != null) {
+                b.setOnClickListener(v -> {
+                    numeroPistaSeleccionado = val;
+                    for (int j = 1; j <= 8; j++) {
+                        int idOther = getResources().getIdentifier("btn_num_" + j, "id", getPackageName());
+                        View bOther = dialog.findViewById(idOther);
+                        if (bOther != null) bOther.setSelected(j == val);
+                    }
+                });
+                if (i == 1) b.setSelected(true);
+            }
+        }
+
         dialog.findViewById(R.id.btn_enviar_pista).setOnClickListener(v -> {
             String p = inputP.getText().toString().trim();
-            int n = (int) spinnerN.getSelectedItem();
             if (!p.isEmpty()) {
-                enviarPistaServidor(p, n);
+                enviarPistaServidor(p, numeroPistaSeleccionado);
                 dialog.dismiss();
             }
         });
@@ -729,4 +750,48 @@ public class PartidaActivity extends AppCompatActivity {
             default: return Color.parseColor("#95A5A6");
         }
     }
+
+    private void cargarPersonalizaciones() {
+        OkHttpClient client = new OkHttpClient();
+        String url = NetworkConfig.BASE_URL + "/jugadores";
+        String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
+        
+        if (jwt == null) return;
+
+        Request request = new Request.Builder()
+                .url(url).get().addHeader("Authorization", "Bearer " + jwt).build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {}
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        JSONObject obj = new JSONObject(response.body().string());
+                        String marco = obj.optString("marco_carta_equipado", "");
+                        String fondo = obj.optString("fondo_tablero_equipado", "");
+                        customizationManager.saveCustomizations(marco, fondo);
+                        runOnUiThread(() -> aplicarTematizacionVisual());
+                    } catch (Exception e) {}
+                }
+            }
+        });
+    }
+
+    private void aplicarTematizacionVisual() {
+        // Aplicamos el color de personalización al contenedor del tablero (la carpeta)
+        View tableroContenedor = findViewById(R.id.tablero_contenedor);
+        if (tableroContenedor instanceof CardView) {
+            ((CardView) tableroContenedor).setCardBackgroundColor(customizationManager.getBoardColor());
+        }
+
+        // También a la pestaña para que coincida
+        View tabCarpeta = findViewById(R.id.tab_carpeta);
+        if (tabCarpeta != null && tabCarpeta.getBackground() != null) {
+            tabCarpeta.getBackground().setColorFilter(customizationManager.getBoardColor(), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+
+        // Refrescamos el tablero si ya se ha pintado
+        obtenerEstadoCompletoDePartida();
+    }
 }
+
