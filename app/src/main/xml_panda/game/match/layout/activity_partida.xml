@@ -3,7 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/desk_wood">
+    android:background="@drawable/wood">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_vignette" />
 
     <LinearLayout
         android:id="@+id/header_partida"
@@ -199,26 +204,43 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/tablero_contenedor"
+        android:id="@+id/wrapper_carpeta"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/header_partida"
         android:layout_marginHorizontal="12dp"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical"
-        android:background="@color/folder_manila"
-        android:elevation="4dp"
-        android:padding="12dp">
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
 
-        <GridLayout
-            android:id="@+id/grid_tablero"
+        <!-- Pestaña de la carpeta Manila -->
+        <View
+            android:id="@+id/tab_carpeta"
+            android:layout_width="100dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/bg_tab_manila_active" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/tablero_contenedor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="5"
-            android:alignmentMode="alignMargins"
-            android:columnOrderPreserved="false" />
+            android:layout_marginTop="-2dp"
+            app:cardBackgroundColor="@color/folder_manila"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:cardUseCompatPadding="false">
 
+            <GridLayout
+                android:id="@+id/grid_tablero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:columnCount="4"
+                android:rowCount="5"
+                android:alignmentMode="alignMargins"
+                android:columnOrderPreserved="false" />
+
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
     <RelativeLayout
@@ -232,7 +254,7 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_alignParentStart="true"
-            android:background="@drawable/fondo_boton_mision"
+            android:background="@drawable/bg_boton_tastico"
             android:elevation="6dp">
 
             <ImageView
@@ -255,7 +277,7 @@
             <FrameLayout
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:background="@drawable/fondo_boton_mision"
+                android:background="@drawable/bg_boton_tastico"
                 android:elevation="6dp">
 
                 <ImageView
