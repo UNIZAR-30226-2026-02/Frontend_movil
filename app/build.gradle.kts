@@ -89,4 +89,5 @@ dependencies {
     // Glide para carga de imágenes
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("androidx.lifecycle:lifecycle-process:2.6.2")
 }

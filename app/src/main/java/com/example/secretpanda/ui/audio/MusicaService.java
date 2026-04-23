@@ -1,4 +1,4 @@
-package com.example.secretpanda.ui;
+package com.example.secretpanda.ui.audio;
 
 import android.app.Service;
 import android.content.Intent;
@@ -40,9 +40,15 @@ public class MusicaService extends Service {
             mediaPlayer.start();
         }
         // START_STICKY hace que si el sistema mata el servicio por falta de RAM, lo reinicie solo
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        // Destruimos el servicio. Esto invocará automáticamente a onDestroy().
+        stopSelf();
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -69,6 +75,17 @@ public class MusicaService extends Service {
             float volBase = instance.getSharedPreferences("Ajustes_Audio", MODE_PRIVATE)
                     .getInt("volumen_fondo", 50) / 100f;
             instance.mediaPlayer.setVolume(volBase, volBase);
+        }
+    }
+    public static void pausarMusica() {
+        if (instance != null && instance.mediaPlayer != null && instance.mediaPlayer.isPlaying()) {
+            instance.mediaPlayer.pause();
+        }
+    }
+
+    public static void reanudarMusica() {
+        if (instance != null && instance.mediaPlayer != null && !instance.mediaPlayer.isPlaying()) {
+            instance.mediaPlayer.start();
         }
     }
 }

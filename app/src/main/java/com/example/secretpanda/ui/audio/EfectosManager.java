@@ -1,4 +1,4 @@
-package com.example.secretpanda.ui;
+package com.example.secretpanda.ui.audio;
 
 import android.content.Context;
 import android.media.AudioAttributes;
@@ -6,6 +6,7 @@ import android.media.SoundPool;
 import android.os.Handler;
 import android.os.Looper;
 import com.example.secretpanda.R;
+
 import java.util.HashMap;
 
 public class EfectosManager {
