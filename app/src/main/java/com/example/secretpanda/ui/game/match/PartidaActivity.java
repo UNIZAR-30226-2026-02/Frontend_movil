@@ -63,6 +63,9 @@ public class PartidaActivity extends AppCompatActivity {
     private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
     
     private String equipoTurnoActual = "";
+    private boolean partidaEmpezada = false;
+    private String equipoInicioPartida = "";
+
     private String faseTurno = ""; 
     private boolean miVotoEnviado = false;
     private boolean hayPistaActiva = false;
@@ -187,8 +190,27 @@ public class PartidaActivity extends AppCompatActivity {
                 return;
             }
 
+
             equipoTurnoActual = json.optString("equipo_turno_actual", equipoTurnoActual);
-            
+            cartas_rojas_restantes = json.optInt("cartas_rojas_restantes", 0);
+            cartas_azules_restantes = json.optInt("cartas_azules_restantes", 0);
+
+            if(!partidaEmpezada){
+                if(equipoTurnoActual.equals("azul")){
+                    equipoInicioPartida = equipoTurnoActual;
+                }else{
+                    equipoInicioPartida = equipoTurnoActual;
+                }
+                partidaEmpezada = true;
+            }
+
+            if(equipoInicioPartida.equals("azul")){
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS  - cartas_rojas_restantes));
+            }else{
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1 - cartas_rojas_restantes));
+            }
             // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
             if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
                 String nuevoEquipo = json.optString("mi_equipo");
@@ -199,21 +221,7 @@ public class PartidaActivity extends AppCompatActivity {
 
             faseTurno = json.optString("fase_turno", "JEFE_PISTA");
 
-            cartas_rojas_restantes = json.optInt("cartas_rojas_restantes", 0);
-            cartas_azules_restantes = json.optInt("cartas_azules_restantes", 0);
-            if(!(max_Jugadores % 2 == 0)){
-                if(jugadores_Rojo > jugadores_Azul){
-                    tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1 - cartas_rojas_restantes));
-                    tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
-                }else{
-                    tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
-                    tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
-                }
-            }else{
-                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
-                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
 
-            }
             if (json.has("pista_actual") && !json.isNull("pista_actual")) {
                 JSONObject pista = json.getJSONObject("pista_actual");
                 palabraPistaActual = pista.optString("palabra_pista", "");
