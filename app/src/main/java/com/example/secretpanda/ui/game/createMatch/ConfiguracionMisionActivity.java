@@ -3,7 +3,6 @@ package com.example.secretpanda.ui.game.createMatch;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.example.secretpanda.ui.game.join.TematicasDialogFragment;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 

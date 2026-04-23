@@ -11,11 +11,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 
 public class MisionPrivadaActivity extends AppCompatActivity {
 

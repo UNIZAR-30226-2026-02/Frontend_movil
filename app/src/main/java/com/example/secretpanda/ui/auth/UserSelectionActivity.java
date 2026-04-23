@@ -1,6 +1,5 @@
 package com.example.secretpanda.ui.auth;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -9,9 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
-import com.example.secretpanda.data.model.Jugador; // ¡Importante importar el modelo!
-import com.example.secretpanda.ui.EfectosManager;
-import com.example.secretpanda.ui.home.HomeActivity;
+import com.example.secretpanda.ui.audio.EfectosManager;
 
 public class UserSelectionActivity extends AppCompatActivity {
 

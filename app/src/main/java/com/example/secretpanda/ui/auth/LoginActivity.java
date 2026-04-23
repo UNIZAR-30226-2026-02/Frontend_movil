@@ -12,8 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
-import com.example.secretpanda.ui.EfectosManager;
-import com.example.secretpanda.ui.LoadingActivity;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;

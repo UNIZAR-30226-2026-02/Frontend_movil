@@ -22,7 +22,7 @@ import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.example.secretpanda.ui.game.match.PartidaActivity;
 
 import org.json.JSONArray;
@@ -61,7 +61,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private boolean esLider = false;
     private Dialog dialogoCarga;
 
-    // 🔥 VARIABLES DECLARADAS AQUÍ 🔥
     private int jugadoresAzul = 0;
     private int jugadoresRojo = 0;
 
@@ -84,9 +83,10 @@ public class SalaEsperaActivity extends AppCompatActivity {
         tvContadorTotal = findViewById(R.id.tv_jugadores_sala);
         tvTiempoSala = findViewById(R.id.tv_tiempo_sala);
 
+
         btnGestionarEquipo = findViewById(R.id.btn_gestionar_equipo);
         btnGestionarEquipo.setOnClickListener(v -> {
-            com.example.secretpanda.ui.EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             mostrarDialogoCambiarEquipo();
         });
 
@@ -317,6 +317,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
         jugadoresAzul = azul;
         jugadoresRojo = rojo;
+        maxJugadores = lista.size();
 
         int maxPorEquipo = maxJugadores - 2;
         if (maxPorEquipo < 2) maxPorEquipo = 2; // Seguro de fallos
@@ -437,9 +438,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
                         intent.putExtra("ID_PARTIDA", idPartida);
                         intent.putExtra("MI_NOMBRE_USUARIO", jugadorLocal != null ? jugadorLocal.getTag() : miPropioIdGoogle);
                         intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "AZUL" : "ROJO");
-                        intent.putExtra("JUGADORES_AZUL", tvContadorAzul.getText().toString());
-                        intent.putExtra("JUGADORES_ROJO", tvContadorRojo.getText().toString());
-                        intent.putExtra("JUGADORES_TOTAL", tvContadorTotal.getText().toString());
+                        intent.putExtra("JUGADORES_AZUL", jugadoresAzul);
+                        intent.putExtra("JUGADORES_ROJO", jugadoresRojo);
+                        intent.putExtra("JUGADORES_TOTAL", maxJugadores);
                         intent.putExtra("ES_LIDER", true);
                         startActivity(intent);
                         finish();

@@ -7,6 +7,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.secretpanda.R;
+import com.example.secretpanda.ui.audio.EfectosManager;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class TematicaAdapter extends RecyclerView.Adapter<TematicaAdapter.Temati
         holder.txtEmoji.setText(emojiPaquete(tematica));
 
         holder.itemView.setOnClickListener(v -> {
-            com.example.secretpanda.ui.EfectosManager.reproducir(v.getContext(), R.raw.sonido_click);
+            EfectosManager.reproducir(v.getContext(), R.raw.sonido_click);
             if (listener != null) {
                 listener.onTematicaSelected(tematica);
             }

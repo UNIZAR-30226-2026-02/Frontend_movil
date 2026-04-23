@@ -3,7 +3,6 @@ package com.example.secretpanda.ui.game.match;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,7 +20,7 @@ import androidx.cardview.widget.CardView;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
