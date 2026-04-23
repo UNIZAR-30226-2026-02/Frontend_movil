@@ -87,7 +87,7 @@ public class PartidaActivity extends AppCompatActivity {
 
         String equipoExtra = getIntent().getStringExtra("MI_EQUIPO");
         if (equipoExtra != null) miEquipo = equipoExtra;
-        
+
         String tagExtra = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         if (tagExtra != null) miTag = tagExtra;
         
@@ -156,6 +156,7 @@ public class PartidaActivity extends AppCompatActivity {
             }
             try {
                 JSONObject json = new JSONObject(payload);
+                Log.d("WS", "Estado público: " + json.toString());
                 runOnUiThread(() -> aplicarEstadoTotal(json));
             } catch (Exception e) { Log.e("WS", "Error estado publico", e); }
         });
@@ -170,6 +171,7 @@ public class PartidaActivity extends AppCompatActivity {
             }
             try {
                 JSONObject json = new JSONObject(payload);
+                Log.d("WS", "Estado público: " + json.toString());
                 runOnUiThread(() -> aplicarEstadoTotal(json));
             } catch (Exception e) { Log.e("WS", "Error estado privado", e); }
         });
@@ -178,6 +180,7 @@ public class PartidaActivity extends AppCompatActivity {
     private void navegarAFinPartida() {
         Intent intent = new Intent(this, com.example.secretpanda.ui.game.endMatch.FinPartidaActivity.class);
         intent.putExtra("ID_PARTIDA", idPartidaActual);
+        intent.putExtra("MI_NOMBRE_USUARIO", miTag);
         startActivity(intent);
         finish();
     }
@@ -190,26 +193,22 @@ public class PartidaActivity extends AppCompatActivity {
                 return;
             }
 
-
-            equipoTurnoActual = json.optString("equipo_turno_actual", equipoTurnoActual);
+            equipoTurnoActual = json.optString("equipo_turno_actual", "");
             cartas_rojas_restantes = json.optInt("cartas_rojas_restantes", 0);
             cartas_azules_restantes = json.optInt("cartas_azules_restantes", 0);
 
+
             if(!partidaEmpezada){
-                if(equipoTurnoActual.equals("azul")){
-                    equipoInicioPartida = equipoTurnoActual;
-                }else{
-                    equipoInicioPartida = equipoTurnoActual;
-                }
+                equipoInicioPartida = equipoTurnoActual;
                 partidaEmpezada = true;
             }
 
             if(equipoInicioPartida.equals("azul")){
-                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
-                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS  - cartas_rojas_restantes));
-            }else{
                 tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
-                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1 - cartas_rojas_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1  - cartas_rojas_restantes));
+            }else{
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
             }
             // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
             if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
@@ -567,14 +566,11 @@ public class PartidaActivity extends AppCompatActivity {
         stompClient.topic("/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase()).subscribe(msg -> {
             try {
                 JSONObject json = new JSONObject(msg.getPayload());
-                String idEnviado = json.optString("id_google", ""); 
-                if (idEnviado.isEmpty()) idEnviado = json.optString("id_jugador", "");
-                
-                final String finalId = idEnviado;
+
                 runOnUiThread(() -> {
                     historialChat.add(json);
                     if (contenedorMensajesActual != null) {
-                        boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(finalId);
+                        boolean esMio = miTag != json.optString("tag", "");
                         boolean esValido = json.optBoolean("es_valido", true);
                         agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio, esValido);
                     }
@@ -628,6 +624,7 @@ public class PartidaActivity extends AppCompatActivity {
         if (parent instanceof android.widget.ScrollView) {
             parent.post(() -> ((android.widget.ScrollView)parent).fullScroll(View.FOCUS_DOWN));
         }
+
     }
 
     private void mostrarDialogoChat() {
@@ -639,7 +636,7 @@ public class PartidaActivity extends AppCompatActivity {
         android.widget.EditText in = d.findViewById(R.id.input_mensaje);
         if (JEFE_STRING.equalsIgnoreCase(miRol)) d.findViewById(R.id.zona_escribir).setVisibility(View.GONE);
         for (JSONObject m : historialChat) {
-            boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(m.optString("id_jugador"));
+            boolean esMio = miTag == m.optString("tag", "");
             boolean esValido = m.optBoolean("es_valido", true);
             agregarMensajeAlChat(contenedorMensajesActual, m.optString("tag"), m.optString("mensaje"), esMio, esValido);
         }

@@ -38,10 +38,10 @@
             android:paddingVertical="8dp"
             android:text="ABANDONAR"
             android:textAllCaps="true"
-            android:textColor="@color/ink_muted"
+            android:textColor="@color/white"
             android:textSize="13sp"
             android:textStyle="bold"
-            app:drawableTint="@color/ink_muted" />
+            app:drawableTint="@color/white" />
     </RelativeLayout>
 
     <RelativeLayout
