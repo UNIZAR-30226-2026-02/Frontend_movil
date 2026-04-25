@@ -227,11 +227,20 @@ public class PartidaActivity extends AppCompatActivity {
         if (hayPistaActiva || "votando".equalsIgnoreCase(faseTurno)) {
             tvFasePartida.setText("PISTA: " + palabraPistaActual.toUpperCase() + " (" + numeroPistaActual + ")");
         } else {
-            String msg = equipoTurnoActual.equalsIgnoreCase(miEquipo) ? "TU TURNO: DA UNA PISTA" : "ESPERANDO AL JEFE " + equipoTurnoActual.toUpperCase();
+            String msg;
+            if (equipoTurnoActual.equalsIgnoreCase(miEquipo)) {
+                if (JEFE_STRING.equalsIgnoreCase(miRol)) {
+                    msg = "TU TURNO: DA UNA PISTA";
+                } else {
+                    msg = "ESPERANDO PISTA DEL JEFE";
+                }
+            } else {
+                msg = "ESPERANDO AL JEFE " + equipoTurnoActual.toUpperCase();
+            }
             tvFasePartida.setText(msg);
         }
         tvMiRol.setText("ROL: " + miRol);
-        
+
         boolean puedoDarPista = JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !"votando".equalsIgnoreCase(faseTurno);
         iconoBtnAlerta.setImageResource(puedoDarPista ? R.drawable.ic_anadir_pista : android.R.drawable.ic_menu_view);
     }

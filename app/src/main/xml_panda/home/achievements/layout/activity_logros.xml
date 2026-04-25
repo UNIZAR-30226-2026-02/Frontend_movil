@@ -31,7 +31,8 @@
         android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginTop="12dp"
-        android:background="@android:color/transparent" android:gravity="center_vertical"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,8 +55,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="LOGROS Y MEDALLAS"
-                android:textColor="@color/ink_text" 
-                android:fontFamily="serif" 
+                android:textColor="@color/ink_text"
+                android:fontFamily="serif"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -70,45 +71,152 @@
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/sello_clasificado"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_marginEnd="60dp"
-        android:layout_marginBottom="24dp"
-        android:alpha="0.4"
-        android:rotation="-15"
-        android:src="@drawable/bg_stamp_confidential"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <ImageView
         android:id="@+id/btn_cerrar_logros"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
-        android:background="@android:color/transparent" android:elevation="5dp"
+        android:background="@android:color/transparent"
+        android:elevation="5dp"
         android:padding="8dp"
         android:src="@drawable/ic_cerrar_x"
-        app:tint="@color/ink_text" app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/ink_text"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/layout_stats_logros"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/top_bar_logros">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_dark_card"
+            android:backgroundTint="#2a2218"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_trofeo"
+                app:tint="#d4b878"
+                android:layout_marginBottom="4dp"/>
+            <TextView
+                android:id="@+id/txt_stat_num_logros"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0/0"
+                android:textColor="#d4b878"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LOGROS"
+                android:textColor="#e8dcc8"
+                android:textSize="10sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_dark_card"
+            android:backgroundTint="#2a2218"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_medal"
+                app:tint="#d4b878"
+                android:layout_marginBottom="4dp"/>
+            <TextView
+                android:id="@+id/txt_stat_num_medallas"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0/0"
+                android:textColor="#d4b878"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MEDALLAS"
+                android:textColor="#e8dcc8"
+                android:textSize="10sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_dark_card"
+            android:backgroundTint="#2a2218"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_bullet"
+                app:tint="#d4b878"
+                android:layout_marginBottom="4dp"/>
+            <TextView
+                android:id="@+id/txt_stat_num_balas"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="#d4b878"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BALAS"
+                android:textColor="#e8dcc8"
+                android:textSize="10sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
+    </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_botones_filtro_logros"
         android:layout_width="match_parent"
         android:layout_height="55dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_bar_logros">
+        app:layout_constraintTop_toBottomOf="@+id/layout_stats_logros">
 
         <TextView
             android:id="@+id/tab_logros"
             android:layout_width="130dp"
             android:layout_height="55dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_manila_card" android:gravity="center"
+            android:background="@drawable/bg_manila_card"
+            android:gravity="center"
             android:text="Logros"
-            android:textColor="@color/ink_text" android:fontFamily="monospace" android:textSize="18sp"
+            android:textColor="@color/ink_text"
+            android:fontFamily="monospace"
+            android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
@@ -120,9 +228,12 @@
             android:layout_width="130dp"
             android:layout_height="40dp"
             android:layout_marginStart="8dp"
-            android:background="@drawable/bg_manila_card" android:gravity="center"
+            android:background="@drawable/bg_manila_card"
+            android:gravity="center"
             android:text="Medallas"
-            android:textColor="@color/ink_muted" android:fontFamily="monospace" android:textSize="16sp"
+            android:textColor="@color/ink_muted"
+            android:fontFamily="monospace"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/tab_logros"
             app:layout_constraintEnd_toEndOf="parent"
@@ -150,5 +261,17 @@
         app:spanCount="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layout_botones_filtro_logros" />
+
+    <ImageView
+        android:id="@+id/sello_clasificado"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginBottom="24dp"
+        android:alpha="0.4"
+        android:rotation="-15"
+        android:src="@drawable/bg_stamp_confidential"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
