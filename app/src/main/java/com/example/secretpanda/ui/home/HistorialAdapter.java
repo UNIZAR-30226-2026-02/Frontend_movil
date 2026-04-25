@@ -44,9 +44,11 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
         // Código
         holder.txtCodigo.setText("SALA: " + partida.codigo_partida);
 
-        // Fecha convertida al formato "Hace X tiempo"
-        holder.txtFecha.setText(obtenerTiempoTranscurrido(partida.fechaFin));
-
+        String fechaMostrada = "---";
+        if (partida.fechaFin != null && !partida.fechaFin.equals("null") && !partida.fechaFin.isEmpty()) {
+            fechaMostrada = obtenerTiempoTranscurrido(partida.fechaFin);
+        }
+        holder.txtFecha.setText(fechaMostrada);
         // Mostrar Equipo y Rol
         String equipoStr = partida.equipo != null ? partida.equipo.toUpperCase() : "DESCONOCIDO";
         String rolStr = partida.rol != null ? partida.rol.toUpperCase() : "AGENTE";

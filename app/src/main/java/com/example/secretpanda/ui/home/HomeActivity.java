@@ -320,20 +320,21 @@ public class HomeActivity extends AppCompatActivity {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_historial, null);
         AlertDialog dialog = crearDialogoBase(dialogView);
 
-        // 1. Configurar RecyclerView (Asegúrate de tener un RecyclerView con este ID en dialog_historial.xml)
         RecyclerView recycler = dialogView.findViewById(R.id.recycler_historial);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         TextView txtVacio = dialogView.findViewById(R.id.txt_historial_vacio);
-        // Creamos el adaptador (necesitarás crear esta clase HistorialAdapter similar a las anteriores)
+
+        TextView txtTotal = dialogView.findViewById(R.id.txt_stat_partidas);
+        TextView txtVic = dialogView.findViewById(R.id.txt_stat_victorias);
+        TextView txtDer = dialogView.findViewById(R.id.txt_stat_derrotas);
+
         HistorialAdapter adapter = new HistorialAdapter(new ArrayList<>());
         recycler.setAdapter(adapter);
 
-        // 2. CARGA AUTOMÁTICA: Llamamos al servidor nada más abrir
-        cargarHistorialServidor(adapter, txtVacio, recycler);
+        cargarHistorialServidor(adapter, txtVacio, recycler, txtTotal, txtVic, txtDer);
 
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_popup);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
-
         dialog.show();
     }
 
@@ -394,7 +395,8 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
-    private void cargarHistorialServidor(HistorialAdapter adapter, TextView txtVacio, RecyclerView recycler) {
+    private void cargarHistorialServidor(HistorialAdapter adapter, TextView txtVacio, RecyclerView recycler,
+                                         TextView txtTotal, TextView txtVic, TextView txtDer) {
         OkHttpClient client = new OkHttpClient();
         String url = NetworkConfig.BASE_URL + "/jugadores/historial";
 
@@ -422,7 +424,9 @@ public class HomeActivity extends AppCompatActivity {
                         Log.d("API_HISTORIAL", jsonData);
                         org.json.JSONArray array = new org.json.JSONArray(jsonData);
                         List<PartidaHistorial> lista = new java.util.ArrayList<>();
-
+                        int contadorTotales = 0;
+                        int contadorVictorias = 0;
+                        int contadorDerrotas = 0;
                         for (int i = 0; i < array.length(); i++) {
                             org.json.JSONObject obj = array.getJSONObject(i);
                             PartidaHistorial ph = new PartidaHistorial();
@@ -435,7 +439,16 @@ public class HomeActivity extends AppCompatActivity {
                             ph.abandono = obj.optBoolean("abandono");
 
                             ph.estado = obj.optString("estado"); // <--- Añadido
-
+                            contadorTotales++;
+                            if (!obj.isNull("rojo_gana")) {
+                                boolean rojoGana = obj.optBoolean("rojo_gana");
+                                String equipo = obj.optString("equipo", "");
+                                if ((rojoGana && "rojo".equalsIgnoreCase(equipo)) || (!rojoGana && "azul".equalsIgnoreCase(equipo))) {
+                                    contadorVictorias++;
+                                } else {
+                                    contadorDerrotas++;
+                                }
+                            }
                             // Manejo correcto de null para Boolean
                             if (obj.isNull("rojo_gana")) {
                                 ph.rojoGana = null;
@@ -450,6 +463,9 @@ public class HomeActivity extends AppCompatActivity {
                             Log.d("API_HISTORIAL", ph.id_partida + " - " + ph.codigo_partida + " - " + ph.fechaFin + " - " + ph.equipo + " - " + ph.rol);
                             lista.add(ph);
                         }
+                        final int finTotales = contadorTotales;
+                        final int finVictorias = contadorVictorias;
+                        final int finDerrotas = contadorDerrotas;
                         runOnUiThread(() -> {
                             if (lista.isEmpty()) {
                                 txtVacio.setVisibility(View.VISIBLE);
@@ -458,6 +474,9 @@ public class HomeActivity extends AppCompatActivity {
                                 txtVacio.setVisibility(View.GONE);
                                 recycler.setVisibility(View.VISIBLE);
                             }
+                            if (txtTotal != null) txtTotal.setText(String.valueOf(finTotales));
+                            if (txtVic != null) txtVic.setText(String.valueOf(finVictorias));
+                            if (txtDer != null) txtDer.setText(String.valueOf(finDerrotas));
                             Log.d("API_HISTORIAL", "Lista actualizada: " + lista.size());
                             adapter.setLista(lista);
                         });

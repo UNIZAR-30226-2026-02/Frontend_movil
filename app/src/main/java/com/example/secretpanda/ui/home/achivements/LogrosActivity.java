@@ -41,6 +41,8 @@ public class LogrosActivity extends AppCompatActivity {
     private RecyclerView recyclerLogros, recyclerMedallas;
     private ImageView btnCerrar;
 
+    private TextView txtStatLogros, txtStatMedallas, txtStatBalas;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +54,10 @@ public class LogrosActivity extends AppCompatActivity {
         recyclerLogros = findViewById(R.id.recycler_lista_logros);
         recyclerMedallas = findViewById(R.id.recycler_lista_medallas);
         btnCerrar = findViewById(R.id.btn_cerrar_logros);
+
+        txtStatLogros = findViewById(R.id.txt_stat_num_logros);
+        txtStatMedallas = findViewById(R.id.txt_stat_num_medallas);
+        txtStatBalas = findViewById(R.id.txt_stat_num_balas);
 
         recyclerLogros.setLayoutManager(new LinearLayoutManager(this));
         recyclerMedallas.setLayoutManager(new LinearLayoutManager(this));
@@ -76,9 +82,7 @@ public class LogrosActivity extends AppCompatActivity {
         cargarDatosReales();
     }
 
-    // ==========================================
-    // CONEXIÓN CON LA BASE DE DATOS (Real)
-    // ==========================================
+
     private void cargarDatosReales() {
         OkHttpClient client = new OkHttpClient();
         String url = NetworkConfig.BASE_URL + "/jugadores/logros";
@@ -117,8 +121,6 @@ public class LogrosActivity extends AppCompatActivity {
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject obj = array.getJSONObject(i);
 
-                            // Mapeamos los datos del JSON al objeto Logro
-                            // Asegúrate de que tu modelo Logro tenga estos constructores o setters
                             Logro item = new Logro();
                             item.setNombre(obj.optString("nombre", ""));
                             item.setDescripcion(obj.optString("descripcion", ""));
@@ -127,7 +129,6 @@ public class LogrosActivity extends AppCompatActivity {
                             item.setCompletado(obj.optBoolean("completado", false));
                             item.setBalasRecompensa(obj.optInt("balas_recompensa", 0));
 
-                            // Separamos en la lista que toca según el boolean "es_logro"
                             boolean esLogro = obj.optBoolean("es_logro", true);
 
                             if (esLogro) {
@@ -139,8 +140,39 @@ public class LogrosActivity extends AppCompatActivity {
                             }
                         }
 
-                        // Actualizamos los adaptadores en el hilo principal
+                        int contLogros = 0;
+                        int contMedallas = 0;
+                        int sumaBalas = 0;
+
+                        for (Logro l : listaLogros) {
+                            if (l.isCompletado()) {
+                                contLogros++;
+                                sumaBalas += l.getBalasRecompensa();
+                            }
+                        }
+
+                        for (Logro m : listaMedallas) {
+                            if (m.isCompletado()) {
+                                contMedallas++;
+                                sumaBalas += m.getBalasRecompensa();
+                            }
+                        }
+
+                        // Creamos variables final para el runOnUiThread
+                        final int finalLogrosCompletados = contLogros;
+                        final int finalTotalLogros = listaLogros.size();
+                        final int finalMedallasCompletadas = contMedallas;
+                        final int finalTotalMedallas = listaMedallas.size();
+                        final int finalSumaBalas = sumaBalas;
+
+                        // Actualizamos los adaptadores y los cuadrados en el hilo principal
                         runOnUiThread(() -> {
+                            // Textos de los 3 cuadrados
+                            if (txtStatLogros != null) txtStatLogros.setText(finalLogrosCompletados + "/" + finalTotalLogros);
+                            if (txtStatMedallas != null) txtStatMedallas.setText(finalMedallasCompletadas + "/" + finalTotalMedallas);
+                            if (txtStatBalas != null) txtStatBalas.setText(String.valueOf(finalSumaBalas));
+
+                            // Adaptadores que ya te funcionaban bien
                             recyclerLogros.setAdapter(new LogrosAdapter(listaLogros));
                             recyclerMedallas.setAdapter(new MedallasAdapter(listaMedallas));
                         });
@@ -190,7 +222,6 @@ public class LogrosActivity extends AppCompatActivity {
             holder.barra.setMax(logro.getValorObjetivo());
             holder.barra.setProgress(logro.getProgresoActual());
             holder.txtDescripcion.setText(logro.getDescripcion());
-
 
             if (logro.isCompletado()) {
                 holder.txtProgreso.setText("¡Completado!");
