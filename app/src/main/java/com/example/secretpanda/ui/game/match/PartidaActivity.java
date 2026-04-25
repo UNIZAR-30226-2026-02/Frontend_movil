@@ -16,10 +16,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
@@ -50,12 +51,21 @@ public class PartidaActivity extends AppCompatActivity {
     private View btnAlerta, btnChat, circuloTurno, circuloMiEquipo;
     private android.widget.ImageView iconoBtnAlerta;
     private GridLayout gridTablero;
+    private com.example.secretpanda.data.CustomizationManager customizationManager;
 
     private StompClient stompClient;
     private int idPartidaActual;
+    private int cartas_rojas_restantes, cartas_azules_restantes;
+    private int max_Jugadores;
+    private int jugadores_Rojo, jugadores_Azul;
+
+    private static final int NUM_CARTAS = 8;
     private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
     
     private String equipoTurnoActual = "";
+    private boolean partidaEmpezada = false;
+    private String equipoInicioPartida = "";
+
     private String faseTurno = ""; 
     private boolean miVotoEnviado = false;
     private boolean hayPistaActiva = false;
@@ -71,16 +81,22 @@ public class PartidaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_partida);
 
         idPartidaActual = getIntent().getIntExtra("ID_PARTIDA", -1);
-        
+        max_Jugadores = getIntent().getIntExtra("JUGADORES_TOTAL", 0);
+        jugadores_Rojo = getIntent().getIntExtra("JUGADORES_ROJO", 0);
+        jugadores_Azul = getIntent().getIntExtra("JUGADORES_AZUL", 0);
+
         String equipoExtra = getIntent().getStringExtra("MI_EQUIPO");
         if (equipoExtra != null) miEquipo = equipoExtra;
-        
+
         String tagExtra = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         if (tagExtra != null) miTag = tagExtra;
         
         // Obtenemos el ID real guardado durante el login
         miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
         
+        customizationManager = new com.example.secretpanda.data.CustomizationManager(this);
+        cargarPersonalizaciones();
+
         if (idPartidaActual == -1) {
             Toast.makeText(this, "Error: Partida no encontrada", Toast.LENGTH_SHORT).show();
             finish();
@@ -140,6 +156,7 @@ public class PartidaActivity extends AppCompatActivity {
             }
             try {
                 JSONObject json = new JSONObject(payload);
+                Log.d("WS", "Estado público: " + json.toString());
                 runOnUiThread(() -> aplicarEstadoTotal(json));
             } catch (Exception e) { Log.e("WS", "Error estado publico", e); }
         });
@@ -154,6 +171,7 @@ public class PartidaActivity extends AppCompatActivity {
             }
             try {
                 JSONObject json = new JSONObject(payload);
+                Log.d("WS", "Estado público: " + json.toString());
                 runOnUiThread(() -> aplicarEstadoTotal(json));
             } catch (Exception e) { Log.e("WS", "Error estado privado", e); }
         });
@@ -162,6 +180,7 @@ public class PartidaActivity extends AppCompatActivity {
     private void navegarAFinPartida() {
         Intent intent = new Intent(this, com.example.secretpanda.ui.game.endMatch.FinPartidaActivity.class);
         intent.putExtra("ID_PARTIDA", idPartidaActual);
+        intent.putExtra("MI_NOMBRE_USUARIO", miTag);
         startActivity(intent);
         finish();
     }
@@ -174,8 +193,23 @@ public class PartidaActivity extends AppCompatActivity {
                 return;
             }
 
-            equipoTurnoActual = json.optString("equipo_turno_actual", equipoTurnoActual);
-            
+            equipoTurnoActual = json.optString("equipo_turno_actual", "");
+            cartas_rojas_restantes = json.optInt("cartas_rojas_restantes", 0);
+            cartas_azules_restantes = json.optInt("cartas_azules_restantes", 0);
+
+
+            if(!partidaEmpezada){
+                equipoInicioPartida = equipoTurnoActual;
+                partidaEmpezada = true;
+            }
+
+            if(equipoInicioPartida.equals("azul")){
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1  - cartas_rojas_restantes));
+            }else{
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
+            }
             // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
             if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
                 String nuevoEquipo = json.optString("mi_equipo");
@@ -186,8 +220,6 @@ public class PartidaActivity extends AppCompatActivity {
 
             faseTurno = json.optString("fase_turno", "JEFE_PISTA");
 
-            tvPuntosRojo.setText(String.valueOf(json.optInt("puntos_rojo", 0)));
-            tvPuntosAzul.setText(String.valueOf(json.optInt("puntos_azul", 0)));
 
             if (json.has("pista_actual") && !json.isNull("pista_actual")) {
                 JSONObject pista = json.getJSONObject("pista_actual");
@@ -287,12 +319,13 @@ public class PartidaActivity extends AppCompatActivity {
                 p.setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3));
                 contenedor.setLayoutParams(p);
 
+                int marcoColor = customizationManager.getBorderColor();
                 if (!revelada && numVotos > 0) {
                     contenedor.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
                     contenedor.setBackgroundColor(yoVotoAqui ? Color.parseColor("#4CAF50") : Color.parseColor("#FFC107"));
                 } else {
-                    contenedor.setPadding(dpToPx(1), dpToPx(1), dpToPx(1), dpToPx(1));
-                    contenedor.setBackgroundColor(Color.DKGRAY);
+                    contenedor.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+                    contenedor.setBackgroundColor(marcoColor);
                 }
 
                 FrameLayout fondo = new FrameLayout(this);
@@ -414,22 +447,36 @@ public class PartidaActivity extends AppCompatActivity {
         });
     }
 
+    private int numeroPistaSeleccionado = 1;
+
     private void mostrarDialogoAnadirPista() {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_anadir_pista);
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
         android.widget.EditText inputP = dialog.findViewById(R.id.input_palabra_pista);
-        android.widget.Spinner spinnerN = dialog.findViewById(R.id.spinner_numero_pista);
-        List<Integer> nums = new ArrayList<>();
-        for (int i = 1; i <= 9; i++) nums.add(i);
-        android.widget.ArrayAdapter<Integer> adapter = new android.widget.ArrayAdapter<>(this, R.layout.spinner_item_pista, nums);
-        adapter.setDropDownViewResource(R.layout.spinner_item_pista);
-        spinnerN.setAdapter(adapter);
+        
+        numeroPistaSeleccionado = 1;
+        for (int i = 1; i <= 8; i++) {
+            final int val = i;
+            int id = getResources().getIdentifier("btn_num_" + i, "id", getPackageName());
+            View b = dialog.findViewById(id);
+            if (b != null) {
+                b.setOnClickListener(v -> {
+                    numeroPistaSeleccionado = val;
+                    for (int j = 1; j <= 8; j++) {
+                        int idOther = getResources().getIdentifier("btn_num_" + j, "id", getPackageName());
+                        View bOther = dialog.findViewById(idOther);
+                        if (bOther != null) bOther.setSelected(j == val);
+                    }
+                });
+                if (i == 1) b.setSelected(true);
+            }
+        }
+
         dialog.findViewById(R.id.btn_enviar_pista).setOnClickListener(v -> {
             String p = inputP.getText().toString().trim();
-            int n = (int) spinnerN.getSelectedItem();
             if (!p.isEmpty()) {
-                enviarPistaServidor(p, n);
+                enviarPistaServidor(p, numeroPistaSeleccionado);
                 dialog.dismiss();
             }
         });
@@ -528,14 +575,11 @@ public class PartidaActivity extends AppCompatActivity {
         stompClient.topic("/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase()).subscribe(msg -> {
             try {
                 JSONObject json = new JSONObject(msg.getPayload());
-                String idEnviado = json.optString("id_google", ""); 
-                if (idEnviado.isEmpty()) idEnviado = json.optString("id_jugador", "");
-                
-                final String finalId = idEnviado;
+
                 runOnUiThread(() -> {
                     historialChat.add(json);
                     if (contenedorMensajesActual != null) {
-                        boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(finalId);
+                        boolean esMio = miTag != json.optString("tag", "");
                         boolean esValido = json.optBoolean("es_valido", true);
                         agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio, esValido);
                     }
@@ -589,6 +633,7 @@ public class PartidaActivity extends AppCompatActivity {
         if (parent instanceof android.widget.ScrollView) {
             parent.post(() -> ((android.widget.ScrollView)parent).fullScroll(View.FOCUS_DOWN));
         }
+
     }
 
     private void mostrarDialogoChat() {
@@ -600,7 +645,7 @@ public class PartidaActivity extends AppCompatActivity {
         android.widget.EditText in = d.findViewById(R.id.input_mensaje);
         if (JEFE_STRING.equalsIgnoreCase(miRol)) d.findViewById(R.id.zona_escribir).setVisibility(View.GONE);
         for (JSONObject m : historialChat) {
-            boolean esMio = miPropioIdGoogle != null && miPropioIdGoogle.equals(m.optString("id_jugador"));
+            boolean esMio = miTag == m.optString("tag", "");
             boolean esValido = m.optBoolean("es_valido", true);
             agregarMensajeAlChat(contenedorMensajesActual, m.optString("tag"), m.optString("mensaje"), esMio, esValido);
         }
@@ -718,4 +763,48 @@ public class PartidaActivity extends AppCompatActivity {
             default: return Color.parseColor("#95A5A6");
         }
     }
+
+    private void cargarPersonalizaciones() {
+        OkHttpClient client = new OkHttpClient();
+        String url = NetworkConfig.BASE_URL + "/jugadores";
+        String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
+        
+        if (jwt == null) return;
+
+        Request request = new Request.Builder()
+                .url(url).get().addHeader("Authorization", "Bearer " + jwt).build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {}
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    try {
+                        JSONObject obj = new JSONObject(response.body().string());
+                        String marco = obj.optString("marco_carta_equipado", "");
+                        String fondo = obj.optString("fondo_tablero_equipado", "");
+                        customizationManager.saveCustomizations(marco, fondo);
+                        runOnUiThread(() -> aplicarTematizacionVisual());
+                    } catch (Exception e) {}
+                }
+            }
+        });
+    }
+
+    private void aplicarTematizacionVisual() {
+        // Aplicamos el color de personalización al contenedor del tablero (la carpeta)
+        View tableroContenedor = findViewById(R.id.tablero_contenedor);
+        if (tableroContenedor instanceof CardView) {
+            ((CardView) tableroContenedor).setCardBackgroundColor(customizationManager.getBoardColor());
+        }
+
+        // También a la pestaña para que coincida
+        View tabCarpeta = findViewById(R.id.tab_carpeta);
+        if (tabCarpeta != null && tabCarpeta.getBackground() != null) {
+            tabCarpeta.getBackground().setColorFilter(customizationManager.getBoardColor(), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+
+        // Refrescamos el tablero si ya se ha pintado
+        obtenerEstadoCompletoDePartida();
+    }
 }
+

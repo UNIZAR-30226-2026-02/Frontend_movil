@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="24dp"
-    android:background="@drawable/bg_manila_card"
+    android:background="@drawable/fondo_dialogo_oscuro"
     android:padding="24dp">
 
     <ImageView
@@ -16,7 +16,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="4dp"
         android:src="@drawable/ic_cerrar_x"
-        app:tint="@color/ink_text" />
+        app:tint="#d4b878" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,10 +30,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
-            android:fontFamily="serif"
+            android:fontFamily="monospace"
             android:gravity="center"
             android:text="ADVERTENCIA DE CAMPO:\n¿CONFIRMAR ABANDONO DE MISIÓN?"
-            android:textColor="@color/ink_text"
+            android:textColor="#d4b878"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:text="Los datos no guardados se perderán"
-            android:textColor="@color/ink_muted"
+            android:textColor="#666666"
             android:textSize="10sp"
             android:alpha="0.7"/>
 

@@ -17,16 +17,13 @@ import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
-import com.example.secretpanda.ui.EfectosManager;
-import com.example.secretpanda.ui.game.match.PartidaActivity;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 

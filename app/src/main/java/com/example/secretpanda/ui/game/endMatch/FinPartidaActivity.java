@@ -15,7 +15,7 @@ import androidx.cardview.widget.CardView;
 import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.example.secretpanda.ui.home.HomeActivity;
 
 import org.json.JSONObject;

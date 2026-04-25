@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_manila_folder"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ORDEN DE ELIMINACIÓN"
+        android:textColor="@color/fbi_red"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:fontFamily="serif"
+        android:gravity="center"
+        android:letterSpacing="0.1"
+        android:layout_marginBottom="16dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/ink_text"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/mensaje_desactivar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Estás a punto de desactivar tu cuenta de forma permanente.\n\n• Se borrarán estadísticas y victorias.\n• Perderás ítems y personalizaciones.\n• Dejarás de aparecer en clasificaciones.\n\nEsta acción es IRREVERSIBLE."
+        android:textColor="@color/ink_text"
+        android:textSize="14sp"
+        android:fontFamily="monospace"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ESPERE A QUE SE AUTORICE LA OPERACIÓN..."
+        android:textColor="@color/ink_muted"
+        android:textSize="10sp"
+        android:fontFamily="serif"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btn_cancelar_dialogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CANCELAR"
+            android:textColor="@color/ink_text"
+            android:background="@android:color/transparent"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btn_confirmar_dialogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONFIRMAR (10)"
+            android:textColor="@color/fbi_red"
+            android:background="@drawable/fondo_input_borde_negro"
+            android:backgroundTint="@color/folder_manila_dark"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:paddingHorizontal="16dp"/>
+    </LinearLayout>
+
+</LinearLayout>

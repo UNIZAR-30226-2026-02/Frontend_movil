@@ -94,7 +94,49 @@ public class PerfilActivity extends AppCompatActivity {
 
         ImageView btnCerrar = findViewById(R.id.btn_cerrar_perfil);
         btnCerrarSesion = findViewById(R.id.btn_cerrar_sesion);
+        Button btnDesactivarCuenta = findViewById(R.id.btn_desactivar_cuenta);
+
         btnCerrar.setOnClickListener(v -> finish());
+
+        btnDesactivarCuenta.setOnClickListener(v -> {
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_desactivar_cuenta, null);
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+            builder.setView(dialogView);
+            android.app.AlertDialog dialog = builder.create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+
+            Button btnConfirmar = dialogView.findViewById(R.id.btn_confirmar_dialogo);
+            Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar_dialogo);
+
+            btnConfirmar.setEnabled(false);
+            btnConfirmar.setAlpha(0.5f);
+
+            new android.os.CountDownTimer(10000, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    btnConfirmar.setText("CONFIRMAR (" + (millisUntilFinished / 1000 + 1) + ")");
+                }
+
+                @Override
+                public void onFinish() {
+                    btnConfirmar.setText("CONFIRMAR");
+                    btnConfirmar.setEnabled(true);
+                    btnConfirmar.setAlpha(1.0f);
+                }
+            }.start();
+
+            btnConfirmar.setOnClickListener(v2 -> {
+                desactivarCuentaServidor();
+                dialog.dismiss();
+            });
+
+            btnCancelar.setOnClickListener(v2 -> dialog.dismiss());
+
+            dialog.show();
+        });
 
         tabDatos.setOnClickListener(v -> {
             cargarDatosPerfil();
@@ -420,6 +462,53 @@ public class PerfilActivity extends AppCompatActivity {
                         cargarDatosPerfil();
                     }
                 });
+            }
+        });
+    }
+
+    private void desactivarCuentaServidor() {
+        OkHttpClient client = new OkHttpClient();
+        String url = NetworkConfig.BASE_URL + "/auth/desactivar";
+        TokenManager tokenManager = new TokenManager(this);
+        String jwt = tokenManager.getToken();
+
+        if (jwt == null || jwt.isEmpty()) return;
+
+        okhttp3.RequestBody emptyBody = okhttp3.RequestBody.create("", okhttp3.MediaType.parse("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .put(emptyBody)
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                runOnUiThread(() -> android.widget.Toast.makeText(PerfilActivity.this, "Error de red al desactivar cuenta", android.widget.Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                if (response.isSuccessful()) {
+                    runOnUiThread(() -> {
+                        // Flujo de cierre de sesión idéntico al botón de logout
+                        com.google.android.gms.auth.api.signin.GoogleSignInOptions gso =
+                                new com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).build();
+                        com.google.android.gms.auth.api.signin.GoogleSignInClient googleClient =
+                                com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(PerfilActivity.this, gso);
+
+                        googleClient.signOut().addOnCompleteListener(PerfilActivity.this, task -> {
+                            tokenManager.clearToken();
+                            Intent intent = new Intent(PerfilActivity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        });
+                    });
+                } else {
+                    runOnUiThread(() -> android.widget.Toast.makeText(PerfilActivity.this, "Error al desactivar la cuenta en el servidor", android.widget.Toast.LENGTH_SHORT).show());
+                }
             }
         });
     }

@@ -2,13 +2,10 @@
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/colorControlHighlight"> <item>
     <shape android:shape="rectangle">
-        <stroke
-            android:width="1dp"
-            android:color="#8A7A60" />
 
         <corners android:radius="2dp" />
 
-        <solid android:color="@android:color/transparent" />
+        <solid android:color="@color/fbi_red" />
     </shape>
 </item>
 </ripple>

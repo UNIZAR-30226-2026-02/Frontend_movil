@@ -7,7 +7,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.secretpanda.R;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 
 public class CrearMisionOpcionesActivity extends AppCompatActivity {
 

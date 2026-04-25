@@ -9,7 +9,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,7 +19,7 @@ import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.GestorEstadisticas;
 import com.example.secretpanda.data.model.ItemPersonalizacion;
 import com.example.secretpanda.data.model.Jugador;
-import com.example.secretpanda.ui.EfectosManager;
+import com.example.secretpanda.ui.audio.EfectosManager;
 import com.example.secretpanda.ui.customization.PersonalizacionActivity;
 import com.example.secretpanda.ui.home.HomeActivity;
 

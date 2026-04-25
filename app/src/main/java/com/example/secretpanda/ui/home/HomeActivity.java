@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -25,8 +24,8 @@ import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.model.Jugador;
-import com.example.secretpanda.ui.EfectosManager;
-import com.example.secretpanda.ui.MusicaService;
+import com.example.secretpanda.ui.audio.EfectosManager;
+import com.example.secretpanda.ui.audio.MusicaService;
 import com.example.secretpanda.ui.home.classification.ClasificacionActivity; // Importamos la nueva pantalla
 
 import com.example.secretpanda.ui.home.achivements.LogrosActivity;
