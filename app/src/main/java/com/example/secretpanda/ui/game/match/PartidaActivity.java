@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -53,6 +54,7 @@ public class PartidaActivity extends AppCompatActivity {
     private GridLayout gridTablero;
     private com.example.secretpanda.data.CustomizationManager customizationManager;
 
+    private JSONObject tableroAntesVotacion;
     private StompClient stompClient;
     private int idPartidaActual;
     private int cartas_rojas_restantes, cartas_azules_restantes;
@@ -63,7 +65,6 @@ public class PartidaActivity extends AppCompatActivity {
     private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
     
     private String equipoTurnoActual = "";
-    private boolean partidaEmpezada = false;
     private String equipoInicioPartida = "";
 
     private String faseTurno = ""; 
@@ -198,17 +199,12 @@ public class PartidaActivity extends AppCompatActivity {
             cartas_azules_restantes = json.optInt("cartas_azules_restantes", 0);
 
 
-            if(!partidaEmpezada){
-                equipoInicioPartida = equipoTurnoActual;
-                partidaEmpezada = true;
-            }
-
             if(equipoInicioPartida.equals("azul")){
-                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
-                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1  - cartas_rojas_restantes));
-            }else{
                 tvPuntosAzul.setText(String.valueOf(NUM_CARTAS + 1 - cartas_azules_restantes));
                 tvPuntosRojo.setText(String.valueOf(NUM_CARTAS - cartas_rojas_restantes));
+            }else{
+                tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
+                tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1 - cartas_rojas_restantes));
             }
             // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
             if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
@@ -259,11 +255,20 @@ public class PartidaActivity extends AppCompatActivity {
         if (hayPistaActiva || "votando".equalsIgnoreCase(faseTurno)) {
             tvFasePartida.setText("PISTA: " + palabraPistaActual.toUpperCase() + " (" + numeroPistaActual + ")");
         } else {
-            String msg = equipoTurnoActual.equalsIgnoreCase(miEquipo) ? "TU TURNO: DA UNA PISTA" : "ESPERANDO AL JEFE " + equipoTurnoActual.toUpperCase();
+            String msg;
+            if (equipoTurnoActual.equalsIgnoreCase(miEquipo)) {
+                if (JEFE_STRING.equalsIgnoreCase(miRol)) {
+                    msg = "TU TURNO: DA UNA PISTA";
+                } else {
+                    msg = "ESPERANDO PISTA DEL JEFE";
+                }
+            } else {
+                msg = "ESPERANDO AL JEFE " + equipoTurnoActual.toUpperCase();
+            }
             tvFasePartida.setText(msg);
         }
         tvMiRol.setText("ROL: " + miRol);
-        
+
         boolean puedoDarPista = JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !"votando".equalsIgnoreCase(faseTurno);
         iconoBtnAlerta.setImageResource(puedoDarPista ? R.drawable.ic_anadir_pista : android.R.drawable.ic_menu_view);
     }
@@ -271,6 +276,7 @@ public class PartidaActivity extends AppCompatActivity {
     private void pintarTablero(JSONObject estado) {
         try {
             JSONObject tableroObj = estado.optJSONObject("tablero");
+            tableroAntesVotacion = tableroObj;
             if (tableroObj == null) return;
             JSONArray cartasArray = tableroObj.getJSONArray("cartas");
             JSONArray votos = estado.optJSONArray("votos_turno_actual");
@@ -570,7 +576,7 @@ public class PartidaActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     historialChat.add(json);
                     if (contenedorMensajesActual != null) {
-                        boolean esMio = miTag != json.optString("tag", "");
+                        boolean esMio = miTag.equals(json.optString("tag", ""));
                         boolean esValido = json.optBoolean("es_valido", true);
                         agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio, esValido);
                     }
@@ -636,7 +642,7 @@ public class PartidaActivity extends AppCompatActivity {
         android.widget.EditText in = d.findViewById(R.id.input_mensaje);
         if (JEFE_STRING.equalsIgnoreCase(miRol)) d.findViewById(R.id.zona_escribir).setVisibility(View.GONE);
         for (JSONObject m : historialChat) {
-            boolean esMio = miTag == m.optString("tag", "");
+            boolean esMio = Objects.equals(miTag, m.optString("tag", ""));
             boolean esValido = m.optBoolean("es_valido", true);
             agregarMensajeAlChat(contenedorMensajesActual, m.optString("tag"), m.optString("mensaje"), esMio, esValido);
         }
