@@ -2,6 +2,7 @@ package com.example.secretpanda.ui.game.match;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,7 +56,6 @@ public class PartidaActivity extends AppCompatActivity {
     private GridLayout gridTablero;
     private com.example.secretpanda.data.CustomizationManager customizationManager;
 
-    private JSONObject tableroAntesVotacion;
     private StompClient stompClient;
     private int idPartidaActual;
     private int cartas_rojas_restantes, cartas_azules_restantes;
@@ -72,6 +73,10 @@ public class PartidaActivity extends AppCompatActivity {
     private boolean hayPistaActiva = false;
     private String palabraPistaActual = "";
     private int numeroPistaActual = 0;
+    private int idCartaVotada;
+    private int cartas_rojas_restantes_voto;
+    private int cartas_azules_restantes_voto;
+
 
     private List<JSONObject> historialChat = new ArrayList<>();
     private LinearLayout contenedorMensajesActual;
@@ -276,7 +281,6 @@ public class PartidaActivity extends AppCompatActivity {
     private void pintarTablero(JSONObject estado) {
         try {
             JSONObject tableroObj = estado.optJSONObject("tablero");
-            tableroAntesVotacion = tableroObj;
             if (tableroObj == null) return;
             JSONArray cartasArray = tableroObj.getJSONArray("cartas");
             JSONArray votos = estado.optJSONArray("votos_turno_actual");
@@ -333,6 +337,26 @@ public class PartidaActivity extends AppCompatActivity {
                 
                 if (revelada) {
                     if (esImagen) {
+                        if(idCarta == idCartaVotada){
+                            if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
+                                mostrarPopupResultadoCarta(true, "aliado");
+                            }else if(miEquipo.equals("azul") &&
+                                    cartas_azules_restantes_voto == cartas_azules_restantes &&
+                                    cartas_rojas_restantes_voto == cartas_rojas_restantes){
+                                mostrarPopupResultadoCarta(true, "civil");
+                            }else if(miEquipo.equals("azul")){
+                                mostrarPopupResultadoCarta(false, "");
+                            }
+                            if(miEquipo.equals("rojo") && cartas_rojas_restantes < cartas_rojas_restantes_voto){
+                                mostrarPopupResultadoCarta(true, "aliado");
+                            }else if(miEquipo.equals("rojo") &&
+                                    cartas_azules_restantes_voto == cartas_azules_restantes &&
+                                    cartas_rojas_restantes_voto == cartas_rojas_restantes){
+                                mostrarPopupResultadoCarta(true, "civil");
+                            }else if(miEquipo.equals("rojo")){
+                                mostrarPopupResultadoCarta(false, "");
+                            }
+                        }
                         // Si es imagen revelada, ponemos la imagen y luego un filtro encima
                         android.widget.ImageView iv = new android.widget.ImageView(this);
                         iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
@@ -359,6 +383,9 @@ public class PartidaActivity extends AppCompatActivity {
                     fondo.setBackgroundColor(Color.parseColor("#2C3E50"));
                     
                     if (esImagen) {
+                        if(idCarta == idCartaVotada){
+                            mostrarPopupResultadoCarta(false, String.valueOf(idCarta));
+                        }
                         android.widget.ImageView iv = new android.widget.ImageView(this);
                         iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
                         iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
@@ -399,6 +426,47 @@ public class PartidaActivity extends AppCompatActivity {
             }
         } catch (Exception e) { Log.e("TABLERO", "Error", e); }
     }
+    private void mostrarPopupResultadoCarta(boolean correcta, String rol) {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_resultado_revelacion);
+
+        // Hacer el fondo del diálogo original transparente para que se vea nuestro diseño manila
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView txtTitulo = dialog.findViewById(R.id.txt_titulo_revelacion);
+        TextView txtDetalle = dialog.findViewById(R.id.txt_detalle_carta);
+        ImageView imgIcon = dialog.findViewById(R.id.img_resultado_icon);
+        TextView btnCerrar = dialog.findViewById(R.id.btn_cerrar_reporte);
+
+        if (correcta) {
+            txtTitulo.setText("OPERACIÓN REALIZADA");
+            txtTitulo.setTextColor(getResources().getColor(R.color.agent_green));
+            imgIcon.setImageResource(R.drawable.ic_check_tick);
+            if(rol.equals("aliado")){
+                txtDetalle.setText("CARTA: AGENTE ALIADO");
+            }else{
+                txtDetalle.setText("CARTA: AGENTE CIVIL");
+            }
+            imgIcon.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.agent_green)));
+            EfectosManager.reproducir(this, R.raw.sonido_aceptar);
+        } else {
+            txtTitulo.setText("FALLO DE INTELIGENCIA");
+            txtTitulo.setTextColor(getResources().getColor(R.color.ink_muted));
+            txtDetalle.setText("CARTA: AGENTE ENEMIGO");
+            imgIcon.setImageResource(R.drawable.ic_cerrar_x);
+            imgIcon.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.fbi_red)));
+            EfectosManager.reproducir(this, R.raw.sonido_fiasco);
+        }
+
+        btnCerrar.setOnClickListener(v -> {
+            EfectosManager.reproducir(this, R.raw.sonido_click);
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
 
     private void manejarClickCarta(int idCarta, String palabra, boolean revelada) {
         boolean puedeVotarEnEsteMomento = false;
@@ -425,6 +493,9 @@ public class PartidaActivity extends AppCompatActivity {
         try {
             JSONObject json = new JSONObject();
             json.put("id_carta_tablero", idCarta);
+            idCartaVotada = idCarta;
+            cartas_rojas_restantes_voto = cartas_rojas_restantes;
+            cartas_azules_restantes_voto = cartas_azules_restantes;
             stompClient.send("/app/partidas/" + idPartidaActual + "/votar", json.toString()).subscribe();
         } catch (Exception e) { }
     }
