@@ -228,6 +228,7 @@
             app:tint="@color/ink_muted" />
     </LinearLayout>
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -235,27 +236,55 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <TextView
-            android:id="@+id/btn_iniciar_partida_principal"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/agent_green"
-            android:fontFamily="monospace"
-            android:paddingVertical="16dp"
-            android:text="INICIAR MISIÓN"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:letterSpacing="0.1"
-            android:elevation="4dp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/btn_config_sala"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:background="@color/ink_dark"
+                android:fontFamily="monospace"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="16dp"
+                android:visibility="gone"
+                android:text="CONFIG"
+                android:gravity="center"
+                android:textColor="@color/folder_manila"
+                android:textSize="14sp"
+                android:letterSpacing="0.1"
+                android:elevation="4dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btn_iniciar_partida_principal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/agent_green"
+                android:fontFamily="monospace"
+                android:paddingVertical="16dp"
+                android:text="INICIAR MISIÓN"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:letterSpacing="0.1"
+                android:elevation="4dp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <ImageView
             android:layout_width="100dp"
             android:layout_height="50dp"
             android:layout_marginTop="16dp"
             android:src="@drawable/bg_stamp_confidential"
-            android:alpha="0.4"
-            android:rotation="-5"/>
+            android:alpha="0.5"
+            android:rotation="-5" />
+
     </LinearLayout>
 </LinearLayout>

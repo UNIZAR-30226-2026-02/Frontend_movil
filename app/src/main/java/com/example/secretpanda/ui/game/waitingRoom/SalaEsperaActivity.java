@@ -49,7 +49,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private List<Jugador> listaJugadores;
 
     private boolean estoyEnEquipoAzul;
-    private TextView btnGestionarEquipo;
+    private TextView btnGestionarEquipo, btnConfig;
     private Jugador jugadorLocal;
 
     private int idPartida = -1;
@@ -89,7 +89,10 @@ public class SalaEsperaActivity extends AppCompatActivity {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             mostrarDialogoCambiarEquipo();
         });
+        btnConfig = findViewById(R.id.btn_config_sala);
+        btnConfig.setOnClickListener(v ->{
 
+        });
 
         cargarLobbyInicial();
 
