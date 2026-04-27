@@ -78,6 +78,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
 
+
         tvContadorAzul = findViewById(R.id.tv_contador_azul);
         tvContadorRojo = findViewById(R.id.tv_contador_rojo);
         tvContadorTotal = findViewById(R.id.tv_jugadores_sala);
@@ -172,6 +173,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                 ((View) tvCodigo.getParent()).setVisibility(esPub ? View.GONE : View.VISIBLE);
                                 if (!esPub) tvCodigo.setText(json.optString("codigo_partida", ""));
                             }
+                        }else{
+                            btnConfig.setVisibility(View.VISIBLE);
                         }
 
                         int nuevoTiempo = json.optInt("tiempo_espera", -1);
@@ -346,7 +349,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
         }
 
         if (tvContadorTotal != null) {
-            tvContadorTotal.setText(lista.size() + "/" + maxJugadores);
+            String texto = lista.size() + "/" + maxJugadores;
+            tvContadorTotal.setText(texto);
             if (lista.size() < 4) {
                 tvContadorTotal.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante
             } else {

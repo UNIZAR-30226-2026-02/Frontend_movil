@@ -23,6 +23,8 @@ public class Partida {
     @com.google.gson.annotations.SerializedName("tiempo_espera")
     private int segundos;
 
+    @SerializedName("jugadores_actuales")
+    private int jugadoresActuales;
     public int getSegundos() {
         return segundos;
     }
@@ -37,6 +39,8 @@ public class Partida {
     // El servidor nos envía una lista con los jugadores dentro de la sala
     @SerializedName("jugadores")
     private List<Object> jugadores;
+
+
 
     // Constructor vacío obligatorio para Gson
     public Partida() {}
@@ -55,8 +59,7 @@ public class Partida {
 
     // ¡TRUCO! Calculamos los jugadores actuales contando el tamaño de la lista
     public int getJugadoresActuales() {
-        if (jugadores == null) return 0;
-        return jugadores.size();
+        return jugadoresActuales;
     }
 
     // Lógica para saber si está bloqueada (si no es pública)

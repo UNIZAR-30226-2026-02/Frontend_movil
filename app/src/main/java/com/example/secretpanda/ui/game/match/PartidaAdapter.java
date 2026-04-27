@@ -56,7 +56,7 @@ public class PartidaAdapter extends RecyclerView.Adapter<PartidaAdapter.PartidaV
         }
 
         holder.tvSegundos.setText(String.valueOf(partida.getSegundos()));
-        holder.tvJugadores.setText(partida.getJugadoresActuales() + "/" + partida.getMaxJugadores());
+        holder.tvJugadores.setText(partida.getJugadoresTexto());
 
         // 2. LÓGICA DE BLOQUEO
         boolean tengoLaTematica = "Clásico".equalsIgnoreCase(tematica) || "Clasico".equalsIgnoreCase(tematica);

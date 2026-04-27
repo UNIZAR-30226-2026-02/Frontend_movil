@@ -104,7 +104,7 @@
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@android:drawable/ic_menu_myplaces"
+                    android:src="@drawable/ic_agentes_grupo_stencil"
                     app:tint="@color/white" />
             </LinearLayout>
 
@@ -251,8 +251,8 @@
                 android:fontFamily="monospace"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="16dp"
-                android:visibility="gone"
                 android:text="CONFIG"
+                android:visibility="gone"
                 android:gravity="center"
                 android:textColor="@color/folder_manila"
                 android:textSize="14sp"

@@ -10,7 +10,7 @@
     app:cardBackgroundColor="@color/desk_wood"
     app:cardCornerRadius="4dp"
     app:cardElevation="2dp"
-    app:strokeWidth="1.5dp"
+    app:strokeWidth="4dp"
     app:strokeColor="#444444"> 
     
     <RelativeLayout
