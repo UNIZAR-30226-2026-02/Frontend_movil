@@ -80,7 +80,7 @@ public class PartidaActivity extends AppCompatActivity {
 
     private List<JSONObject> historialChat = new ArrayList<>();
     private LinearLayout contenedorMensajesActual;
-
+    private List<Integer> ordenInicialCartas = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -286,14 +286,34 @@ public class PartidaActivity extends AppCompatActivity {
             JSONArray votos = estado.optJSONArray("votos_turno_actual");
             if (votos == null) votos = new JSONArray();
 
+            if (ordenInicialCartas == null && cartasArray.length() > 0) {
+                ordenInicialCartas = new ArrayList<>();
+                for (int i = 0; i < cartasArray.length(); i++) {
+                    ordenInicialCartas.add(cartasArray.getJSONObject(i).optInt("id_carta_tablero"));
+                }
+            }
+
+            // Reordenar las cartas recibidas basándonos estrictamente en el orden inicial
             List<JSONObject> listaCartas = new ArrayList<>();
-            for (int i = 0; i < cartasArray.length(); i++) listaCartas.add(cartasArray.getJSONObject(i));
-            
-            // Estabilidad del tablero: Ordenar siempre por ID
-            Collections.sort(listaCartas, (a, b) -> Integer.compare(a.optInt("id_carta_tablero"), b.optInt("id_carta_tablero")));
+            if (ordenInicialCartas != null) {
+                for (Integer id : ordenInicialCartas) {
+                    for (int i = 0; i < cartasArray.length(); i++) {
+                        JSONObject carta = cartasArray.getJSONObject(i);
+                        if (carta.optInt("id_carta_tablero") == id) {
+                            listaCartas.add(carta);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // Por si falla algo, las metemos tal cual
+                for (int i = 0; i < cartasArray.length(); i++) {
+                    listaCartas.add(cartasArray.getJSONObject(i));
+                }
+            }
 
             gridTablero.removeAllViews();
-            gridTablero.setColumnCount(4);
+            gridTablero.setColumnCount(5);
 
             for (JSONObject cartaJson : listaCartas) {
                 int idCarta = cartaJson.optInt("id_carta_tablero");

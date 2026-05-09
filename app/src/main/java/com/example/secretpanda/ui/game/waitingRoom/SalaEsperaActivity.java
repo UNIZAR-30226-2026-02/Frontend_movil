@@ -7,14 +7,19 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +39,7 @@ import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -50,6 +56,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
     private boolean estoyEnEquipoAzul;
     private TextView btnGestionarEquipo, btnConfig;
+    private ImageView btnPersonalizarSala;
     private Jugador jugadorLocal;
 
     private int idPartida = -1;
@@ -66,9 +73,16 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
     private StompClient stompClient;
 
+    // Variables para la personalización de la sala
+    private List<JSONObject> misBordes = new ArrayList<>();
+    private List<JSONObject> misFondos = new ArrayList<>();
+    private PersonalizacionSalaAdapter personalizacionAdapter;
+    private boolean mostrandoBordes = true; // Recuerda en qué pestaña estamos
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
         setContentView(R.layout.activity_sala_espera);
 
         esLider = getIntent().getBooleanExtra("ES_LIDER", false);
@@ -78,26 +92,30 @@ public class SalaEsperaActivity extends AppCompatActivity {
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
 
-
         tvContadorAzul = findViewById(R.id.tv_contador_azul);
         tvContadorRojo = findViewById(R.id.tv_contador_rojo);
         tvContadorTotal = findViewById(R.id.tv_jugadores_sala);
         tvTiempoSala = findViewById(R.id.tv_tiempo_sala);
-
 
         btnGestionarEquipo = findViewById(R.id.btn_gestionar_equipo);
         btnGestionarEquipo.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             mostrarDialogoCambiarEquipo();
         });
-        btnConfig = findViewById(R.id.btn_config_sala);
-        btnConfig.setOnClickListener(v ->{
 
+        btnConfig = findViewById(R.id.btn_config_sala);
+        btnConfig.setOnClickListener(v -> {
+            // Lógica de configuración...
+        });
+
+        // 🔥 BOTÓN DE PERSONALIZACIÓN 🔥
+        btnPersonalizarSala = findViewById(R.id.btn_personalizar_sala);
+        btnPersonalizarSala.setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            mostrarDialogoPersonalizacion();
         });
 
         cargarLobbyInicial();
-
-
 
         rvJugadores = findViewById(R.id.rv_jugadores);
         rvJugadores.setLayoutManager(new LinearLayoutManager(this));
@@ -142,7 +160,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(payload);
                 String estado = json.optString("estado", "");
 
-                // Si la partida se marca como finalizada (ej: el lider abandona), cerramos el lobby
                 if ("finalizada".equalsIgnoreCase(estado)) {
                     runOnUiThread(() -> {
                         Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
@@ -165,7 +182,6 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     try {
-                        // Sincronización de visibilidad del código
                         if (json.has("es_publica")) {
                             boolean esPub = json.optBoolean("es_publica", true);
                             TextView tvCodigo = findViewById(R.id.tv_codigo_partida);
@@ -173,7 +189,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                 ((View) tvCodigo.getParent()).setVisibility(esPub ? View.GONE : View.VISIBLE);
                                 if (!esPub) tvCodigo.setText(json.optString("codigo_partida", ""));
                             }
-                        }else{
+                        } else {
                             btnConfig.setVisibility(View.VISIBLE);
                         }
 
@@ -239,9 +255,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) {
-                Log.e("WS_LOBBY", "Error HTTP", e);
-            }
+            @Override public void onFailure(Call call, IOException e) {}
             @Override public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful() && response.body() != null) {
                     String responseData = response.body().string();
@@ -274,7 +288,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                 actualizarContadores(listaJugadores);
                             }
                         });
-                    } catch (Exception e) { Log.e("WS_LOBBY", "Error JSON", e); }
+                    } catch (Exception e) {}
                 }
             }
         });
@@ -286,7 +300,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 JSONObject payload = new JSONObject();
                 payload.put("equipo", nuevoEquipo);
                 stompClient.send("/app/partida/" + idPartida + "/participantes/equipo", payload.toString()).subscribe();
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {}
         }
     }
 
@@ -328,23 +342,21 @@ public class SalaEsperaActivity extends AppCompatActivity {
         int maxPorEquipo = maxJugadores - 2;
         if (maxPorEquipo < 2) maxPorEquipo = 2; // Seguro de fallos
 
-        // ACTUALIZAR EQUIPO AZUL
         if (tvContadorAzul != null) {
             tvContadorAzul.setText("AZUL: " + azul + "/" + maxPorEquipo);
             if (azul < 2 || azul > maxPorEquipo) {
-                tvContadorAzul.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante de ALERTA
+                tvContadorAzul.setTextColor(Color.parseColor("#FF5252"));
             } else {
-                tvContadorAzul.setTextColor(Color.parseColor("#3366CC")); // Azul de Agente (Válido)
+                tvContadorAzul.setTextColor(Color.parseColor("#3366CC"));
             }
         }
 
-        // ACTUALIZAR EQUIPO ROJO
         if (tvContadorRojo != null) {
             tvContadorRojo.setText("ROJO: " + rojo + "/" + maxPorEquipo);
             if (rojo < 2 || rojo > maxPorEquipo) {
-                tvContadorRojo.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante de ALERTA
+                tvContadorRojo.setTextColor(Color.parseColor("#FF5252"));
             } else {
-                tvContadorRojo.setTextColor(Color.parseColor("#8B2020")); // Rojo oscuro FBI (Válido)
+                tvContadorRojo.setTextColor(Color.parseColor("#8B2020"));
             }
         }
 
@@ -352,29 +364,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
             String texto = lista.size() + "/" + maxJugadores;
             tvContadorTotal.setText(texto);
             if (lista.size() < 4) {
-                tvContadorTotal.setTextColor(Color.parseColor("#FF5252")); // Rojo brillante
+                tvContadorTotal.setTextColor(Color.parseColor("#FF5252"));
             } else {
-                tvContadorTotal.setTextColor(Color.WHITE); // Blanco (Válido)
+                tvContadorTotal.setTextColor(Color.WHITE);
             }
         }
-    }
-
-
-
-    private void setModoDentro(TextView btn, String colorHex) {
-        btn.setText("DENTRO");
-        btn.setBackgroundResource(R.drawable.fondo_boton_dentro);
-        GradientDrawable f = (GradientDrawable) btn.getBackground().mutate();
-        f.setStroke(5, Color.parseColor(colorHex));
-        btn.setTextColor(Color.parseColor(colorHex));
-    }
-
-    private void setModoUnirse(TextView btn, String colorHex, String textoBoton) {
-        btn.setText(textoBoton);
-        btn.setBackgroundResource(R.drawable.fondo_boton_unirse);
-        GradientDrawable f = (GradientDrawable) btn.getBackground().mutate();
-        f.setColor(Color.parseColor(colorHex));
-        btn.setTextColor(Color.WHITE);
     }
 
     private void mostrarDialogoErrorJugadores() {
@@ -501,5 +495,248 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
+    }
+
+    // =========================================================================
+    // 🔥 LÓGICA DE PERSONALIZACIÓN VISUAL 🔥
+    // =========================================================================
+
+    private void mostrarDialogoPersonalizacion() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_tematicas_sala);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View tabBordes = dialog.findViewById(R.id.tab_bordes);
+        View tabFondos = dialog.findViewById(R.id.tab_fondos);
+        TextView txtBordes = dialog.findViewById(R.id.txt_tab_bordes);
+        TextView txtFondos = dialog.findViewById(R.id.txt_tab_fondos);
+        RecyclerView recycler = dialog.findViewById(R.id.recycler_tematicas_dialog);
+
+        recycler.setLayoutManager(new GridLayoutManager(this, 3));
+
+        personalizacionAdapter = new PersonalizacionSalaAdapter(new ArrayList<>(), item -> equiparItemHTTP(item));
+        recycler.setAdapter(personalizacionAdapter);
+
+        mostrandoBordes = true; // Valor por defecto
+
+        tabBordes.setOnClickListener(v -> {
+            EfectosManager.reproducir(this, R.raw.sonido_click);
+            tabBordes.setBackgroundResource(R.drawable.fondo_tab_activo);
+            tabFondos.setBackgroundResource(R.drawable.fondo_tab_inactivo);
+            txtBordes.setVisibility(View.VISIBLE);
+            txtFondos.setVisibility(View.GONE);
+            mostrandoBordes = true;
+            personalizacionAdapter.setItems(misBordes);
+        });
+
+        tabFondos.setOnClickListener(v -> {
+            EfectosManager.reproducir(this, R.raw.sonido_click);
+            tabFondos.setBackgroundResource(R.drawable.fondo_tab_activo);
+            tabBordes.setBackgroundResource(R.drawable.fondo_tab_inactivo);
+            txtFondos.setVisibility(View.VISIBLE);
+            txtBordes.setVisibility(View.GONE);
+            mostrandoBordes = false;
+            personalizacionAdapter.setItems(misFondos);
+        });
+
+        dialog.findViewById(R.id.btn_cerrar_personalizacion).setOnClickListener(v -> {
+            EfectosManager.reproducir(this, R.raw.sonido_click);
+            dialog.dismiss();
+        });
+
+        // Llamamos a la API para traer tu inventario
+        cargarPersonalizacionesDesdeAPI();
+
+        dialog.show();
+    }
+
+    private void cargarPersonalizacionesDesdeAPI() {
+        OkHttpClient client = new OkHttpClient();
+        String token = new TokenManager(this).getToken();
+        if (token == null) return;
+
+        // 🔥 OJO: Endpoint corregido al INVENTARIO del jugador 🔥
+        Request request = new Request.Builder()
+                .url(NetworkConfig.BASE_URL + "/jugadores/personalizaciones")
+                .get()
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(SalaEsperaActivity.this, "Error de red al cargar opciones", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JSONArray array = new JSONArray(response.body().string());
+                        misBordes.clear();
+                        misFondos.clear();
+
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            String tipo = obj.optString("tipo", "");
+
+                            // Ya no pedimos "comprado" porque todo lo que llega aquí ya es tuyo
+                            if ("carta".equalsIgnoreCase(tipo)) {
+                                misBordes.add(obj);
+                            } else if ("tablero".equalsIgnoreCase(tipo)) {
+                                misFondos.add(obj);
+                            }
+                        }
+
+                        // Refrescamos la pestaña actual
+                        runOnUiThread(() -> {
+                            if (mostrandoBordes) {
+                                personalizacionAdapter.setItems(misBordes);
+                            } else {
+                                personalizacionAdapter.setItems(misFondos);
+                            }
+                        });
+
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+            }
+        });
+    }
+
+    private void equiparItemHTTP(JSONObject item) {
+        OkHttpClient client = new OkHttpClient();
+        String token = new TokenManager(this).getToken();
+        if (token == null) return;
+
+        try {
+            int id = item.getInt("id_personalizacion");
+            boolean equipado = item.optBoolean("equipado", false);
+            boolean nuevoEstado = !equipado; // Hacemos toggle (si está equipado lo quita, si no, lo pone)
+
+            JSONObject payload = new JSONObject();
+            payload.put("id_personalizacion", id);
+            payload.put("equipado", nuevoEstado);
+
+            Request request = new Request.Builder()
+                    .url(NetworkConfig.BASE_URL + "/jugadores/equipar")
+                    .put(RequestBody.create(payload.toString(), MediaType.parse("application/json")))
+                    .addHeader("Authorization", "Bearer " + token)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override public void onFailure(Call call, IOException e) {}
+                @Override public void onResponse(Call call, Response response) {
+                    if (response.isSuccessful()) {
+                        runOnUiThread(() -> {
+                            EfectosManager.reproducir(SalaEsperaActivity.this, R.raw.sonido_aceptar);
+                            // Recargamos el inventario para actualizar qué está equipado
+                            cargarPersonalizacionesDesdeAPI();
+                        });
+                    }
+                }
+            });
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    // =========================================================================
+    // 🔥 INTERFAZ Y ADAPTADOR AISLADOS 🔥
+    // =========================================================================
+
+    public interface OnItemClickListener {
+        void onItemClick(JSONObject item);
+    }
+
+    private class PersonalizacionSalaAdapter extends RecyclerView.Adapter<PersonalizacionSalaAdapter.ViewHolder> {
+        private List<JSONObject> items;
+        private OnItemClickListener listener;
+
+        public PersonalizacionSalaAdapter(List<JSONObject> items, OnItemClickListener listener) {
+            this.items = items;
+            this.listener = listener;
+        }
+
+        public void setItems(List<JSONObject> nuevosItems) {
+            this.items = nuevosItems;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_personalizacion, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            JSONObject item = items.get(position);
+
+            holder.txtNombre.setText(item.optString("nombre", "Tema").toUpperCase());
+            String colorHex = item.optString("valor_visual", "#888888");
+            String tipo = item.optString("tipo", "");
+
+            int parsedColor = Color.GRAY;
+            try {
+                if (!colorHex.startsWith("#")) colorHex = "#" + colorHex;
+                parsedColor = Color.parseColor(colorHex);
+            } catch (Exception e) {}
+
+            // LÓGICA VISUAL: Mostrar cartas para "Borde" o cuadrado liso para "Fondo"
+            if ("carta".equalsIgnoreCase(tipo)) {
+                holder.vistaCartas.setVisibility(View.VISIBLE);
+                holder.vistaImagen.setVisibility(View.GONE);
+                holder.imgCartaFrontal.setColorFilter(parsedColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else {
+                holder.vistaCartas.setVisibility(View.GONE);
+                holder.vistaImagen.setVisibility(View.VISIBLE);
+
+                // Le damos forma redondeada a la imagen para simular el tablero
+                GradientDrawable gd = new GradientDrawable();
+                gd.setShape(GradientDrawable.RECTANGLE);
+                gd.setCornerRadius(16f); // Esquinas suaves
+                gd.setColor(parsedColor);
+                holder.vistaImagen.setImageDrawable(gd);
+            }
+
+            // Ocultamos el candado
+            holder.iconoCandado.setVisibility(View.GONE);
+
+            // Indicador visual de "EQUIPADO"
+            if (item.optBoolean("equipado", false)) {
+                holder.txtNombre.setTextColor(Color.parseColor("#d4b878")); // Dorado
+                holder.fondoItem.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#3a3228")));
+            } else {
+                holder.txtNombre.setTextColor(Color.WHITE);
+                holder.fondoItem.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#2a2218")));
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(item);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView txtNombre;
+            ImageView imgCartaFrontal;
+            ImageView iconoCandado;
+            View fondoItem;
+            View vistaCartas;
+            ImageView vistaImagen;
+
+            public ViewHolder(View itemView) {
+                super(itemView);
+                txtNombre = itemView.findViewById(R.id.txt_nombre_item);
+                imgCartaFrontal = itemView.findViewById(R.id.img_carta_frontal);
+                iconoCandado = itemView.findViewById(R.id.icono_candado);
+                fondoItem = itemView.findViewById(R.id.fondo_item_personalizacion);
+                vistaCartas = itemView.findViewById(R.id.vista_cartas);
+                vistaImagen = itemView.findViewById(R.id.vista_imagen);
+            }
+        }
     }
 }
