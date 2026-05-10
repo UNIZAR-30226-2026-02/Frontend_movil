@@ -6,6 +6,6 @@ public class NetworkConfig {
     //public static final String WS_URL = "ws://10.0.2.2:8080/ws/websocket";
 
     // Configuración para el despliegue en Azure (DESCOMENTAR para usar Azure)
-    public static final String BASE_URL = "https://codenamesweb.azurewebsites.net/api";
-    public static final String WS_URL = "wss://codenamesweb.azurewebsites.net/ws/websocket";
+    public static String BASE_URL = "https://codenamesweb.azurewebsites.net/api";
+    public static String WS_URL = "wss://codenamesweb.azurewebsites.net/ws/websocket";
 }

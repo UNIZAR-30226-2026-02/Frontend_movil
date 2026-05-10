@@ -305,6 +305,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     }
 
     private void conectarWebSocketLobby() {
+        if (getIntent().getBooleanExtra("ES_TEST", false)) return;
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
         String jwt = new TokenManager(this).getToken();
         List<StompHeader> headers = new ArrayList<>();
