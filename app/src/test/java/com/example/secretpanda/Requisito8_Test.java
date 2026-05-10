@@ -18,7 +18,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
-import com.example.secretpanda.ui.home.HomeActivity;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,7 +36,7 @@ import com.example.secretpanda.ui.home.achivements.LogrosActivity;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = 32)
-public class LogrosYMedallasIntegrationTest {
+public class Requisito8_Test {
 
     private MockWebServer mockWebServer;
 

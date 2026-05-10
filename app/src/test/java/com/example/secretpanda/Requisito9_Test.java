@@ -15,7 +15,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.shop.TiendaActivity;
@@ -34,7 +33,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = 32)
-public class TiendaIntegrationTest {
+public class Requisito9_Test {
 
     private MockWebServer mockWebServer;
 

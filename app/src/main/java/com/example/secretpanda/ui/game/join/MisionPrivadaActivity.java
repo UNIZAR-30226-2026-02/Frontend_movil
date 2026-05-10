@@ -62,7 +62,7 @@ public class MisionPrivadaActivity extends AppCompatActivity {
             }
         });
     }
-
+/*
     private void conectarASalaPrivada(String codigo) {
         // Pon tu IP o dominio de tu servidor backend aquí
         String url = NetworkConfig.BASE_URL + "/partidas/" + codigo.trim() + "/unirse/privada";
@@ -128,7 +128,6 @@ public class MisionPrivadaActivity extends AppCompatActivity {
                     }
 
                 } else {
-                    // ... (Tu código para cuando la sala no existe o está llena se queda igual)
                     String errorBody = response.body() != null ? response.body().string() : "Error desconocido";
                     runOnUiThread(() -> {
                         etCodigoSala.setError("Código no válido o sala llena");
@@ -137,5 +136,79 @@ public class MisionPrivadaActivity extends AppCompatActivity {
                 }
             }
         });
+    }*/
+private void conectarASalaPrivada(String codigo) {
+    // Pon tu IP o dominio de tu servidor backend aquí
+    String url = NetworkConfig.BASE_URL + "/partidas/" + codigo.trim() + "/unirse/privada";
+
+    TokenManager tokenManager = new TokenManager(this);
+    String jwt = tokenManager.getToken();
+
+    if (jwt == null || jwt.isEmpty()) {
+        Toast.makeText(this, "Error de sesión: No hay token", Toast.LENGTH_SHORT).show();
+        return;
     }
+
+    OkHttpClient client = new OkHttpClient();
+
+    // Como el endpoint es un POST pero no recibe Body, enviamos un body vacío
+    okhttp3.RequestBody body = new okhttp3.FormBody.Builder().build();
+
+    Request request = new Request.Builder()
+            .url(url)
+            .post(body)
+            .addHeader("Authorization", "Bearer " + jwt)
+            .build();
+
+    client.newCall(request).enqueue(new okhttp3.Callback() {
+        @Override
+        public void onFailure(okhttp3.Call call, java.io.IOException e) {
+            runOnUiThread(() -> Toast.makeText(MisionPrivadaActivity.this,
+                    "Error de red al intentar unirse", Toast.LENGTH_SHORT).show());
+        }
+
+        @Override
+        public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+            if (response.isSuccessful()) {
+                // 1. Leemos la respuesta
+                String idPartidaStr = response.body() != null ? response.body().string().trim() : "";
+
+                // 2. Comprobamos que no esté vacía
+                if (idPartidaStr.isEmpty()) {
+                    runOnUiThread(() -> Toast.makeText(MisionPrivadaActivity.this,
+                            "Error interno: El servidor no devolvió datos", Toast.LENGTH_LONG).show());
+                    return;
+                }
+
+                try {
+                    // 3. CAMBIO CLAVE: Parseamos el JSON para obtener el ID real
+                    org.json.JSONObject jsonResponse = new org.json.JSONObject(idPartidaStr);
+                    int idPartidaReal = jsonResponse.getInt("id_partida");
+
+                    runOnUiThread(() -> {
+                        Toast.makeText(MisionPrivadaActivity.this, "¡Unido con éxito!", Toast.LENGTH_SHORT).show();
+
+                        Intent intent = new Intent(MisionPrivadaActivity.this, com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity.class);
+                        intent.putExtra("ID_PARTIDA", idPartidaReal);
+                        intent.putExtra("CODIGO_PARTIDA", codigo);
+                        intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                        startActivity(intent);
+                        finish();
+                    });
+                } catch (org.json.JSONException e) {
+                    // Atrapamos el error si el JSON no tiene el formato esperado
+                    runOnUiThread(() -> Toast.makeText(MisionPrivadaActivity.this,
+                            "Error: Respuesta del servidor inválida (" + idPartidaStr + ")", Toast.LENGTH_LONG).show());
+                }
+
+            } else {
+                String errorBody = response.body() != null ? response.body().string() : "Error desconocido";
+                runOnUiThread(() -> {
+                    etCodigoSala.setError("Código no válido o sala llena");
+                    Toast.makeText(MisionPrivadaActivity.this, "Error: " + errorBody, Toast.LENGTH_LONG).show();
+                });
+            }
+        }
+    });
+}
 }

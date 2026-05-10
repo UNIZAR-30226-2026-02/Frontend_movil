@@ -18,7 +18,6 @@ import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.model.Partida;
 import com.example.secretpanda.data.TokenManager; // Asegúrate de que este import apunte a tu TokenManager correcto
 import com.example.secretpanda.ui.audio.EfectosManager;
-import com.example.secretpanda.ui.game.match.PartidaAdapter;
 import com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity;
 
 import com.google.gson.Gson;

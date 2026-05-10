@@ -1,16 +1,8 @@
 package com.example.secretpanda;
 
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static androidx.test.espresso.action.ViewActions.replaceText;
-import static androidx.test.espresso.matcher.RootMatchers.isDialog;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import android.app.AlertDialog;
 import android.view.View;
@@ -18,10 +10,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.test.core.app.ActivityScenario;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.UiController;
 import androidx.test.espresso.ViewAction;
-import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -46,7 +36,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = {33},qualifiers = "w1080dp-h2280dp")
-public class EditarPerfilIntegrationTest {
+public class Requisito6_Test {
 
     private MockWebServer mockWebServer;
     private TokenManager tokenManager;

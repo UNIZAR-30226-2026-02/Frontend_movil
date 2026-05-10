@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.cardview)
+    implementation(libs.espresso.contrib)
 
     // Testing básico
     testImplementation(libs.junit)

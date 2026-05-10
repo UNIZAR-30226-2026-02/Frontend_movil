@@ -1,6 +1,5 @@
 package com.example.secretpanda;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.widget.Button;
 
@@ -9,7 +8,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.example.secretpanda.R;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.auth.LoginActivity;
@@ -20,7 +18,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowAlertDialog;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.io.IOException;
@@ -39,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = 33, qualifiers = "w1080dp-h2280dp")
-public class DesactivarCuentaIntegrationTest {
+public class Requisito4_Test {
 
     private MockWebServer mockWebServer;
     private TokenManager tokenManager;

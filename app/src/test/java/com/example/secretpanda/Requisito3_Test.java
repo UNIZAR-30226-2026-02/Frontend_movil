@@ -1,10 +1,8 @@
 package com.example.secretpanda;
-import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.home.profile.PerfilActivity; // Tu actividad de perfil/ajustes
 import com.example.secretpanda.ui.auth.LoginActivity; // Tu actividad de login (RF-2)
 
-import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.intent.Intents.intended;
@@ -30,7 +28,7 @@ import org.robolectric.shadows.ShadowLooper;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = 33, qualifiers = "w1080dp-h2280dp")
-public class LogoutUIIntegrationTest {
+public class Requisito3_Test {
 
     private TokenManager tokenManager;
     private Context context;

@@ -32,7 +32,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = {33}, qualifiers = "w1080dp-h2280dp")
-public class PerfilIntegrationTest {
+public class Requisito5_Test {
 
     private MockWebServer mockWebServer;
     private TokenManager tokenManager;

@@ -4,7 +4,6 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.containsString;
 
 import android.content.Intent;
 
@@ -31,7 +30,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 32)
-public class FinPartidaIntegrationTest {
+public class Requisito11_Test {
 
     private MockWebServer mockWebServer;
 

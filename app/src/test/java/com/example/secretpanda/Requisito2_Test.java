@@ -1,21 +1,15 @@
 package com.example.secretpanda;
 
-import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra;
 import static org.hamcrest.Matchers.allOf;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.isInternal;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import static java.util.EnumSet.allOf;
-
-import android.app.Activity;
-import android.app.Instrumentation.ActivityResult;
 import android.content.Context;
 
 import androidx.test.core.app.ActivityScenario;
@@ -26,9 +20,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.auth.LoginActivity;
-import com.example.secretpanda.ui.auth.LoginActivity;
-import com.example.secretpanda.ui.home.HomeActivity;
-import com.example.secretpanda.ui.home.profile.PerfilActivity;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +38,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 @RunWith(AndroidJUnit4.class)
 @Config(sdk = 33, qualifiers = "w1080dp-h2280dp")
-public class LoginUIIntegrationTest {
+public class Requisito2_Test {
 
     private MockWebServer mockWebServer;
 

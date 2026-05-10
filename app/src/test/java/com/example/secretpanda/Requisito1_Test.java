@@ -21,7 +21,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
-import com.example.secretpanda.R;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.ui.LoadingActivity;
@@ -41,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class) // Magia: Ejecutará Espresso usando Robolectric por debajo
 @Config(sdk = 33, qualifiers = "w1080dp-h2280dp")
-public class RegistroUIIntegrationEspressoTest {
+public class Requisito1_Test {
 
     private MockWebServer mockWebServer;
 
