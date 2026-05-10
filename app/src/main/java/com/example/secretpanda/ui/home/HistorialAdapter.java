@@ -68,12 +68,20 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.Hist
         }
 
         // Estadísticas del líder
-        if (partida.rol != null && (partida.rol.equalsIgnoreCase("lider") || partida.rol.equalsIgnoreCase("jefe"))) {
+        /*if (partida.rol != null && (partida.rol.equalsIgnoreCase("lider") || partida.rol.equalsIgnoreCase("jefe"))) {
+            holder.txtAciertos.setVisibility(View.VISIBLE);
+            holder.txtAciertos.setText("ACIERTOS: " + partida.numAciertos + " | FALLOS: " + partida.numFallos);
+        } else {
+            holder.txtAciertos.setVisibility(View.GONE);
+        }*/
+        if (partida.rol != null && partida.rol.toLowerCase().contains("agente")) {
             holder.txtAciertos.setVisibility(View.VISIBLE);
             holder.txtAciertos.setText("ACIERTOS: " + partida.numAciertos + " | FALLOS: " + partida.numFallos);
         } else {
             holder.txtAciertos.setVisibility(View.GONE);
         }
+
+
     }
 
     @Override

@@ -12,7 +12,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import android.app.AlertDialog;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -22,6 +25,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.example.secretpanda.data.NetworkConfig;
 import com.example.secretpanda.data.TokenManager;
 import com.example.secretpanda.ui.home.profile.PerfilActivity;
 
@@ -31,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowAlertDialog;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.concurrent.TimeUnit;
@@ -66,53 +71,63 @@ public class EditarPerfilIntegrationTest {
 
     @Test(timeout = 30000) // Timeout de seguridad para todo el test
     public void alModificarPerfil_EnviaDatosCorrectosAlServidor() throws Exception {
-        // 1. Preparamos las respuestas
-        String jsonPerfil = "{\"tag\":\"PandaOriginal\",\"foto_perfil\":\"panda_mago\",\"balas\":10,\"victorias\":5,\"derrotas\":2,\"num_aciertos\":1,\"num_fallos\":1}";
+        // 1. VITAL: Conectar tu App al servidor de prueba
+        // Si BASE_URL es estático, debemos asegurarnos de que apunta al mock
+        NetworkConfig.BASE_URL = mockWebServer.url("").toString().replaceAll("/$", "");
 
-        // Encolamos varias por si los ciclos de vida disparan extras
-        mockWebServer.enqueue(new MockResponse().setBody(jsonPerfil));
-        mockWebServer.enqueue(new MockResponse().setBody("[]"));
-        mockWebServer.enqueue(new MockResponse().setBody(jsonPerfil));
-        mockWebServer.enqueue(new MockResponse().setBody("{\"status\":\"ok\"}"));
+        // 2. Encolar respuestas comodín (enviamos varias para cubrir todos los GETs)
+        String jsonPerfil = "{\"tag\":\"PandaOriginal\",\"foto_perfil\":\"panda_mago\",\"balas\":10,\"victorias\":5,\"derrotas\":2,\"num_aciertos\":1,\"num_fallos\":1}";
+        for (int i = 0; i < 5; i++) {
+            mockWebServer.enqueue(new MockResponse().setBody(jsonPerfil).setResponseCode(200));
+        }
 
         try (ActivityScenario<PerfilActivity> scenario = ActivityScenario.launch(PerfilActivity.class)) {
 
-            // A. Navegación con forceClick (evita errores de visibilidad)
-            onView(withId(R.id.tab_datos)).perform(forceClick());
-
-            // B. Abrir diálogo
-            onView(withId(R.id.btn_editar_perfil)).perform(forceClick());
             ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
-            // C. Editar nombre
-            onView(withId(R.id.input_editar_nombre))
-                    .inRoot(isDialog())
-                    .perform(replaceText("NuevoAgente"), closeSoftKeyboard());
+            // 3. Forzar los clics directamente en la instancia de la Actividad (Adiós Espresso Flaky)
+            scenario.onActivity(activity -> {
+                activity.findViewById(R.id.btn_editar_perfil).performClick();
+            });
 
-            // D. Guardar cambios
-            onView(withId(R.id.btn_guardar_cambios))
-                    .inRoot(isDialog())
-                    .perform(forceClick());
+            // 4. Capturar el Diálogo nativo directamente de la memoria
+            AlertDialog dialogoEditar = ShadowAlertDialog.getLatestAlertDialog();
+            assertNotNull("El diálogo de edición no se abrió", dialogoEditar);
 
-            // 2. VERIFICACIÓN NO BLOQUEANTE
-            RecordedRequest currentRequest;
-            boolean putEncontrado = false;
+            // 5. Inyectar datos y simular pulsación del botón Guardar
+            EditText inputNombre = dialogoEditar.findViewById(R.id.input_editar_nombre);
+            Button btnGuardar = dialogoEditar.findViewById(R.id.btn_guardar_cambios);
 
-            // Intentamos leer hasta 5 peticiones que hayan llegado
-            for (int i = 0; i < 5; i++) {
-                currentRequest = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
-                if (currentRequest == null) break;
+            inputNombre.setText("AgenteSecreto007");
 
-                if ("PUT".equals(currentRequest.getMethod())) {
-                    putEncontrado = true;
-                    String body = currentRequest.getBody().readUtf8();
-                    assertTrue("El body no contiene el nuevo nombre", body.contains("NuevoAgente"));
-                    break;
-                }
-            }
-
-            assertTrue("El test terminó pero nunca se detectó la petición PUT", putEncontrado);
+            // Al pulsar aquí, sabemos que ACTUALIZAR PERFIL SERVIDOR se llama sí o sí
+            btnGuardar.performClick();
         }
+
+        // 6. Sincronización para OkHttp
+        // OkHttp usa un ThreadPool en segundo plano. Esto le da tiempo para lanzar el PUT.
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+        Thread.sleep(500);
+
+        // 7. BÚSQUEDA INTELIGENTE DE LA PETICIÓN
+        // En lugar de adivinar el orden, analizamos todas las peticiones que llegaron al servidor
+        RecordedRequest peticionPut = null;
+        for (int i = 0; i < 5; i++) {
+            RecordedRequest r = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
+            if (r == null) break; // Ya no hay más peticiones en cola
+
+            if ("PUT".equals(r.getMethod())) {
+                peticionPut = r;
+                break; // ¡Encontramos nuestra petición!
+            }
+        }
+
+        // 8. Verificaciones finales
+        assertNotNull("El servidor nunca recibió la petición PUT", peticionPut);
+
+        String bodyEnviado = peticionPut.getBody().readUtf8();
+        assertTrue("El nombre no se envió correctamente al servidor. Body real: " + bodyEnviado,
+                bodyEnviado.contains("AgenteSecreto007"));
     }
 
     // Método auxiliar (Asegúrate de incluirlo en tu clase de test)
