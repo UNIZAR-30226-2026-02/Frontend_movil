@@ -1,6 +1,7 @@
 package com.example.secretpanda;
 
 import android.content.Intent;
+import android.widget.TextView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -40,7 +41,6 @@ public class Requisito29Test {
 
     @Before
     public void setUp() throws Exception {
-        // Así evitamos que la app cancele la petición por seguridad
         TokenManager tm = new TokenManager(ApplicationProvider.getApplicationContext());
         tm.saveToken("token_falso_super_secreto");
 
@@ -55,7 +55,7 @@ public class Requisito29Test {
         mockWebServer.shutdown();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 15000)
     public void testEnviarSolicitudDeAmistad() throws Exception {
         mockWebServer.setDispatcher(new Dispatcher() {
             @Override
@@ -83,22 +83,34 @@ public class Requisito29Test {
             ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
             ShadowLooper.idleMainLooper();
 
-
             // ENVIAR SOLICITUD
-
-            // El usuario introduce el tag del amigo
             onView(withId(R.id.input_nombre_solicitud))
                     .perform(typeText("NinjaPanda"), closeSoftKeyboard());
 
             // Pulsa el botón de enviar
-            onView(withId(R.id.btn_enviar_solicitud))
-                    .perform(click());
+            onView(withId(R.id.btn_enviar_solicitud)).perform(click());
 
-            // Esperamos a que la petición POST acabe y se actualice la UI
-            ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
-            ShadowLooper.idleMainLooper();
+            // Bucle de espera a que OkHttp termine en segundo plano y actualice la UI
+            boolean solicitudEnviada = false;
+            for (int i = 0; i < 50; i++) {
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+                ShadowLooper.idleMainLooper();
 
-            // Verificamos que el sistema responde con éxito
+                final String[] textoActual = {""};
+                scenario.onActivity(activity -> {
+                    TextView tv = activity.findViewById(R.id.txt_feedback_solicitud);
+                    if (tv != null) textoActual[0] = tv.getText().toString();
+                });
+
+                // Si ya no pone "Enviando..." o pone el mensaje de éxito, salimos del bucle
+                if (textoActual[0].contains("con éxito")) {
+                    solicitudEnviada = true;
+                    break;
+                }
+                Thread.sleep(100); // Pequeña pausa real para dar aire a OkHttp
+            }
+
+            // Verificamos de forma oficial con Espresso (si falló el bucle, Espresso nos dará el log exacto)
             onView(withId(R.id.txt_feedback_solicitud))
                     .check(matches(isDisplayed()))
                     .check(matches(withText("¡Solicitud enviada con éxito!")));

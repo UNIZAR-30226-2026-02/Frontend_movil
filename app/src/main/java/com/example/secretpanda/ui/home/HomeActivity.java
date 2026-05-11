@@ -373,10 +373,26 @@ public class HomeActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject(response.body().string());
+
+                        // Extraemos los datos normales
                         int balas = obj.optInt("balas", 0);
                         String foto = obj.optString("foto_perfil", "");
 
+                        // EXTRAEMOS SI HAY PARTIDA ACTIVA (Reconexión Inteligente)
+                        int partidaActivaId = obj.optInt("partida_activa_id", -1);
+
                         runOnUiThread(() -> {
+                            // Si el servidor nos dice que estamos a medias en una partida,
+                            // ni siquiera cargamos la Home, saltamos directo a jugar.
+                            if (partidaActivaId != -1 && partidaActivaId != 0) {
+                                Intent intent = new Intent(HomeActivity.this, com.example.secretpanda.ui.game.match.PartidaActivity.class);
+                                intent.putExtra("ID_PARTIDA", partidaActivaId);
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                                startActivity(intent);
+                                return; // Cortamos la ejecución aquí
+                            }
+
+                            // Si NO hay partida, actualizamos la interfaz de la Home normalmente
                             android.widget.TextView txtBalas = findViewById(R.id.txt_balas_home);
                             if (txtBalas != null) txtBalas.setText(String.valueOf(balas));
 
@@ -386,7 +402,7 @@ public class HomeActivity extends AppCompatActivity {
                                 if (resId != 0) {
                                     btnPerfil.setImageResource(resId);
                                 } else {
-                                    btnPerfil.setImageResource(R.drawable.logo_secret_panda); // Por si acaso
+                                    btnPerfil.setImageResource(R.drawable.logo_secret_panda);
                                 }
                             }
                         });
@@ -488,6 +504,4 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
-
-
 }

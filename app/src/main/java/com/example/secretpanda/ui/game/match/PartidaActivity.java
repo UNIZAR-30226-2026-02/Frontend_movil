@@ -32,10 +32,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import io.reactivex.disposables.CompositeDisposable;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -43,6 +43,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
+import ua.naiksoftware.stomp.dto.LifecycleEvent;
 import ua.naiksoftware.stomp.dto.StompHeader;
 
 public class PartidaActivity extends AppCompatActivity {
@@ -57,6 +58,9 @@ public class PartidaActivity extends AppCompatActivity {
     private com.example.secretpanda.data.CustomizationManager customizationManager;
 
     private StompClient stompClient;
+    // Contenedor para matar suscripciones previas
+    private CompositeDisposable suscripcionesWS = new CompositeDisposable();
+
     private int idPartidaActual;
     private int cartas_rojas_restantes, cartas_azules_restantes;
     private int max_Jugadores;
@@ -64,16 +68,16 @@ public class PartidaActivity extends AppCompatActivity {
 
     private static final int NUM_CARTAS = 8;
     private String miEquipo = "", miRol = "", miPropioIdGoogle = "", miTag = "";
-    
+
     private String equipoTurnoActual = "";
     private String equipoInicioPartida = "";
 
-    private String faseTurno = ""; 
+    private String faseTurno = "";
     private boolean miVotoEnviado = false;
     private boolean hayPistaActiva = false;
     private String palabraPistaActual = "";
     private int numeroPistaActual = 0;
-    private int idCartaVotada;
+    private int idCartaVotada = -1; // Inicializado a -1 por seguridad
     private int cartas_rojas_restantes_voto;
     private int cartas_azules_restantes_voto;
 
@@ -81,6 +85,7 @@ public class PartidaActivity extends AppCompatActivity {
     private List<JSONObject> historialChat = new ArrayList<>();
     private LinearLayout contenedorMensajesActual;
     private List<Integer> ordenInicialCartas = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,10 +101,9 @@ public class PartidaActivity extends AppCompatActivity {
 
         String tagExtra = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
         if (tagExtra != null) miTag = tagExtra;
-        
-        // Obtenemos el ID real guardado durante el login
+
         miPropioIdGoogle = new com.example.secretpanda.data.TokenManager(this).getIdGoogle();
-        
+
         customizationManager = new com.example.secretpanda.data.CustomizationManager(this);
         cargarPersonalizaciones();
 
@@ -112,7 +116,7 @@ public class PartidaActivity extends AppCompatActivity {
         inicializarVistas();
         configurarBotones();
         conectarWebSocket();
-        
+
         obtenerMiRolDelServidor();
         obtenerEstadoCompletoDePartida();
     }
@@ -140,47 +144,104 @@ public class PartidaActivity extends AppCompatActivity {
         if (token != null) headers.add(new StompHeader("Authorization", "Bearer " + token));
 
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
+
+        // Activamos Heartbeats
+        stompClient.withClientHeartbeat(10000).withServerHeartbeat(10000);
+
         stompClient.lifecycle().subscribe(lifecycleEvent -> {
-            if (lifecycleEvent.getType() == ua.naiksoftware.stomp.dto.LifecycleEvent.Type.OPENED) {
-                runOnUiThread(() -> {
-                    suscribirseAlEstadoPublico();
-                    suscribirseAlEstadoPrivado();
-                    suscribirseAlChat();
-                    suscribirseAlTemporizador();
-                });
+            switch (lifecycleEvent.getType()) {
+                case OPENED:
+                    runOnUiThread(() -> {
+                        suscripcionesWS.clear(); // Limpiamos suscripciones anteriores para evitar clones
+                        obtenerEstadoCompletoDePartida(); // Pedimos el tablero por si nos hemos perdido algo en la reconexión
+                        suscribirseAlEstadoPublico();
+                        suscribirseAlEstadoPrivado();
+                        suscribirseAlChat();
+                        suscribirseAlTemporizador();
+                    });
+                    break;
+
+                case ERROR:
+                case CLOSED:
+                    runOnUiThread(() -> {
+                        // Intento automático de reconexión si no ha sido un cierre forzado por nosotros
+                        new android.os.Handler().postDelayed(() -> {
+                            if (stompClient != null && !stompClient.isConnected()) {
+                                Log.w("WS", "Reconectando...");
+                                stompClient.connect(headers);
+                            }
+                        }, 3000);
+                    });
+                    break;
             }
         });
         stompClient.connect(headers);
     }
 
+    // Modificamos los métodos de suscripción para guardarlos en suscripcionesWS
     private void suscribirseAlEstadoPublico() {
-        stompClient.topic("/topic/partidas/" + idPartidaActual + "/estado").subscribe(msg -> {
-            String payload = msg.getPayload();
-            if ("FINALIZADA".equalsIgnoreCase(payload)) {
-                runOnUiThread(this::navegarAFinPartida);
-                return;
-            }
-            try {
-                JSONObject json = new JSONObject(payload);
-                Log.d("WS", "Estado público: " + json.toString());
-                runOnUiThread(() -> aplicarEstadoTotal(json));
-            } catch (Exception e) { Log.e("WS", "Error estado publico", e); }
-        });
+        suscripcionesWS.add(
+                stompClient.topic("/topic/partidas/" + idPartidaActual + "/estado").subscribe(msg -> {
+                    String payload = msg.getPayload();
+                    if ("FINALIZADA".equalsIgnoreCase(payload)) {
+                        runOnUiThread(this::navegarAFinPartida);
+                        return;
+                    }
+                    try {
+                        JSONObject json = new JSONObject(payload);
+                        runOnUiThread(() -> aplicarEstadoTotal(json));
+                    } catch (Exception e) { Log.e("WS", "Error estado publico", e); }
+                })
+        );
     }
 
     private void suscribirseAlEstadoPrivado() {
-        stompClient.topic("/user/queue/partidas/" + idPartidaActual + "/estado").subscribe(msg -> {
-            String payload = msg.getPayload();
-            if ("FINALIZADA".equalsIgnoreCase(payload)) {
-                runOnUiThread(this::navegarAFinPartida);
-                return;
-            }
-            try {
-                JSONObject json = new JSONObject(payload);
-                Log.d("WS", "Estado público: " + json.toString());
-                runOnUiThread(() -> aplicarEstadoTotal(json));
-            } catch (Exception e) { Log.e("WS", "Error estado privado", e); }
-        });
+        suscripcionesWS.add(
+                stompClient.topic("/user/queue/partidas/" + idPartidaActual + "/estado").subscribe(msg -> {
+                    String payload = msg.getPayload();
+                    if ("FINALIZADA".equalsIgnoreCase(payload)) {
+                        runOnUiThread(this::navegarAFinPartida);
+                        return;
+                    }
+                    try {
+                        JSONObject json = new JSONObject(payload);
+                        runOnUiThread(() -> aplicarEstadoTotal(json));
+                    } catch (Exception e) { Log.e("WS", "Error estado privado", e); }
+                })
+        );
+    }
+
+    private void suscribirseAlTemporizador() {
+        suscripcionesWS.add(
+                stompClient.topic("/topic/partidas/" + idPartidaActual + "/temporizador").subscribe(msg -> {
+                    try {
+                        String p = msg.getPayload();
+                        int s = p.contains("{") ? new JSONObject(p).optInt("segundos_restantes", 0) : Integer.parseInt(p.replaceAll("[^0-9]", ""));
+                        runOnUiThread(() -> tvTimer.setText(String.format("%02d:%02d", s/60, s%60)));
+                    } catch (Exception e) { }
+                })
+        );
+    }
+
+    private void suscribirseAlChat() {
+        suscripcionesWS.add(
+                stompClient.topic("/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase()).subscribe(msg -> {
+                    try {
+                        JSONObject json = new JSONObject(msg.getPayload());
+
+                        runOnUiThread(() -> {
+                            historialChat.add(json);
+                            if (contenedorMensajesActual != null) {
+                                boolean esMio = miTag.equals(json.optString("tag", ""));
+                                boolean esValido = json.optBoolean("es_valido", true);
+                                agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio, esValido);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e("CHAT", "Error procesando mensaje", e);
+                    }
+                })
+        );
     }
 
     private void navegarAFinPartida() {
@@ -211,7 +272,6 @@ public class PartidaActivity extends AppCompatActivity {
                 tvPuntosAzul.setText(String.valueOf(NUM_CARTAS - cartas_azules_restantes));
                 tvPuntosRojo.setText(String.valueOf(NUM_CARTAS + 1 - cartas_rojas_restantes));
             }
-            // Solo actualizamos miEquipo si el servidor nos lo envía explícitamente
             if (json.has("mi_equipo") && !json.isNull("mi_equipo")) {
                 String nuevoEquipo = json.optString("mi_equipo");
                 if (!nuevoEquipo.isEmpty()) {
@@ -220,7 +280,6 @@ public class PartidaActivity extends AppCompatActivity {
             }
 
             faseTurno = json.optString("fase_turno", "JEFE_PISTA");
-
 
             if (json.has("pista_actual") && !json.isNull("pista_actual")) {
                 JSONObject pista = json.getJSONObject("pista_actual");
@@ -293,7 +352,6 @@ public class PartidaActivity extends AppCompatActivity {
                 }
             }
 
-            // Reordenar las cartas recibidas basándonos estrictamente en el orden inicial
             List<JSONObject> listaCartas = new ArrayList<>();
             if (ordenInicialCartas != null) {
                 for (Integer id : ordenInicialCartas) {
@@ -306,7 +364,6 @@ public class PartidaActivity extends AppCompatActivity {
                     }
                 }
             } else {
-                // Por si falla algo, las metemos tal cual
                 for (int i = 0; i < cartasArray.length(); i++) {
                     listaCartas.add(cartasArray.getJSONObject(i));
                 }
@@ -352,11 +409,11 @@ public class PartidaActivity extends AppCompatActivity {
                 FrameLayout fondo = new FrameLayout(this);
                 fondo.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
 
-                // 1. CAPA DE FONDO (Color base o Imagen)
                 boolean esImagen = palabra.startsWith("http") || palabra.contains("/") || palabra.endsWith(".png") || palabra.endsWith(".jpg");
-                
+
                 if (revelada) {
                     if (esImagen) {
+                        // (Carta Imagen Revelada)
                         if(idCarta == idCartaVotada){
                             if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
                                 mostrarPopupResultadoCarta(true, "aliado");
@@ -376,20 +433,20 @@ public class PartidaActivity extends AppCompatActivity {
                             }else if(miEquipo.equals("rojo")){
                                 mostrarPopupResultadoCarta(false, "");
                             }
+                            idCartaVotada = -1; // Detenemos el bucle
                         }
-                        // Si es imagen revelada, ponemos la imagen y luego un filtro encima
+
                         android.widget.ImageView iv = new android.widget.ImageView(this);
                         iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
                         iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
                         Glide.with(this)
-                            .load(palabra)
-                            .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
-                            .placeholder(android.R.color.darker_gray)
-                            .error(android.R.color.darker_gray)
-                            .into(iv);
+                                .load(palabra)
+                                .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
+                                .placeholder(android.R.color.darker_gray)
+                                .error(android.R.color.darker_gray)
+                                .into(iv);
                         fondo.addView(iv);
 
-                        // Filtro semitransparente (60% de opacidad del color del equipo)
                         View filtro = new View(this);
                         filtro.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
                         int colorTipo = obtenerColorTipo(tipo);
@@ -397,29 +454,58 @@ public class PartidaActivity extends AppCompatActivity {
                         filtro.setBackgroundColor(colorConAlpha);
                         fondo.addView(filtro);
                     } else {
+                        // (Carta Texto Revelada)
+                        if(idCarta == idCartaVotada){
+                            if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
+                                mostrarPopupResultadoCarta(true, "aliado");
+                            }else if(miEquipo.equals("azul") &&
+                                    cartas_azules_restantes_voto == cartas_azules_restantes &&
+                                    cartas_rojas_restantes_voto == cartas_rojas_restantes){
+                                mostrarPopupResultadoCarta(true, "civil");
+                            }else if(miEquipo.equals("azul")){
+                                mostrarPopupResultadoCarta(false, "");
+                            }
+                            if(miEquipo.equals("rojo") && cartas_rojas_restantes < cartas_rojas_restantes_voto){
+                                mostrarPopupResultadoCarta(true, "aliado");
+                            }else if(miEquipo.equals("rojo") &&
+                                    cartas_azules_restantes_voto == cartas_azules_restantes &&
+                                    cartas_rojas_restantes_voto == cartas_rojas_restantes){
+                                mostrarPopupResultadoCarta(true, "civil");
+                            }else if(miEquipo.equals("rojo")){
+                                mostrarPopupResultadoCarta(false, "");
+                            }
+                            idCartaVotada = -1; // Detenemos el bucle
+                        }
                         fondo.setBackgroundColor(obtenerColorTipo(tipo));
                     }
                 } else {
                     fondo.setBackgroundColor(Color.parseColor("#2C3E50"));
-                    
+
                     if (esImagen) {
+                        // (Carta Imagen Oculta Equivocada)
                         if(idCarta == idCartaVotada){
                             mostrarPopupResultadoCarta(false, String.valueOf(idCarta));
+                            idCartaVotada = -1; // Detenemos el bucle
                         }
                         android.widget.ImageView iv = new android.widget.ImageView(this);
                         iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
                         iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
                         Glide.with(this)
-                            .load(palabra)
-                            .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
-                            .placeholder(android.R.color.darker_gray)
-                            .error(android.R.color.darker_gray)
-                            .into(iv);
+                                .load(palabra)
+                                .transform(new CenterCrop(), new RoundedCorners(dpToPx(4)))
+                                .placeholder(android.R.color.darker_gray)
+                                .error(android.R.color.darker_gray)
+                                .into(iv);
                         fondo.addView(iv);
+                    } else {
+                        // (Carta Texto Oculta Equivocada)
+                        if(idCarta == idCartaVotada){
+                            mostrarPopupResultadoCarta(false, String.valueOf(idCarta));
+                            idCartaVotada = -1; // Detenemos el bucle
+                        }
                     }
                 }
 
-                // 2. CAPA DE INFORMACIÓN PARA EL JEFE (Línea de color si no está revelada)
                 if (!revelada && JEFE_STRING.equalsIgnoreCase(miRol)) {
                     View line = new View(this);
                     FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, dpToPx(8));
@@ -429,7 +515,6 @@ public class PartidaActivity extends AppCompatActivity {
                     fondo.addView(line);
                 }
 
-                // 3. CAPA DE TEXTO (Solo si NO es imagen o si es Jefe para identificar)
                 if (!esImagen) {
                     TextView tv = new TextView(this);
                     tv.setText(palabra.toUpperCase());
@@ -446,11 +531,11 @@ public class PartidaActivity extends AppCompatActivity {
             }
         } catch (Exception e) { Log.e("TABLERO", "Error", e); }
     }
+
     private void mostrarPopupResultadoCarta(boolean correcta, String rol) {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_resultado_revelacion);
 
-        // Hacer el fondo del diálogo original transparente para que se vea nuestro diseño manila
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
@@ -492,16 +577,14 @@ public class PartidaActivity extends AppCompatActivity {
         boolean puedeVotarEnEsteMomento = false;
 
         if (!revelada) {
-            // NORMALIZACIÓN DE STRINGS para evitar errores de mayúsculas o espacios
             String equipoNormalizado = (miEquipo != null) ? miEquipo.trim().toLowerCase() : "";
             String turnoNormalizado = (equipoTurnoActual != null) ? equipoTurnoActual.trim().toLowerCase() : "";
             String faseNormalizada = (faseTurno != null) ? faseTurno.trim().toLowerCase() : "";
-            
+
             boolean esMiTurno = equipoNormalizado.equals(turnoNormalizado);
             boolean soyJefe = JEFE_STRING.equalsIgnoreCase(miRol) || "lider".equalsIgnoreCase(miRol);
-            boolean soyAgente = !soyJefe; // Por defecto, si no eres jefe, eres agente
-            
-            // El botón aparece si es fase de votación (o hay pista) y es mi turno
+            boolean soyAgente = !soyJefe;
+
             boolean faseVotacion = faseNormalizada.contains("votan") || hayPistaActiva;
             puedeVotarEnEsteMomento = soyAgente && esMiTurno && faseVotacion && !miVotoEnviado;
         }
@@ -542,7 +625,7 @@ public class PartidaActivity extends AppCompatActivity {
         dialog.setContentView(R.layout.dialog_anadir_pista);
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
         android.widget.EditText inputP = dialog.findViewById(R.id.input_palabra_pista);
-        
+
         numeroPistaSeleccionado = 1;
         for (int i = 1; i <= 8; i++) {
             final int val = i;
@@ -589,13 +672,13 @@ public class PartidaActivity extends AppCompatActivity {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_pista_jefe);
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-        
+
         TextView tvPalabra = dialog.findViewById(R.id.input_palabra_jefe);
         TextView tvNumero = dialog.findViewById(R.id.input_numero_jefe);
-        
+
         if (tvPalabra != null) tvPalabra.setText(palabraPistaActual.toUpperCase());
         if (tvNumero != null) tvNumero.setText(String.valueOf(numeroPistaActual));
-        
+
         dialog.findViewById(R.id.btn_cerrar_pista).setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
@@ -620,7 +703,16 @@ public class PartidaActivity extends AppCompatActivity {
                         runOnUiThread(() -> actualizarInterfazGlobal());
                     } catch (Exception e) { }
                 } else {
-                    com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
+                    // Si el token es inválido, salimos
+                    if (response.code() == 403) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(PartidaActivity.this, "Sesión invalidada: Iniciada en otro dispositivo", Toast.LENGTH_LONG).show();
+                            new com.example.secretpanda.data.TokenManager(PartidaActivity.this).clearToken();
+                            finish();
+                        });
+                    } else {
+                        com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
+                    }
                 }
             }
         });
@@ -643,37 +735,17 @@ public class PartidaActivity extends AppCompatActivity {
                         runOnUiThread(() -> aplicarEstadoTotal(json));
                     } catch (Exception e) { }
                 } else {
-                    com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
-                }
-            }
-        });
-    }
-
-    private void suscribirseAlTemporizador() {
-        stompClient.topic("/topic/partidas/" + idPartidaActual + "/temporizador").subscribe(msg -> {
-            try {
-                String p = msg.getPayload();
-                int s = p.contains("{") ? new JSONObject(p).optInt("segundos_restantes", 0) : Integer.parseInt(p.replaceAll("[^0-9]", ""));
-                runOnUiThread(() -> tvTimer.setText(String.format("%02d:%02d", s/60, s%60)));
-            } catch (Exception e) { }
-        });
-    }
-
-    private void suscribirseAlChat() {
-        stompClient.topic("/topic/partidas/" + idPartidaActual + "/chat/" + miEquipo.toLowerCase()).subscribe(msg -> {
-            try {
-                JSONObject json = new JSONObject(msg.getPayload());
-
-                runOnUiThread(() -> {
-                    historialChat.add(json);
-                    if (contenedorMensajesActual != null) {
-                        boolean esMio = miTag.equals(json.optString("tag", ""));
-                        boolean esValido = json.optBoolean("es_valido", true);
-                        agregarMensajeAlChat(contenedorMensajesActual, json.optString("tag"), json.optString("mensaje"), esMio, esValido);
+                    // CONTROL DE SESIÓN ÚNICA
+                    if (response.code() == 403) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(PartidaActivity.this, "Sesión invalidada: Iniciada en otro dispositivo", Toast.LENGTH_LONG).show();
+                            new com.example.secretpanda.data.TokenManager(PartidaActivity.this).clearToken();
+                            finish();
+                        });
+                    } else {
+                        com.example.secretpanda.data.ErrorUtils.showErrorMessage(PartidaActivity.this, response);
                     }
-                });
-            } catch (Exception e) { 
-                Log.e("CHAT", "Error procesando mensaje", e); 
+                }
             }
         });
     }
@@ -681,13 +753,13 @@ public class PartidaActivity extends AppCompatActivity {
     private void agregarMensajeAlChat(LinearLayout c, String r, String t, boolean esMio, boolean esValido) {
         if (c == null) return;
         View v = getLayoutInflater().inflate(R.layout.item_mensaje_chat, c, false);
-        
+
         TextView tvRemitente = v.findViewById(R.id.tv_remitente);
         TextView tvMensaje = v.findViewById(R.id.tv_texto_mensaje);
         View globo = v.findViewById(R.id.globo_mensaje);
-        
+
         tvRemitente.setText(esMio ? "YO" : r.toUpperCase());
-        
+
         if (!esValido) {
             tvMensaje.setText("[Mensaje bloqueado por lenguaje inapropiado]");
             tvMensaje.setTextColor(Color.GRAY);
@@ -696,27 +768,25 @@ public class PartidaActivity extends AppCompatActivity {
             tvMensaje.setText(t);
             tvMensaje.setTypeface(null, Typeface.NORMAL);
         }
-        
-        // Alineación y color según el emisor
+
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) globo.getLayoutParams();
         if (esMio) {
             lp.gravity = Gravity.END;
             lp.setMargins(dpToPx(40), 0, 0, dpToPx(12));
-            globo.setBackgroundResource(R.drawable.fondo_input_codigo); // Fondo claro (Manila)
+            globo.setBackgroundResource(R.drawable.fondo_input_codigo);
             tvRemitente.setTextColor(getResources().getColor(R.color.agent_green));
             if (esValido) tvMensaje.setTextColor(Color.BLACK);
         } else {
             lp.gravity = Gravity.START;
             lp.setMargins(0, 0, dpToPx(40), dpToPx(12));
-            globo.setBackgroundResource(R.drawable.fondo_boton_mision); // Fondo oscuro (Tinta)
+            globo.setBackgroundResource(R.drawable.fondo_boton_mision);
             tvRemitente.setTextColor(getResources().getColor(R.color.agent_blue));
-            if (esValido) tvMensaje.setTextColor(Color.WHITE); // Texto claro sobre fondo oscuro
+            if (esValido) tvMensaje.setTextColor(Color.WHITE);
         }
         globo.setLayoutParams(lp);
-        
+
         c.addView(v);
-        
-        // Auto-scroll al final
+
         View parent = (View) c.getParent();
         if (parent instanceof android.widget.ScrollView) {
             parent.post(() -> ((android.widget.ScrollView)parent).fullScroll(View.FOCUS_DOWN));
@@ -753,8 +823,6 @@ public class PartidaActivity extends AppCompatActivity {
             JSONObject j = new JSONObject();
             j.put("mensaje", m);
             stompClient.send("/app/partidas/" + idPartidaActual + "/chat", j.toString()).subscribe();
-            // Eliminamos agregarMensajeAlChat de aquí para evitar duplicados, 
-            // el WebSocket se encargará de recibirlo y pintarlo.
         } catch (Exception e) { }
     }
 
@@ -804,10 +872,10 @@ public class PartidaActivity extends AppCompatActivity {
             if (ivCarta != null) {
                 ivCarta.setVisibility(View.VISIBLE);
                 Glide.with(this)
-                    .load(palabra)
-                    .placeholder(android.R.color.darker_gray)
-                    .error(android.R.color.darker_gray)
-                    .into(ivCarta);
+                        .load(palabra)
+                        .placeholder(android.R.color.darker_gray)
+                        .error(android.R.color.darker_gray)
+                        .into(ivCarta);
             }
         } else {
             if (tvPalabra != null) {
@@ -835,7 +903,7 @@ public class PartidaActivity extends AppCompatActivity {
         if (btnCerrar != null) {
             btnCerrar.setOnClickListener(v -> d.dismiss());
         }
-        
+
         d.show();
     }
 
@@ -856,7 +924,7 @@ public class PartidaActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient();
         String url = NetworkConfig.BASE_URL + "/jugadores";
         String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
-        
+
         if (jwt == null) return;
 
         Request request = new Request.Builder()
@@ -879,20 +947,25 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void aplicarTematizacionVisual() {
-        // Aplicamos el color de personalización al contenedor del tablero (la carpeta)
         View tableroContenedor = findViewById(R.id.tablero_contenedor);
         if (tableroContenedor instanceof CardView) {
             ((CardView) tableroContenedor).setCardBackgroundColor(customizationManager.getBoardColor());
         }
 
-        // También a la pestaña para que coincida
         View tabCarpeta = findViewById(R.id.tab_carpeta);
         if (tabCarpeta != null && tabCarpeta.getBackground() != null) {
             tabCarpeta.getBackground().setColorFilter(customizationManager.getBoardColor(), android.graphics.PorterDuff.Mode.SRC_IN);
         }
 
-        // Refrescamos el tablero si ya se ha pintado
         obtenerEstadoCompletoDePartida();
     }
-}
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        suscripcionesWS.dispose(); //  Limpiamos TODO al salir de la Activity
+        if (stompClient != null) {
+            stompClient.disconnect();
+        }
+    }
+}

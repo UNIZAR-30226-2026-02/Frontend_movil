@@ -85,7 +85,6 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.cardview)
-    implementation(libs.espresso.contrib)
 
     // Testing básico
     testImplementation(libs.junit)
@@ -95,8 +94,10 @@ dependencies {
     // 🔥 NUEVAS DEPENDENCIAS PARA EL TEST (Navegación y MockBackend) 🔥
     androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
     testImplementation("org.mockito:mockito-core:5.5.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
     // Peticiones HTTP
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 

@@ -32,13 +32,15 @@
 
             <ImageView
                 android:id="@+id/btn_personalizar_sala"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/bg_boton_abandonar_borde"
-                android:padding="6dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/bg_boton_tastico"
+                android:padding="8dp"
                 android:src="@android:drawable/ic_menu_edit"
-                app:tint="@color/ink_muted" />
+                android:elevation="2dp"
+                app:tint="@color/ink_text" />
 
             <TextView
                 android:id="@+id/btn_abandonar"
