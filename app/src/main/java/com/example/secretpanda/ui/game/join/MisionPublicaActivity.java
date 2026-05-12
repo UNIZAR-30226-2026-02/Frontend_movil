@@ -108,23 +108,20 @@ public class MisionPublicaActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(Call call, IOException e) {
                         Log.e("API_ERROR", "Error de red al intentar unirse", e);
-                        runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "Error de conexión", android.widget.Toast.LENGTH_SHORT).show());
+                        runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se ha podido acceder a la misión.", android.widget.Toast.LENGTH_LONG).show());
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        // IMPORTANTE: Guardamos el cuerpo de la respuesta. (Solo se puede leer .string() una vez)
                         String jsonRespuesta = response.body() != null ? response.body().string() : "";
 
                         // Si da 200 (éxito) O da 409 (ya estabas dentro), te dejamos pasar
                         if (response.isSuccessful() || response.code() == 409) {
 
-                            // 🕵️‍♂️ Intentamos leer qué equipo nos asignó el backend
-                            String equipoAsignado = "rojo"; // Valor de emergencia por defecto
+                            String equipoAsignado = "rojo";
                             try {
                                 if (!jsonRespuesta.isEmpty()) {
                                     org.json.JSONObject jsonObject = new org.json.JSONObject(jsonRespuesta);
-                                    // OJO: Pon aquí exactamente cómo se llama la variable de equipo que te devuelve tu backend
                                     if (jsonObject.has("equipo")) {
                                         equipoAsignado = jsonObject.getString("equipo");
                                     }
@@ -133,14 +130,13 @@ public class MisionPublicaActivity extends AppCompatActivity {
                                 Log.e("WS_PARTIDAS", "No se pudo extraer el equipo del JSON. Usando defecto.", e);
                             }
 
-                            // Congelamos la variable para poder usarla dentro del hilo principal
                             final String miEquipoFinal = equipoAsignado;
 
                             runOnUiThread(() -> {
                                 Intent intent = new Intent(MisionPublicaActivity.this, SalaEsperaActivity.class);
                                 intent.putExtra("ID_PARTIDA", idPartidaClicada);
-                                intent.putExtra("MI_EQUIPO", miEquipoFinal); // ¡Usamos el equipo real del servidor!
-                                intent.putExtra("ES_LIDER", false); // Como nos unimos a partida ajena, no somos líder
+                                intent.putExtra("MI_EQUIPO", miEquipoFinal);
+                                intent.putExtra("ES_LIDER", false);
                                 intent.putExtra("ES_PRIVADA", false);
                                 intent.putExtra("MAX_JUGADORES", partida.getMaxJugadores());
                                 intent.putExtra("TIEMPO_TURNO", partida.getTiempo());
@@ -148,9 +144,8 @@ public class MisionPublicaActivity extends AppCompatActivity {
                                 startActivity(intent);
                             });
                         } else {
-                            // Otros errores
                             Log.e("API_ERROR", "El servidor rechazó la entrada. Código: " + response.code() + " Cuerpo: " + jsonRespuesta);
-                            runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se pudo entrar a la sala", android.widget.Toast.LENGTH_SHORT).show());
+                            runOnUiThread(() -> android.widget.Toast.makeText(MisionPublicaActivity.this, "No se ha podido acceder a la misión.", android.widget.Toast.LENGTH_LONG).show());
                         }
                     }
                 });

@@ -34,11 +34,11 @@ public class UserSelectionActivity extends AppCompatActivity {
             String username = inputUsuario.getText().toString().trim();
             nombreUsuario = username;
             if (username.length() < 3) {
-                Toast.makeText(this, "El nombre debe tener al menos 3 caracteres", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "El nombre en clave debe tener al menos 3 caracteres.", Toast.LENGTH_SHORT).show();
                 return;
             }
             if (username.length() > 15) {
-                Toast.makeText(this, "El nombre no debe tener mas de 15 caracteres", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "El nombre en clave no debe tener mas de 15 caracteres", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -68,8 +68,10 @@ public class UserSelectionActivity extends AppCompatActivity {
             client.newCall(request).enqueue(new okhttp3.Callback() {
                 @Override
                 public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                    com.example.secretpanda.data.ErrorUtils.showConnectionError(UserSelectionActivity.this, e);
-                    runOnUiThread(() -> btnAceptar.setEnabled(true));
+                    runOnUiThread(() -> {
+                        Toast.makeText(UserSelectionActivity.this, "Error de comunicación con el servidor central.", Toast.LENGTH_LONG).show();
+                        btnAceptar.setEnabled(true);
+                    });
                 }
 
                 @Override
@@ -100,8 +102,23 @@ public class UserSelectionActivity extends AppCompatActivity {
                             });
                         }
                     } else {
-                        com.example.secretpanda.data.ErrorUtils.showErrorMessage(UserSelectionActivity.this, response);
-                        runOnUiThread(() -> btnAceptar.setEnabled(true));
+                        try {
+                            // Leemos la respuesta del servidor para ver por qué ha fallado
+                            String errorBody = response.body() != null ? response.body().string() : "";
+
+                            runOnUiThread(() -> {
+                                // Si el servidor nos devuelve el código TAG_TAKEN de la API...
+                                if (errorBody.contains("TAG_TAKEN")) {
+                                    Toast.makeText(UserSelectionActivity.this, "Este nombre en clave ya está asignado a otro agente. Elige otro.", Toast.LENGTH_LONG).show();
+                                } else {
+                                    // Si es cualquier otro error raro
+                                    Toast.makeText(UserSelectionActivity.this, "Infracción de seguridad o caída del servidor.", Toast.LENGTH_LONG).show();
+                                }
+                                btnAceptar.setEnabled(true);
+                            });
+                        } catch (Exception e) {
+                            runOnUiThread(() -> btnAceptar.setEnabled(true));
+                        }
                     }
                 }
             });

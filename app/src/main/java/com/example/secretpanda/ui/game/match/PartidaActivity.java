@@ -415,7 +415,10 @@ public class PartidaActivity extends AppCompatActivity {
                     if (esImagen) {
                         // (Carta Imagen Revelada)
                         if(idCarta == idCartaVotada){
-                            if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
+                            if ("asesino".equalsIgnoreCase(tipo)) {
+                                // Llamamos al asesino
+                                mostrarPopupResultadoCarta(false, "asesino");
+                            } else if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
                                 mostrarPopupResultadoCarta(true, "aliado");
                             }else if(miEquipo.equals("azul") &&
                                     cartas_azules_restantes_voto == cartas_azules_restantes &&
@@ -424,7 +427,7 @@ public class PartidaActivity extends AppCompatActivity {
                             }else if(miEquipo.equals("azul")){
                                 mostrarPopupResultadoCarta(false, "");
                             }
-                            if(miEquipo.equals("rojo") && cartas_rojas_restantes < cartas_rojas_restantes_voto){
+                            else if(miEquipo.equals("rojo") && cartas_rojas_restantes < cartas_rojas_restantes_voto){
                                 mostrarPopupResultadoCarta(true, "aliado");
                             }else if(miEquipo.equals("rojo") &&
                                     cartas_azules_restantes_voto == cartas_azules_restantes &&
@@ -435,7 +438,6 @@ public class PartidaActivity extends AppCompatActivity {
                             }
                             idCartaVotada = -1; // Detenemos el bucle
                         }
-
                         android.widget.ImageView iv = new android.widget.ImageView(this);
                         iv.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
                         iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
@@ -549,19 +551,34 @@ public class PartidaActivity extends AppCompatActivity {
             txtTitulo.setText("OPERACIÓN REALIZADA");
             txtTitulo.setTextColor(getResources().getColor(R.color.agent_green));
             imgIcon.setImageResource(R.drawable.ic_check_tick);
+
             if(rol.equals("aliado")){
-                txtDetalle.setText("CARTA: AGENTE ALIADO");
+                txtDetalle.setText("¡Has encontrado a un agente amigo!");
             }else{
-                txtDetalle.setText("CARTA: AGENTE CIVIL");
+                txtDetalle.setText("Has encontrado a un civil.");
+                // Como es civil, le quitamos el verde de éxito y lo ponemos gris oscuro
+                txtTitulo.setTextColor(Color.DKGRAY);
+                imgIcon.setImageTintList(ColorStateList.valueOf(Color.DKGRAY));
             }
-            imgIcon.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.agent_green)));
-            EfectosManager.reproducir(this, R.raw.sonido_aceptar);
+            if(rol.equals("aliado")) {
+                imgIcon.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.agent_green)));
+                EfectosManager.reproducir(this, R.raw.sonido_aceptar);
+            }
         } else {
-            txtTitulo.setText("FALLO DE INTELIGENCIA");
-            txtTitulo.setTextColor(getResources().getColor(R.color.ink_muted));
-            txtDetalle.setText("CARTA: AGENTE ENEMIGO");
-            imgIcon.setImageResource(R.drawable.ic_cerrar_x);
-            imgIcon.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.fbi_red)));
+            // Evaluamos si es un fallo normal o si has levantado al asesino
+            if (rol.equals("asesino")) {
+                txtTitulo.setText("AMENAZA LETAL");
+                txtTitulo.setTextColor(Color.BLACK);
+                txtDetalle.setText("¡Has encontrado al asesino!");
+                imgIcon.setImageResource(R.drawable.ic_cerrar_x);
+                imgIcon.setImageTintList(ColorStateList.valueOf(Color.BLACK));
+            } else {
+                txtTitulo.setText("FALLO DE INTELIGENCIA");
+                txtTitulo.setTextColor(getResources().getColor(R.color.ink_muted));
+                txtDetalle.setText("Has encontrado a un agente enemigo.");
+                imgIcon.setImageResource(R.drawable.ic_cerrar_x);
+                imgIcon.setImageTintList(ColorStateList.valueOf(getResources().getColor(R.color.fbi_red)));
+            }
             EfectosManager.reproducir(this, R.raw.sonido_fiasco);
         }
 
@@ -610,7 +627,11 @@ public class PartidaActivity extends AppCompatActivity {
             mostrarDialogoChat();
         });
         btnAlerta.setOnClickListener(v -> {
-            if (JEFE_STRING.equalsIgnoreCase(miRol) && miEquipo.equalsIgnoreCase(equipoTurnoActual) && !hayPistaActiva) {
+            if (!miEquipo.equalsIgnoreCase(equipoTurnoActual)) {
+                Toast.makeText(this, "NO ES TU TURNO", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (JEFE_STRING.equalsIgnoreCase(miRol) && !hayPistaActiva) {
                 mostrarDialogoAnadirPista();
             } else {
                 mostrarDialogoVerPista();
@@ -661,6 +682,8 @@ public class PartidaActivity extends AppCompatActivity {
             json.put("palabra_pista", palabra);
             json.put("pista_numero", numero);
             stompClient.send("/app/partidas/" + idPartidaActual + "/pista", json.toString()).subscribe();
+
+            runOnUiThread(() -> Toast.makeText(PartidaActivity.this, "✓ PISTA ENVIADA", Toast.LENGTH_SHORT).show());
         } catch (Exception e) { }
     }
 
@@ -846,10 +869,24 @@ public class PartidaActivity extends AppCompatActivity {
         String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
                 .url(NetworkConfig.BASE_URL + "/partidas/" + idPartidaActual + "/participantes")
-                .delete().addHeader("Authorization", "Bearer " + jwt).build();
+                .delete()
+                .addHeader("Authorization", "Bearer " + jwt)
+                .build();
+
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Call call, IOException e) { finish(); }
-            @Override public void onResponse(Call call, Response response) { finish(); }
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(PartidaActivity.this, "No se pudo abandonar la partida. Inténtalo de nuevo.", Toast.LENGTH_LONG).show());
+            }
+            @Override
+            public void onResponse(Call call, Response response) {
+                if (response.isSuccessful()) {
+                    // Solo salimos de la actividad si el servidor confirmó la salida
+                    finish();
+                } else {
+                    runOnUiThread(() -> Toast.makeText(PartidaActivity.this, "No se pudo abandonar la partida. Inténtalo de nuevo.", Toast.LENGTH_LONG).show());
+                }
+            }
         });
     }
 

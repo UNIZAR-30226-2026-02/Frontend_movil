@@ -235,6 +235,20 @@ public class PerfilActivity extends AppCompatActivity {
                             misAmigos.clear();
                             misAmigos.addAll(listaAmigosReales);
                             if (adaptador != null) adaptador.notifyDataSetChanged();
+
+                            TextView mensajeVacio = findViewById(R.id.texto_amigos_vacio);
+
+                            if (misAmigos.isEmpty()) {
+                                if (mensajeVacio != null) {
+                                    mensajeVacio.setVisibility(View.VISIBLE);
+                                    recyclerAmigos.setVisibility(View.GONE); // Ocultamos el recycler vacío
+                                }
+                            } else {
+                                if (mensajeVacio != null) {
+                                    mensajeVacio.setVisibility(View.GONE);
+                                    recyclerAmigos.setVisibility(View.VISIBLE); // Mostramos el recycler con amigos
+                                }
+                            }
                         });
 
                     } catch (org.json.JSONException e) {

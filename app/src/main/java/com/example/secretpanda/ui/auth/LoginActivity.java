@@ -82,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
             enviarTokenAlBackend(idToken, googleIdEstable);
         } catch (ApiException e) {
             Log.e("LOGIN_GOOGLE", "Error en Google Sign-In: " + e.getStatusCode());
-            Toast.makeText(this, "Fallo al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Fallo al conectar con los satélites de Google.", Toast.LENGTH_SHORT).show();
         }
     }
 

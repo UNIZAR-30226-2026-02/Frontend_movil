@@ -82,6 +82,17 @@
                 app:spanCount="3" />
 
             <TextView
+                android:id="@+id/texto_barajas_vacias"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="No hay paquetes disponibles."
+                android:textColor="#666666"
+                android:fontFamily="monospace"
+                android:textAlignment="center"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -101,6 +112,17 @@
                 app:spanCount="3" />
 
             <TextView
+                android:id="@+id/texto_marcos_vacios"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="No hay marcos disponibles."
+                android:textColor="#666666"
+                android:fontFamily="monospace"
+                android:textAlignment="center"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -118,6 +140,17 @@
                 android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3" />
+
+            <TextView
+                android:id="@+id/texto_fondos_vacios"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="No hay fondos disponibles."
+                android:textColor="#666666"
+                android:fontFamily="monospace"
+                android:textAlignment="center"
+                android:visibility="gone" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -127,5 +160,31 @@
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_alignParentBottom="true" />
+    <LinearLayout
+        android:id="@+id/layout_cargando_tienda"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#120e0a"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:elevation="10dp"
+        android:visibility="visible"
+        android:clickable="true"
+        android:focusable="true">
 
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminateTint="#d4b878"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="monospace"
+            android:text="ACCEDIENDO AL MERCADO NEGRO..."
+            android:textColor="#d4b878"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 </RelativeLayout>

@@ -48,7 +48,7 @@ public class ErrorUtils {
      */
     public static void showConnectionError(Activity activity, Exception e) {
         Log.e(TAG, "Error de conexión", e);
-        showToast(activity, "No se pudo conectar con el servidor. Revisa tu conexión.");
+        showToast(activity, "\"Infracción de seguridad o caída del servidor.");
     }
 
     private static void showToast(Activity activity, String message) {

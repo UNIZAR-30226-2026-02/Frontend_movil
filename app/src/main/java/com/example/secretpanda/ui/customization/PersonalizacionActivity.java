@@ -604,7 +604,7 @@ private void animarAltura(View vista, int altoFinalDp) {
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                runOnUiThread(() -> android.widget.Toast.makeText(PersonalizacionActivity.this, "Error de red al equipar", android.widget.Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> android.widget.Toast.makeText(PersonalizacionActivity.this, "Error al equipar.", android.widget.Toast.LENGTH_LONG).show());
             }
 
             @Override
@@ -616,10 +616,11 @@ private void animarAltura(View vista, int altoFinalDp) {
                             adapterPosesion.notifyDataSetChanged();
                         }
                         txtTematicaSeleccionada.setText(nombreItem);
-                        android.widget.Toast.makeText(PersonalizacionActivity.this, "¡Equipado!", android.widget.Toast.LENGTH_SHORT).show();
+
+                        android.widget.Toast.makeText(PersonalizacionActivity.this, nombreItem + " equipado correctamente.", android.widget.Toast.LENGTH_LONG).show();
                         dialog.dismiss();
                     } else {
-                        android.widget.Toast.makeText(PersonalizacionActivity.this, "Error al equipar: " + response.code(), android.widget.Toast.LENGTH_SHORT).show();
+                        android.widget.Toast.makeText(PersonalizacionActivity.this, "Error al equipar.", android.widget.Toast.LENGTH_LONG).show();
                     }
                 });
             }

@@ -154,6 +154,14 @@ public class SolicitudesActivity extends AppCompatActivity {
                             listaRecibidas.clear();
                             listaRecibidas.addAll(temp);
                             adapterRecibidas.notifyDataSetChanged();
+
+                            if (listaRecibidas.isEmpty() && txtMensajeRecibidas != null) {
+                                txtMensajeRecibidas.setText("No hay solicitudes pendientes en el archivo.");
+                                txtMensajeRecibidas.setTextColor(Color.parseColor("#8b8b8b")); // Gris apagado
+                                txtMensajeRecibidas.setVisibility(View.VISIBLE);
+                            } else if (txtMensajeRecibidas != null) {
+                                txtMensajeRecibidas.setVisibility(View.INVISIBLE);
+                            }
                         });
                     } catch (JSONException e) {
                         Log.e("API", "Error parseo: " + e.getMessage());
@@ -250,18 +258,11 @@ public class SolicitudesActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (response.isSuccessful()) {
                         txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
-                        txtFeedback.setText("¡Solicitud enviada con éxito!");
+                        txtFeedback.setText("Solicitud enviada con éxito a: " + tag);
                         etBuscarAmigo.setText("");
                     } else {
-                        // ERRORES
                         txtFeedback.setTextColor(Color.parseColor("#F44336")); // Rojo
-                        if (code == 409) {
-                            txtFeedback.setText("Este usuario ya es tu amigo o tiene una solicitud pendiente.");
-                        } else if (code == 404) {
-                            txtFeedback.setText("El usuario no existe.");
-                        } else {
-                            txtFeedback.setText("No se pudo enviar la solicitud.");
-                        }
+                        txtFeedback.setText("No se pudo enviar la solicitud de amistad.");
                     }
                 });
             }

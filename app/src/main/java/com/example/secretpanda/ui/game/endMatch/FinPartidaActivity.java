@@ -183,13 +183,13 @@ public class FinPartidaActivity extends AppCompatActivity {
             // Cartel Dinámico
             if (heGanado) {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_aplauso);
-                tvSubtituloVictoria.setText("¡Enhorabuena agente!");
-                tvTituloVictoria.setText("HAS GANADO");
+                tvSubtituloVictoria.setText("Excelente trabajo en el campo.");
+                tvTituloVictoria.setText("¡Enhorabuena agente! HAS GANADO");
                 tvDetalleVictoria.setText("(Tu equipo ha desmantelado la red rival)");
             } else {
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_fiasco);
-                tvSubtituloVictoria.setText("¡Misión fallida!");
-                tvTituloVictoria.setText("HAS PERDIDO");
+                tvSubtituloVictoria.setText("Debemos reagruparnos y mejorar nuestra estrategia.");
+                tvTituloVictoria.setText("¡Misión fallida! HAS PERDIDO");
                 tvDetalleVictoria.setText("(Victoria para el Equipo " + equipoGanador + ")");
             }
 
@@ -201,7 +201,7 @@ public class FinPartidaActivity extends AppCompatActivity {
 
     private void mostrarError(String mensaje) {
         runOnUiThread(() -> {
-            tvCargando.setText(mensaje);
+            tvCargando.setText("ERROR AL DESENCRIPTAR INFORME: " + mensaje);
             tvCargando.setTextColor(Color.parseColor("#CC3333")); // text-[#cc3333] de React
         });
     }

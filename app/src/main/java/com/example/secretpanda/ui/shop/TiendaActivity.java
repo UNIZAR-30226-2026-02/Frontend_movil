@@ -43,8 +43,6 @@ public class TiendaActivity extends AppCompatActivity {
     private String idGoogle;
     private String idGoogleEstable;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,15 +69,12 @@ public class TiendaActivity extends AppCompatActivity {
 
         nombreUsuario = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
 
-        //actualizarTextoSaldo();
         cargarBalasServidor();
         cargarTemasTienda();
         cargarBordesYFondos();
     }
 
-
     private void actualizarTextoSaldo() {
-        // LEEMOS LAS BALAS DEL JUGADOR REAL
         Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
         if (txtSaldo != null && jugador != null) {
             txtSaldo.setText(String.valueOf(jugador.getBalas()));
@@ -130,7 +125,7 @@ public class TiendaActivity extends AppCompatActivity {
                                             tipo,
                                             0,
                                             precio,
-                                            "0" // Esto fuerza que tanto en la lista como en el popup se vea fondo_carta_gruesa
+                                            "0"
                                     );
                                     item.setId(idTema);
                                     barajasTienda.add(item);
@@ -140,25 +135,27 @@ public class TiendaActivity extends AppCompatActivity {
                                 }
                             }
                             adapterBarajas.notifyDataSetChanged();
+
+                            TextView txtVacio = findViewById(R.id.texto_barajas_vacias);
+                            if (txtVacio != null) {
+                                txtVacio.setVisibility(barajasTienda.isEmpty() ? View.VISIBLE : View.GONE);
+                            }
                         });
                     } catch (Exception e) { e.printStackTrace(); }
                 }
             }
         });
     }
+
     private void cargarBordesYFondos() {
-
         OkHttpClient client = new OkHttpClient();
-
-        // URL del endpoint (ajusta la IP si es necesario)
         String url = NetworkConfig.BASE_URL + "/personalizaciones/activas";
 
-        // Obtenemos el token para la autenticación
         TokenManager tokenManager = new TokenManager(this);
         String jwt = tokenManager.getToken();
 
         if (jwt == null || jwt.isEmpty()) {
-            return; // O redirigir al Login
+            return;
         }
 
         Request request = new Request.Builder()
@@ -182,6 +179,10 @@ public class TiendaActivity extends AppCompatActivity {
                         org.json.JSONArray temasArray = new org.json.JSONArray(jsonRespuesta);
 
                         runOnUiThread(() -> {
+                            View layoutCargando = findViewById(R.id.layout_cargando_tienda);
+                            if (layoutCargando != null) {
+                                layoutCargando.setVisibility(View.GONE);
+                            }
                             bordesTienda.clear();
                             fondosTienda.clear();
 
@@ -189,30 +190,27 @@ public class TiendaActivity extends AppCompatActivity {
                                 try {
                                     org.json.JSONObject temaJson = temasArray.getJSONObject(i);
 
-                                    Log.d("API_TIENDA-2", "Tema JSON: " + temaJson.toString());
-
                                     int idTema = temaJson.optInt("id_personalizacion", temaJson.optInt("id_tema", -1));
                                     String nombre = temaJson.optString("nombre", "Tema Desconocido");
                                     int posicionGuion = nombre.indexOf("_");
-                                    String nombrePersonalizacion = nombre.substring(0, posicionGuion);
+                                    String nombrePersonalizacion = posicionGuion > 0 ? nombre.substring(0, posicionGuion) : nombre;
                                     int precio = temaJson.optInt("precio_bala", 0);
                                     boolean comprado = temaJson.optBoolean("comprado", false);
                                     String tipo = temaJson.optString("tipo", "baraja");
                                     String valor = temaJson.optString("valor_visual", "0");
 
-                                        ItemPersonalizacion item = new ItemPersonalizacion(
-                                                nombrePersonalizacion,
-                                                !comprado,        // bloqueado por defecto en la tienda
-                                                tipo ,    // tipo
-                                                0,           // icono (0 para que ponga la carta por defecto)
-                                                precio,       // precio en balas
-                                                valor
-                                        );
-                                        item.setId(idTema);
+                                    ItemPersonalizacion item = new ItemPersonalizacion(
+                                            nombrePersonalizacion,
+                                            !comprado,
+                                            tipo ,
+                                            0,
+                                            precio,
+                                            valor
+                                    );
+                                    item.setId(idTema);
 
-                                        if (tipo.equalsIgnoreCase("carta")) bordesTienda.add(item);
-                                        else fondosTienda.add(item);
-
+                                    if (tipo.equalsIgnoreCase("carta")) bordesTienda.add(item);
+                                    else fondosTienda.add(item);
 
                                 } catch (Exception e) {
                                     android.util.Log.e("API_TIENDA", "Error procesando item", e);
@@ -220,6 +218,16 @@ public class TiendaActivity extends AppCompatActivity {
                             }
                             adapterBordes.notifyDataSetChanged();
                             adapterFondos.notifyDataSetChanged();
+
+                            TextView txtBordesVacios = findViewById(R.id.texto_marcos_vacios);
+                            if (txtBordesVacios != null) {
+                                txtBordesVacios.setVisibility(bordesTienda.isEmpty() ? View.VISIBLE : View.GONE);
+                            }
+
+                            TextView txtFondosVacios = findViewById(R.id.texto_fondos_vacios);
+                            if (txtFondosVacios != null) {
+                                txtFondosVacios.setVisibility(fondosTienda.isEmpty() ? View.VISIBLE : View.GONE);
+                            }
                         });
                     } catch (Exception e) {
                         android.util.Log.e("API_TIENDA", "Error procesando JSON", e);
@@ -240,7 +248,6 @@ public class TiendaActivity extends AppCompatActivity {
         TextView txtTitulo = dialogView.findViewById(R.id.txt_preview_titulo_tienda);
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_preview_tienda);
 
-        // Nuevas referencias al XML
         ImageView imgPreview = dialogView.findViewById(R.id.img_preview_item_tienda);
         FrameLayout vistaCartasPreview = dialogView.findViewById(R.id.vista_cartas_preview);
         ImageView imgCartaFrontalPreview = dialogView.findViewById(R.id.img_carta_frontal_preview);
@@ -250,6 +257,7 @@ public class TiendaActivity extends AppCompatActivity {
         TextView txtPrecioBoton = dialogView.findViewById(R.id.txt_precio_boton_compra);
         TextView txtFeedback = dialogView.findViewById(R.id.txt_feedback_tienda);
         TextView txtEmojiPreview = dialogView.findViewById(R.id.txt_emoji_preview_tienda);
+
         txtTitulo.setText(item.getNombre());
         txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
 
@@ -260,10 +268,6 @@ public class TiendaActivity extends AppCompatActivity {
                 txtEmojiPreview.setText(emojiPaquete(item.getNombre()));
                 txtEmojiPreview.setVisibility(View.VISIBLE);
             }
-            if (vistaCartasPreview != null) vistaCartasPreview.setVisibility(View.VISIBLE);
-            if (imgPreview != null) imgPreview.setVisibility(View.GONE);
-
-            // Forzamos la carta normal para la baraja
             if (imgCartaFrontalPreview != null) {
                 imgCartaFrontalPreview.setImageResource(R.drawable.fondo_carta_gruesa);
             }
@@ -287,160 +291,94 @@ public class TiendaActivity extends AppCompatActivity {
         }
 
         btnComprar.setOnClickListener(v -> {
-            if(item.getTipo().equals("baraja")){
-                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-                String url = NetworkConfig.BASE_URL + "/tienda/comprar/tema";
+            okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+            String url = item.getTipo().equals("baraja") ?
+                    NetworkConfig.BASE_URL + "/tienda/comprar/tema" :
+                    NetworkConfig.BASE_URL + "/tienda/comprar/personalizacion";
 
-                TokenManager tokenManager = new TokenManager(this);
-                String jwt = tokenManager.getToken();
+            TokenManager tokenManager = new TokenManager(this);
+            String jwt = tokenManager.getToken();
 
-                org.json.JSONObject jsonBody = new org.json.JSONObject();
-                try {
+            org.json.JSONObject jsonBody = new org.json.JSONObject();
+            try {
+                if (item.getTipo().equals("baraja")) {
                     jsonBody.put("id_tema", item.getId());
-                } catch (Exception e) { e.printStackTrace(); }
-
-                okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
-
-                okhttp3.Request request = new okhttp3.Request.Builder()
-                        .url(url)
-                        .post(body)
-                        .addHeader("Authorization", "Bearer " + jwt)
-                        .build();
-
-                btnComprar.setEnabled(false);
-                txtPrecioBotonArriba.setText("");
-                txtPrecioBoton.setText("Comprando...");
-
-                client.newCall(request).enqueue(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                        runOnUiThread(() -> {
-                            txtFeedback.setVisibility(View.VISIBLE);
-                            txtFeedback.setText("Error de red");
-                            txtFeedback.setTextColor(Color.RED);
-                            btnComprar.setEnabled(true);
-                        });
-                    }
-
-                    @Override
-                    public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                        String respuestaCuerpo = response.body() != null ? response.body().string() : "";
-
-                        runOnUiThread(() -> {
-                            txtFeedback.setVisibility(View.VISIBLE);
-                            if (response.isSuccessful()) {
-                                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_disparo);
-                                try {
-                                    org.json.JSONObject resJson = new org.json.JSONObject(respuestaCuerpo);
-                                    int balasRestantes = resJson.getInt("balas");
-
-                                    // Actualizar saldo y UI
-                                    Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
-                                    if (jugador != null) jugador.setBalas(balasRestantes);
-                                    actualizarTextoSaldo();
-                                    item.setBloqueado(false);
-                                    adaptadorOrigen.notifyItemChanged(position);
-
-                                    // Feedback de éxito
-                                    txtFeedback.setText("✔ ¡Compra realizada!");
-                                    txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
-                                    btnComprar.setVisibility(View.GONE); // Ocultamos el botón tras comprar
-
-                                    new android.os.Handler().postDelayed(dialog::dismiss, 1500);
-
-                                } catch (Exception e) { e.printStackTrace(); }
-                            } else {
-                                btnComprar.setEnabled(true);
-                                txtFeedback.setTextColor(Color.RED);
-                                if (response.code() == 400) {
-                                    txtFeedback.setText("✘ No tienes suficientes balas");
-                                } else {
-                                    txtFeedback.setText("Error: " + response.code());
-                                }
-                            }
-                        });
-                    }
-                });
-            }else {
-                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-                String url = NetworkConfig.BASE_URL + "/tienda/comprar/personalizacion";
-
-                TokenManager tokenManager = new TokenManager(this);
-                String jwt = tokenManager.getToken();
-
-                org.json.JSONObject jsonBody = new org.json.JSONObject();
-                try {
+                } else {
                     jsonBody.put("id_personalizacion", item.getId());
-                } catch (Exception e) { e.printStackTrace(); }
+                }
+            } catch (Exception e) { e.printStackTrace(); }
 
-                okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
+            okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
 
-                okhttp3.Request request = new okhttp3.Request.Builder()
-                        .url(url)
-                        .post(body)
-                        .addHeader("Authorization", "Bearer " + jwt)
-                        .build();
+            okhttp3.Request request = new okhttp3.Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .addHeader("Authorization", "Bearer " + jwt)
+                    .build();
 
-                btnComprar.setEnabled(false);
-                txtPrecioBotonArriba.setText("");
-                txtPrecioBoton.setText("Comprando...");
+            btnComprar.setEnabled(false);
+            txtPrecioBotonArriba.setText("");
+            txtPrecioBoton.setText("Comprando...");
 
-                client.newCall(request).enqueue(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                        runOnUiThread(() -> {
-                            txtFeedback.setVisibility(View.VISIBLE);
-                            txtFeedback.setText("Error de red");
-                            txtFeedback.setTextColor(Color.RED);
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                    runOnUiThread(() -> {
+                        txtFeedback.setVisibility(View.VISIBLE);
+                        txtFeedback.setText("Error al realizar la compra.");
+                        txtFeedback.setTextColor(Color.RED);
+                        btnComprar.setEnabled(true);
+
+                        txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
+                    });
+                }
+
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                    String respuestaCuerpo = response.body() != null ? response.body().string() : "";
+
+                    runOnUiThread(() -> {
+                        txtFeedback.setVisibility(View.VISIBLE);
+                        if (response.isSuccessful()) {
+                            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_disparo);
+                            try {
+                                org.json.JSONObject resJson = new org.json.JSONObject(respuestaCuerpo);
+                                int balasRestantes = resJson.getInt("balas");
+
+                                Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
+                                if (jugador != null) jugador.setBalas(balasRestantes);
+                                actualizarTextoSaldo();
+                                item.setBloqueado(false);
+                                adaptadorOrigen.notifyItemChanged(position);
+
+                                txtFeedback.setText("¡" + item.getNombre() + " adquirido! Te quedan " + balasRestantes + " balas.");
+                                txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
+                                btnComprar.setVisibility(View.GONE);
+
+                                new android.os.Handler().postDelayed(dialog::dismiss, 1500);
+
+                            } catch (Exception e) { e.printStackTrace(); }
+                        } else {
                             btnComprar.setEnabled(true);
-                        });
-                    }
+                            txtFeedback.setTextColor(Color.RED);
 
-                    @Override
-                    public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-                        String respuestaCuerpo = response.body() != null ? response.body().string() : "";
+                            txtPrecioBoton.setText(String.valueOf(item.getPrecio()));
 
-                        runOnUiThread(() -> {
-                            txtFeedback.setVisibility(View.VISIBLE);
-                            if (response.isSuccessful()) {
-                                EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_disparo);
-                                try {
-                                    org.json.JSONObject resJson = new org.json.JSONObject(respuestaCuerpo);
-                                    int balasRestantes = resJson.getInt("balas");
-
-                                    // Actualizar saldo y UI
-                                    Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
-                                    if (jugador != null) jugador.setBalas(balasRestantes);
-                                    actualizarTextoSaldo();
-                                    item.setBloqueado(false);
-                                    adaptadorOrigen.notifyItemChanged(position);
-
-                                    // Feedback de éxito
-                                    txtFeedback.setText("✔ ¡Compra realizada!");
-                                    txtFeedback.setTextColor(Color.parseColor("#4CAF50")); // Verde
-                                    btnComprar.setVisibility(View.GONE); // Ocultamos el botón tras comprar
-
-                                    new android.os.Handler().postDelayed(dialog::dismiss, 1500);
-
-                                } catch (Exception e) { e.printStackTrace(); }
+                            if (response.code() == 400) {
+                                txtFeedback.setText("No tienes suficientes balas para esta compra.");
                             } else {
-                                btnComprar.setEnabled(true);
-                                txtFeedback.setTextColor(Color.RED);
-                                if (response.code() == 400) {
-                                    txtFeedback.setText("✘ No tienes suficientes balas");
-                                } else {
-                                    txtFeedback.setText("Error: " + response.code());
-                                }
+                                txtFeedback.setText("Error al realizar la compra.");
                             }
-                        });
-                    }
-                });
-            }
+                        }
+                    });
+                }
+            });
         });
 
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
+
     private void configurarNavegacionInferior() {
         LinearLayout btnNavTienda = findViewById(R.id.nav_tienda);
         if (btnNavTienda != null) btnNavTienda.setSelected(true);
@@ -485,7 +423,6 @@ public class TiendaActivity extends AppCompatActivity {
                             if (txtSaldo != null) {
                                 txtSaldo.setText(String.valueOf(balasReales));
                             }
-                            // Actualizamos el singleton local por coherencia
                             Jugador jugador = GestorEstadisticas.getInstance().getJugadorActual();
                             if (jugador != null) jugador.setBalas(balasReales);
                         });
@@ -494,6 +431,7 @@ public class TiendaActivity extends AppCompatActivity {
             }
         });
     }
+
     private String emojiPaquete(String nombre) {
         if (nombre == null) return "🎴";
         String n = nombre.toLowerCase();

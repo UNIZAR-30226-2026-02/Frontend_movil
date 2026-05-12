@@ -131,7 +131,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    runOnUiThread(() -> Toast.makeText(ConfiguracionMisionActivity.this, "Error de red", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> Toast.makeText(ConfiguracionMisionActivity.this, "Error al contactar con la central. No se pudo crear la misión.", Toast.LENGTH_LONG).show());
                 }
 
                 @Override
@@ -150,12 +150,12 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
                             startActivity(intent);
                             finish();
-                        } catch (Exception e) { 
-                            Log.e("CREAR", "Error JSON: " + bodyStr, e); 
+                        } catch (Exception e) {
+                            Log.e("CREAR", "Error JSON: " + bodyStr, e);
                         }
                     } else {
                         Log.e("CREAR", "Error Servidor (" + response.code() + "): " + bodyStr);
-                        runOnUiThread(() -> Toast.makeText(ConfiguracionMisionActivity.this, "Error del servidor: " + response.code(), Toast.LENGTH_SHORT).show());
+                        runOnUiThread(() -> Toast.makeText(ConfiguracionMisionActivity.this, "Error al contactar con la central. No se pudo crear la misión.", Toast.LENGTH_LONG).show());
                     }
                 }
             });
