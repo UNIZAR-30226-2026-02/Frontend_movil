@@ -385,10 +385,7 @@ public class HomeActivity extends AppCompatActivity {
                             // Si el servidor nos dice que estamos a medias en una partida,
                             // ni siquiera cargamos la Home, saltamos directo a jugar.
                             if (partidaActivaId != -1 && partidaActivaId != 0) {
-                                Intent intent = new Intent(HomeActivity.this, com.example.secretpanda.ui.game.match.PartidaActivity.class);
-                                intent.putExtra("ID_PARTIDA", partidaActivaId);
-                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
-                                startActivity(intent);
+                                verificarEstadoPartidaHome(partidaActivaId);
                                 return; // Cortamos la ejecución aquí
                             }
 
@@ -407,6 +404,58 @@ public class HomeActivity extends AppCompatActivity {
                             }
                         });
                     } catch (Exception e) { e.printStackTrace(); }
+                }
+            }
+        });
+    }
+
+    private void verificarEstadoPartidaHome(int idPartida) {
+        String token = new com.example.secretpanda.data.TokenManager(this).getToken();
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+        okhttp3.Request req = new okhttp3.Request.Builder()
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartida + "/situacion")
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+
+        client.newCall(req).enqueue(new okhttp3.Callback() {
+            @Override public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                // En caso de fallo, forzamos recarga de Home para que no se quede bloqueado
+                runOnUiThread(() -> {
+                   Intent intent = new Intent(HomeActivity.this, HomeActivity.class);
+                   intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                   intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                   intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+                   startActivity(intent);
+                });
+            }
+            @Override public void onResponse(okhttp3.Call call, okhttp3.Response res) throws java.io.IOException {
+                if (res.isSuccessful() && res.body() != null) {
+                    try {
+                        org.json.JSONObject json = new org.json.JSONObject(res.body().string());
+                        String estado = json.optString("estado", "");
+                        runOnUiThread(() -> {
+                            if ("en_curso".equalsIgnoreCase(estado)) {
+                                Intent intent = new Intent(HomeActivity.this, com.example.secretpanda.ui.game.match.PartidaActivity.class);
+                                intent.putExtra("ID_PARTIDA", idPartida);
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                                startActivity(intent);
+                                finish();
+                            } else if ("esperando".equalsIgnoreCase(estado)) {
+                                Intent intent = new Intent(HomeActivity.this, com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity.class);
+                                intent.putExtra("ID_PARTIDA", idPartida);
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                // Si no está activa, recargamos Home normalmente
+                                Intent intent = new Intent(HomeActivity.this, HomeActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                                intent.putExtra("GOOGLE_ID_ESTABLE", idGoogleEstable);
+                                startActivity(intent);
+                            }
+                        });
+                    } catch (Exception e) { }
                 }
             }
         });

@@ -196,7 +196,7 @@ public class LoginActivity extends AppCompatActivity {
         String token = new com.example.secretpanda.data.TokenManager(this).getToken();
         OkHttpClient client = new OkHttpClient();
         Request req = new Request.Builder()
-                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartida + "/estado")
+                .url(NetworkConfig.BASE_URL + "/partidas/" + idPartida + "/situacion")
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
 
@@ -208,12 +208,22 @@ public class LoginActivity extends AppCompatActivity {
                 if (res.isSuccessful() && res.body() != null) {
                     try {
                         org.json.JSONObject json = new org.json.JSONObject(res.body().string());
-                        if ("en_curso".equalsIgnoreCase(json.optString("estado", ""))) {
+                        String estado = json.optString("estado", "");
+                        if ("en_curso".equalsIgnoreCase(estado)) {
                             runOnUiThread(() -> {
                                 Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.game.match.PartidaActivity.class);
                                 intent.putExtra("ID_PARTIDA", idPartida);
                                 intent.putExtra("MI_NOMBRE_USUARIO", tag);
-                                Toast.makeText(LoginActivity.this, "Reconectando...", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(LoginActivity.this, "Reconectando a la partida...", Toast.LENGTH_SHORT).show();
+                                startActivity(intent);
+                                finish();
+                            });
+                        } else if ("esperando".equalsIgnoreCase(estado)) {
+                            runOnUiThread(() -> {
+                                Intent intent = new Intent(LoginActivity.this, com.example.secretpanda.ui.game.waitingRoom.SalaEsperaActivity.class);
+                                intent.putExtra("ID_PARTIDA", idPartida);
+                                intent.putExtra("MI_NOMBRE_USUARIO", tag);
+                                Toast.makeText(LoginActivity.this, "Reconectando a la sala...", Toast.LENGTH_SHORT).show();
                                 startActivity(intent);
                                 finish();
                             });

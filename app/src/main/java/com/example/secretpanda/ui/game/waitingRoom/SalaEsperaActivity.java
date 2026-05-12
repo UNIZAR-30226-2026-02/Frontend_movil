@@ -44,11 +44,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import io.reactivex.disposables.CompositeDisposable;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
 import ua.naiksoftware.stomp.dto.StompHeader;
 
-public class SalaEsperaActivity extends AppCompatActivity {
+import com.example.secretpanda.data.WebSocketManager;
+import com.example.secretpanda.data.WebSocketManager.WebSocketConnectionListener;
+
+public class SalaEsperaActivity extends AppCompatActivity implements WebSocketConnectionListener {
 
     private RecyclerView rvJugadores;
     private JugadorSalaAdapter adapter;
@@ -72,6 +76,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private int jugadoresRojo = 0;
 
     private StompClient stompClient;
+    private CompositeDisposable suscripcionesWS = new CompositeDisposable();
 
     // Variables para la personalización de la sala
     private List<JSONObject> misBordes = new ArrayList<>();
@@ -142,6 +147,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
             actualizarContadores(nuevaLista);
         });
         rvJugadores.setAdapter(adapter);
+
+        // Inicializar StompClient desde el manager y registrar listener
+        stompClient = WebSocketManager.getInstance().getStompClient();
+        WebSocketManager.getInstance().addConnectionListener(this);
+
         conectarWebSocketLobby();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -154,61 +164,63 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
     private void suscribirseAlCanalDelLobby() {
         String destinoTopic = "/topic/partidas/" + idPartida + "/lobby";
-        stompClient.topic(destinoTopic).subscribe(stompMessage -> {
-            String payload = stompMessage.getPayload();
-            try {
-                JSONObject json = new JSONObject(payload);
-                String estado = json.optString("estado", "");
+        suscripcionesWS.add(
+            WebSocketManager.getInstance().getStompClient().topic(destinoTopic).subscribe(stompMessage -> {
+                String payload = stompMessage.getPayload();
+                try {
+                    JSONObject json = new JSONObject(payload);
+                    String estado = json.optString("estado", "");
 
-                if ("finalizada".equalsIgnoreCase(estado)) {
+                    if ("finalizada".equalsIgnoreCase(estado)) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
+                            finish();
+                        });
+                        return;
+                    }
+
+                    if ("en_curso".equalsIgnoreCase(estado)) {
+                        runOnUiThread(() -> {
+                            Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
+                            intent.putExtra("ID_PARTIDA", idPartida);
+                            intent.putExtra("MI_NOMBRE_USUARIO", jugadorLocal != null ? jugadorLocal.getTag() : miPropioIdGoogle);
+                            intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "azul" : "rojo");
+                            startActivity(intent);
+                            finish();
+                        });
+                        return;
+                    }
+
                     runOnUiThread(() -> {
-                        Toast.makeText(this, "El líder ha abandonado. Partida cancelada.", Toast.LENGTH_LONG).show();
-                        finish();
-                    });
-                    return;
-                }
-
-                if ("en_curso".equalsIgnoreCase(estado)) {
-                    runOnUiThread(() -> {
-                        Intent intent = new Intent(SalaEsperaActivity.this, PartidaActivity.class);
-                        intent.putExtra("ID_PARTIDA", idPartida);
-                        intent.putExtra("MI_NOMBRE_USUARIO", jugadorLocal != null ? jugadorLocal.getTag() : miPropioIdGoogle);
-                        intent.putExtra("MI_EQUIPO", estoyEnEquipoAzul ? "azul" : "rojo");
-                        startActivity(intent);
-                        finish();
-                    });
-                    return;
-                }
-
-                runOnUiThread(() -> {
-                    try {
-                        if (json.has("es_publica")) {
-                            boolean esPub = json.optBoolean("es_publica", true);
-                            TextView tvCodigo = findViewById(R.id.tv_codigo_partida);
-                            if (tvCodigo != null && tvCodigo.getParent() instanceof View) {
-                                ((View) tvCodigo.getParent()).setVisibility(esPub ? View.GONE : View.VISIBLE);
-                                if (!esPub) tvCodigo.setText(json.optString("codigo_partida", ""));
+                        try {
+                            if (json.has("es_publica")) {
+                                boolean esPub = json.optBoolean("es_publica", true);
+                                TextView tvCodigo = findViewById(R.id.tv_codigo_partida);
+                                if (tvCodigo != null && tvCodigo.getParent() instanceof View) {
+                                    ((View) tvCodigo.getParent()).setVisibility(esPub ? View.GONE : View.VISIBLE);
+                                    if (!esPub) tvCodigo.setText(json.optString("codigo_partida", ""));
+                                }
+                            } else {
+                                btnConfig.setVisibility(View.VISIBLE);
                             }
-                        } else {
-                            btnConfig.setVisibility(View.VISIBLE);
-                        }
 
-                        int nuevoTiempo = json.optInt("tiempo_espera", -1);
-                        if (nuevoTiempo != -1 && tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempo + "s");
+                            int nuevoTiempo = json.optInt("tiempo_espera", -1);
+                            if (nuevoTiempo != -1 && tvTiempoSala != null) tvTiempoSala.setText(nuevoTiempo + "s");
 
-                        if (json.has("max_jugadores")) {
-                            maxJugadores = json.getInt("max_jugadores");
-                        }
+                            if (json.has("max_jugadores")) {
+                                maxJugadores = json.getInt("max_jugadores");
+                            }
 
-                        if (json.has("jugadores")) {
-                            procesarListaJugadores(json.getJSONArray("jugadores"));
-                            adapter.notifyDataSetChanged();
-                            actualizarContadores(listaJugadores);
-                        }
-                    } catch (Exception e) { Log.e("WS_LOBBY", "Error UI", e); }
-                });
-            } catch (Exception e) { Log.e("WS_LOBBY", "Error JSON", e); }
-        }, throwable -> Log.e("WS_LOBBY", "Error sub", throwable));
+                            if (json.has("jugadores")) {
+                                procesarListaJugadores(json.getJSONArray("jugadores"));
+                                adapter.notifyDataSetChanged();
+                                actualizarContadores(listaJugadores);
+                            }
+                        } catch (Exception e) { Log.e("WS_LOBBY", "Error UI", e); }
+                    });
+                } catch (Exception e) { Log.e("WS_LOBBY", "Error JSON", e); }
+            }, throwable -> Log.e("WS_LOBBY", "Error sub", throwable))
+        );
     }
 
     private void procesarListaJugadores(JSONArray jugadoresArray) {
@@ -267,7 +279,24 @@ public class SalaEsperaActivity extends AppCompatActivity {
                         int maxJug = json.optInt("max_jugadores", 8);
                         JSONArray jugadoresArr = json.optJSONArray("jugadores");
 
+                        // DETECTAR LÍDER (Para reconexiones)
+                        String tagCreador = json.optString("tag_creador", "");
+                        if (!tagCreador.isEmpty() && tagCreador.equals(miPropioIdGoogle)) {
+                            esLider = true;
+                        }
+
                         runOnUiThread(() -> {
+                            // Actualizar UI de líder si se ha detectado tras reconexión
+                            if (esLider) {
+                                TextView btnIniciar = findViewById(R.id.btn_iniciar_partida_principal);
+                                if (btnIniciar != null) {
+                                    btnIniciar.setText("Iniciar\npartida");
+                                    btnIniciar.setAlpha(1.0f);
+                                    btnIniciar.setEnabled(true);
+                                    btnIniciar.setOnClickListener(v -> validarAntesDeIniciar());
+                                }
+                            }
+
                             TextView tvCodigoPartida = findViewById(R.id.tv_codigo_partida);
                             if (tvCodigoPartida != null && tvCodigoPartida.getParent() instanceof View) {
                                 View layoutCodigoEntero = (View) tvCodigoPartida.getParent();
@@ -295,26 +324,67 @@ public class SalaEsperaActivity extends AppCompatActivity {
     }
 
     private void cambiarEquipoEnBackend(String nuevoEquipo) {
-        if (stompClient != null && stompClient.isConnected()) {
+        if (WebSocketManager.getInstance().isConnected()) {
             try {
                 JSONObject payload = new JSONObject();
                 payload.put("equipo", nuevoEquipo);
-                stompClient.send("/app/partida/" + idPartida + "/participantes/equipo", payload.toString()).subscribe();
+                WebSocketManager.getInstance().getStompClient().send("/app/partida/" + idPartida + "/participantes/equipo", payload.toString()).subscribe();
             } catch (Exception e) {}
         }
     }
 
     private void conectarWebSocketLobby() {
         if (getIntent().getBooleanExtra("ES_TEST", false)) return;
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, NetworkConfig.WS_URL);
         String jwt = new TokenManager(this).getToken();
-        List<StompHeader> headers = new ArrayList<>();
-        if (jwt != null) headers.add(new StompHeader("Authorization", "Bearer " + jwt));
+        if (jwt != null && !jwt.isEmpty()) {
+            WebSocketManager.getInstance().conectar(jwt);
+        } else {
+            Log.e("SalaEspera", "JWT no disponible al intentar conectar WebSocket.");
+        }
+    }
 
-        stompClient.lifecycle().subscribe(ev -> {
-            if (ev.getType() == ua.naiksoftware.stomp.dto.LifecycleEvent.Type.OPENED) suscribirseAlCanalDelLobby();
-        });
-        stompClient.connect(headers);
+    // Implementación de la interfaz WebSocketConnectionListener
+    @Override
+    public void onWebSocketConnected() {
+        Log.d("SalaEsperaActivity", "WebSocket conectado, re-suscribiendo a lobby.");
+        // Limpiamos suscripciones anteriores para evitar duplicados en la reconexión
+        suscripcionesWS.clear();
+        // Asumimos que si estamos en esta Activity, queremos estar en el lobby.
+        suscribirseAlCanalDelLobby();
+        enviarMensajeUnirLobby(); // Re-enviar mensaje de unión al lobby si es necesario
+    }
+
+    @Override
+    public void onWebSocketDisconnected() {
+        Log.w("SalaEsperaActivity", "WebSocket desconectado.");
+        runOnUiThread(() -> Toast.makeText(this, "Conexión al lobby perdida. Intentando reconectar...", Toast.LENGTH_LONG).show());
+        // El WebSocketManager intentará reconectar automáticamente, o podríamos llamarlo explícitamente aquí:
+        String jwt = new TokenManager(this).getToken();
+        if (jwt != null && !jwt.isEmpty()) {
+            WebSocketManager.getInstance().reconnect(jwt);
+        }
+    }
+
+    @Override
+    public void onWebSocketError(Throwable exception) {
+        Log.e("SalaEsperaActivity", "Error en WebSocket: " + exception.getMessage());
+        runOnUiThread(() -> Toast.makeText(this, "Error en la conexión al lobby. " + exception.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
+    private void enviarMensajeUnirLobby() {
+        if (WebSocketManager.getInstance().isConnected()) {
+            try {
+                JSONObject payload = new JSONObject();
+                // Aquí podrías añadir cualquier dato necesario para "re-unirse" al lobby
+                // Por ejemplo, el ID de partida y el ID de usuario si el backend lo requiere explícitamente
+                payload.put("idPartida", idPartida);
+                payload.put("idUsuario", miPropioIdGoogle);
+                WebSocketManager.getInstance().getStompClient().send("/app/partida/" + idPartida + "/unirLobby", payload.toString()).subscribe();
+                Log.d("SalaEsperaActivity", "Mensaje de unión al lobby enviado: " + payload.toString());
+            } catch (Exception e) {
+                Log.e("SalaEsperaActivity", "Error al enviar mensaje de unión al lobby", e);
+            }
+        }
     }
 
     private void validarAntesDeIniciar() {
@@ -455,6 +525,8 @@ public class SalaEsperaActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Eliminar listener para evitar fugas de memoria y llamadas innecesarias
+        WebSocketManager.getInstance().removeConnectionListener(this);
         if (stompClient != null && stompClient.isConnected()) stompClient.disconnect();
         if (dialogoCarga != null && dialogoCarga.isShowing()) dialogoCarga.dismiss();
     }
