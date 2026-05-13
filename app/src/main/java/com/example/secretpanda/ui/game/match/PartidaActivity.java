@@ -383,6 +383,26 @@ public class PartidaActivity extends AppCompatActivity {
             gridTablero.removeAllViews();
             gridTablero.setColumnCount(5);
 
+            gridTablero.setRowCount(4);
+
+            int totalCartasEsperadas = 20;
+            if (listaCartas.size() > totalCartasEsperadas) {
+                // Si por error llegan más, truncamos las sobrantes
+                listaCartas = listaCartas.subList(0, totalCartasEsperadas);
+            } else {
+                // Si por error llegan menos, rellenamos con cartas vacías protectoras
+                while (listaCartas.size() < totalCartasEsperadas) {
+                    try {
+                        JSONObject dummyCarta = new JSONObject();
+                        dummyCarta.put("id_carta_tablero", -999);
+                        dummyCarta.put("palabra", "---");
+                        dummyCarta.put("estado", "oculta");
+                        dummyCarta.put("tipo", "neutral");
+                        listaCartas.add(dummyCarta);
+                    } catch (Exception e) {}
+                }
+            }
+
             for (JSONObject cartaJson : listaCartas) {
                 int idCarta = cartaJson.optInt("id_carta_tablero");
                 String palabra = cartaJson.optString("palabra", "");
@@ -392,11 +412,14 @@ public class PartidaActivity extends AppCompatActivity {
 
                 int numVotos = 0;
                 boolean yoVotoAqui = false;
+                List<String> nombresVotantes = new ArrayList<>();
+
                 for (int v = 0; v < votos.length(); v++) {
                     JSONObject voto = votos.getJSONObject(v);
                     if (voto.optInt("id_carta_tablero") == idCarta) {
                         numVotos++;
                         String tagVotante = voto.optString("tag", "");
+                        nombresVotantes.add(tagVotante);
                         if (miTag != null && miTag.equals(tagVotante)) yoVotoAqui = true;
                     }
                 }
@@ -469,7 +492,10 @@ public class PartidaActivity extends AppCompatActivity {
                     } else {
                         // (Carta Texto Revelada)
                         if(idCarta == idCartaVotada){
-                            if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
+                            if ("asesino".equalsIgnoreCase(tipo)) {
+                                // Llamamos al asesino
+                                mostrarPopupResultadoCarta(false, "asesino");
+                            } else if(miEquipo.equals("azul") && cartas_azules_restantes < cartas_azules_restantes_voto){
                                 mostrarPopupResultadoCarta(true, "aliado");
                             }else if(miEquipo.equals("azul") &&
                                     cartas_azules_restantes_voto == cartas_azules_restantes &&
@@ -478,7 +504,7 @@ public class PartidaActivity extends AppCompatActivity {
                             }else if(miEquipo.equals("azul")){
                                 mostrarPopupResultadoCarta(false, "");
                             }
-                            if(miEquipo.equals("rojo") && cartas_rojas_restantes < cartas_rojas_restantes_voto){
+                            else if(miEquipo.equals("rojo") && cartas_rojas_restantes < cartas_rojas_restantes_voto){
                                 mostrarPopupResultadoCarta(true, "aliado");
                             }else if(miEquipo.equals("rojo") &&
                                     cartas_azules_restantes_voto == cartas_azules_restantes &&
@@ -537,9 +563,47 @@ public class PartidaActivity extends AppCompatActivity {
                     tv.setTextSize(12);
                     fondo.addView(tv);
                 }
+                if (!revelada && !nombresVotantes.isEmpty()) {
+                    LinearLayout layoutVotos = new LinearLayout(this);
+                    layoutVotos.setOrientation(LinearLayout.VERTICAL);
+                    FrameLayout.LayoutParams paramsVotos = new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                    paramsVotos.gravity = Gravity.TOP | Gravity.END;
+                    paramsVotos.setMargins(0, dpToPx(2), dpToPx(2), 0);
+                    layoutVotos.setLayoutParams(paramsVotos);
 
+                    for (String nombreVotante : nombresVotantes) {
+                        TextView txtVotante = new TextView(this);
+                        // Mostramos solo las primeras 5 letras para que no tape toda la carta
+                        String nombreCorto = nombreVotante.length() > 5 ? nombreVotante.substring(0, 5) : nombreVotante;
+                        txtVotante.setText(nombreCorto.toUpperCase());
+                        txtVotante.setTextColor(Color.WHITE);
+                        txtVotante.setTextSize(8f);
+                        txtVotante.setPadding(dpToPx(4), dpToPx(2), dpToPx(4), dpToPx(2));
+                        txtVotante.setTypeface(null, Typeface.BOLD);
+
+                        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                        gd.setColor(Color.parseColor("#B3000000")); // Negro al 70%
+                        gd.setCornerRadius(dpToPx(4));
+                        txtVotante.setBackground(gd);
+
+                        LinearLayout.LayoutParams lpBadge = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        lpBadge.setMargins(0, 0, 0, dpToPx(2));
+                        lpBadge.gravity = Gravity.END;
+                        txtVotante.setLayoutParams(lpBadge);
+
+                        layoutVotos.addView(txtVotante);
+                    }
+                    fondo.addView(layoutVotos);
+                }
                 contenedor.addView(fondo);
-                contenedor.setOnClickListener(v -> manejarClickCarta(idCarta, palabra, revelada));
+
+                // Protegemos el OnClickListener para que las cartas dummy no hagan nada
+                if (idCarta != -999) {
+                    contenedor.setOnClickListener(v -> manejarClickCarta(idCarta, palabra, revelada));
+                }
+
                 gridTablero.addView(contenedor);
             }
         } catch (Exception e) { Log.e("TABLERO", "Error", e); }

@@ -1,16 +1,22 @@
 package com.example.secretpanda.data.model;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.Map;
 
 public class ErrorResponse {
     private String timestamp;
     private int status;
-    private String error;
+
+    @SerializedName("error_code")
+    private String errorCode;
+
+    private String error; // Por retrocompatibilidad con fallos antiguos
     private String message;
     private Map<String, String> details;
 
     public String getTimestamp() { return timestamp; }
     public int getStatus() { return status; }
+    public String getErrorCode() { return errorCode; }
     public String getError() { return error; }
     public String getMessage() { return message; }
     public Map<String, String> getDetails() { return details; }

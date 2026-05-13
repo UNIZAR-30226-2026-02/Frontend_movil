@@ -353,26 +353,27 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
         jugadoresAzul = azul;
         jugadoresRojo = rojo;
-        maxJugadores = lista.size();
 
         int maxPorEquipo = maxJugadores - 2;
         if (maxPorEquipo < 2) maxPorEquipo = 2; // Seguro de fallos
 
         if (tvContadorAzul != null) {
             tvContadorAzul.setText("AZUL: " + azul + "/" + maxPorEquipo);
+            // El color cambia a rojo alarma si el equipo es inválido
             if (azul < 2 || azul > maxPorEquipo) {
                 tvContadorAzul.setTextColor(Color.parseColor("#FF5252"));
             } else {
-                tvContadorAzul.setTextColor(Color.parseColor("#3366CC"));
+                tvContadorAzul.setTextColor(Color.parseColor("#3366CC")); // Azul oficial
             }
         }
 
         if (tvContadorRojo != null) {
             tvContadorRojo.setText("ROJO: " + rojo + "/" + maxPorEquipo);
+            // El color cambia a rojo alarma si el equipo es inválido
             if (rojo < 2 || rojo > maxPorEquipo) {
                 tvContadorRojo.setTextColor(Color.parseColor("#FF5252"));
             } else {
-                tvContadorRojo.setTextColor(Color.parseColor("#8B2020"));
+                tvContadorRojo.setTextColor(Color.parseColor("#8B2020")); // Rojo oficial
             }
         }
 

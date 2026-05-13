@@ -469,18 +469,22 @@ public class HomeActivity extends AppCompatActivity {
                         final int finVictorias = contadorVictorias;
                         final int finDerrotas = contadorDerrotas;
                         runOnUiThread(() -> {
-                            if (lista.isEmpty()) {
+                            java.util.List<PartidaHistorial> listaMostrar = lista.size() > 30 ? lista.subList(0, 30) : lista;
+
+                            if (listaMostrar.isEmpty()) {
                                 txtVacio.setVisibility(View.VISIBLE);
                                 recycler.setVisibility(View.GONE);
                             } else {
                                 txtVacio.setVisibility(View.GONE);
                                 recycler.setVisibility(View.VISIBLE);
                             }
+
                             if (txtTotal != null) txtTotal.setText(String.valueOf(finTotales));
                             if (txtVic != null) txtVic.setText(String.valueOf(finVictorias));
                             if (txtDer != null) txtDer.setText(String.valueOf(finDerrotas));
-                            Log.d("API_HISTORIAL", "Lista actualizada: " + lista.size());
-                            adapter.setLista(lista);
+
+                            Log.d("API_HISTORIAL", "Lista actualizada en pantalla: " + listaMostrar.size());
+                            adapter.setLista(listaMostrar);
                         });
 
                     } catch (org.json.JSONException e) {

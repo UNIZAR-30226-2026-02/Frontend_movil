@@ -88,7 +88,8 @@
         android:textColor="#FFFFFF"
         android:fontFamily="monospace"
         android:textStyle="bold"
-        android:letterSpacing="0.1" />
+        android:letterSpacing="0.1"
+        android:maxLength="20" />
 
     <TextView
         android:layout_width="wrap_content"
