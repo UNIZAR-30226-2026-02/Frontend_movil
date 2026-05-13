@@ -82,6 +82,9 @@ public class PartidaActivity extends AppCompatActivity {
     private int cartas_rojas_restantes_voto;
     private int cartas_azules_restantes_voto;
     private boolean heAbandonado = false;
+    private int cartasOcultasAnterior = -1;
+    private String equipoTurnoAnterior = "";
+    private String faseTurnoAnterior = "";
 
 
     private List<JSONObject> historialChat = new ArrayList<>();
@@ -316,6 +319,31 @@ public class PartidaActivity extends AppCompatActivity {
 
             actualizarInterfazGlobal();
             pintarTablero(json);
+            int ocultasActuales = 0;
+            JSONObject tableroObj = json.optJSONObject("tablero");
+            if (tableroObj != null) {
+                JSONArray cartasArray = tableroObj.optJSONArray("cartas");
+                if (cartasArray != null) {
+                    for (int i=0; i<cartasArray.length(); i++) {
+                        if ("oculta".equalsIgnoreCase(cartasArray.getJSONObject(i).optString("estado", "oculta"))) {
+                            ocultasActuales++;
+                        }
+                    }
+                }
+            }
+
+            // Cambio de turno sin revelar cartas
+            if (cartasOcultasAnterior != -1) {
+                if (ocultasActuales == cartasOcultasAnterior &&
+                        "votando".equalsIgnoreCase(faseTurnoAnterior) &&
+                        !equipoTurnoActual.equalsIgnoreCase(equipoTurnoAnterior)) {
+                    mostrarPopupEmpate();
+                }
+            }
+
+            cartasOcultasAnterior = ocultasActuales;
+            equipoTurnoAnterior = equipoTurnoActual;
+            faseTurnoAnterior = faseTurno;
 
         } catch (Exception e) { Log.e("UI", "Error aplicando estado", e); }
     }
@@ -1094,5 +1122,34 @@ public class PartidaActivity extends AppCompatActivity {
         if (stompClient != null) {
             stompClient.disconnect();
         }
+    }
+    private void mostrarPopupEmpate() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_resultado_revelacion);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView txtTitulo = dialog.findViewById(R.id.txt_titulo_revelacion);
+        TextView txtDetalle = dialog.findViewById(R.id.txt_detalle_carta);
+        ImageView imgIcon = dialog.findViewById(R.id.img_resultado_icon);
+        TextView btnCerrar = dialog.findViewById(R.id.btn_cerrar_reporte);
+
+        // Ajuste visual para el empate/timeout
+        txtTitulo.setText("SIN CONSENSO");
+        txtTitulo.setTextColor(Color.DKGRAY);
+        txtDetalle.setText("Votación empatada o tiempo agotado. Turno perdido.");
+        imgIcon.setImageResource(R.drawable.ic_cerrar_x);
+        imgIcon.setImageTintList(ColorStateList.valueOf(Color.DKGRAY));
+
+        EfectosManager.reproducir(this, R.raw.sonido_fiasco);
+
+        btnCerrar.setOnClickListener(v -> {
+            EfectosManager.reproducir(this, R.raw.sonido_click);
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 }

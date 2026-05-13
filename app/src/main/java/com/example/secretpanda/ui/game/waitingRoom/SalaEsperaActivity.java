@@ -722,9 +722,17 @@ public class SalaEsperaActivity extends AppCompatActivity {
             if (item.optBoolean("equipado", false)) {
                 holder.txtNombre.setTextColor(Color.parseColor("#d4b878")); // Dorado
                 holder.fondoItem.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#3a3228")));
+
+                holder.itemView.setScaleX(1.05f);
+                holder.itemView.setScaleY(1.05f);
+                holder.itemView.setElevation(8f);
             } else {
                 holder.txtNombre.setTextColor(Color.WHITE);
                 holder.fondoItem.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#2a2218")));
+
+                holder.itemView.setScaleX(1.0f);
+                holder.itemView.setScaleY(1.0f);
+                holder.itemView.setElevation(0f);
             }
 
             holder.itemView.setOnClickListener(v -> {
