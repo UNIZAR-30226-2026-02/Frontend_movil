@@ -479,6 +479,9 @@ public class HomeActivity extends AppCompatActivity {
                         int contadorVictorias = 0;
                         int contadorDerrotas = 0;
                         for (int i = 0; i < array.length(); i++) {
+                            if(i >= 30){
+                                break;
+                            }
                             org.json.JSONObject obj = array.getJSONObject(i);
                             PartidaHistorial ph = new PartidaHistorial();
                             ph.id_partida = obj.optInt("id_partida");

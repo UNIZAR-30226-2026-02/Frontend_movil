@@ -148,6 +148,7 @@ public class ConfiguracionMisionActivity extends AppCompatActivity {
                             intent.putExtra("CODIGO_PARTIDA", codigo);
                             intent.putExtra("ES_LIDER", true);
                             intent.putExtra("MI_NOMBRE_USUARIO", nombreUsuario);
+                            intent.putExtra("ES_PRIVADA", esPrivada);
                             startActivity(intent);
                             finish();
                         } catch (Exception e) {

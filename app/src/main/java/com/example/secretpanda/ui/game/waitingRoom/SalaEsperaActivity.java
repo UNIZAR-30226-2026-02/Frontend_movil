@@ -66,6 +66,8 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
     private Jugador jugadorLocal;
 
     private int idPartida = -1;
+    private boolean esPrivada = false;
+
     private String miPropioIdGoogle = "";
 
     private TextView tvContadorAzul, tvContadorRojo, tvContadorTotal, tvTiempoSala;
@@ -98,6 +100,7 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
         esLider = getIntent().getBooleanExtra("ES_LIDER", false);
         idPartida = getIntent().getIntExtra("ID_PARTIDA", -1);
         miPropioIdGoogle = getIntent().getStringExtra("MI_NOMBRE_USUARIO");
+        esPrivada = getIntent().getBooleanExtra("ES_PRIVADA", false);
 
         TextView btnAbandonar = findViewById(R.id.btn_abandonar);
         btnAbandonar.setOnClickListener(v -> mostrarDialogoAbandonar());
@@ -114,7 +117,6 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
         });
 
         btnConfig = findViewById(R.id.btn_config_sala);
-        btnConfig.setVisibility(View.GONE); // Lo ocultamos por defecto
         btnConfig.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             mostrarDialogoAjustesSala();
@@ -142,6 +144,9 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
             }
         } else {
             if (btnIniciarPartida != null) {
+                if(esPrivada){
+                    btnConfig.setVisibility(View.VISIBLE);
+                }
                 btnIniciarPartida.setText("Iniciar\npartida");
                 btnIniciarPartida.setAlpha(1.0f);
                 btnIniciarPartida.setEnabled(true);
@@ -210,8 +215,6 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
 
                             if (esLider && !esPub) {
                                 btnConfig.setVisibility(View.VISIBLE);
-                            } else {
-                                btnConfig.setVisibility(View.GONE);
                             }
 
                             int nuevoTiempo = json.optInt("tiempo_espera", -1);
@@ -320,8 +323,6 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
 
                             if (esLider && !esPublica) {
                                 btnConfig.setVisibility(View.VISIBLE);
-                            } else {
-                                btnConfig.setVisibility(View.GONE);
                             }
 
                             if (tiempo != -1 && tvTiempoSala != null) tvTiempoSala.setText(tiempo + "s");
@@ -861,6 +862,7 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
                     tiempoElegidoConfig = val;
                     for (int id : IDs) d.findViewById(id).setBackgroundResource(R.drawable.fondo_btn_unirse_pequeno);
                     btn.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
+
                 });
             }
         }
@@ -929,19 +931,49 @@ public class SalaEsperaActivity extends AppCompatActivity implements WebSocketCo
     }
 
     private void enviarNuevaConfiguracion() {
+        enviarCambioTiempo(tiempoElegidoConfig);
+        enviarCambioTema(temasConfig.get(temaElegidoConfig));
+    }
+
+    /**
+     * Envía al servidor la actualización del tiempo de turno mediante WebSocket.
+     */
+    private void enviarCambioTiempo(int segundos) {
         if (stompClient != null && stompClient.isConnected()) {
             try {
                 JSONObject payload = new JSONObject();
-                payload.put("tiempo_espera", tiempoElegidoConfig);
-                payload.put("id_tema", temasConfig.get(temaElegidoConfig));
+                payload.put("tiempo_espera", segundos);
 
-                // Enviamos al destino de configuración de la partida
-                stompClient.send("/app/partida/" + idPartida + "/configuracion", payload.toString()).subscribe();
+                // Enviamos al endpoint: /app/partida/{id}/tiempoTurno
+                stompClient.send("/app/partida/" + idPartida + "/tiempoTurno", payload.toString()).subscribe();
 
-                Toast.makeText(this, "Configuración actualizada", Toast.LENGTH_SHORT).show();
+                Log.d("AJUSTES", "Enviando nuevo tiempo: " + segundos + "s");
             } catch (Exception e) {
-                Log.e("WS_CONFIG", "Error al enviar config", e);
+                Log.e("AJUSTES", "Error al construir payload de tiempo", e);
             }
+        } else {
+            Toast.makeText(this, "Sin conexión con el servidor", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Envía al servidor el cambio de temática de la sala.
+     */
+    private void enviarCambioTema(int idTema) {
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                JSONObject payload = new JSONObject();
+                payload.put("id_tema", idTema);
+
+                // Enviamos al endpoint: /app/partida/{id}/tema
+                stompClient.send("/app/partida/" + idPartida + "/tema", payload.toString()).subscribe();
+
+                Log.d("AJUSTES", "Enviando cambio de tema ID: " + idTema);
+            } catch (Exception e) {
+                Log.e("AJUSTES", "Error al construir payload de tema", e);
+            }
+        } else {
+            Toast.makeText(this, "Sin conexión con el servidor", Toast.LENGTH_SHORT).show();
         }
     }
 }
