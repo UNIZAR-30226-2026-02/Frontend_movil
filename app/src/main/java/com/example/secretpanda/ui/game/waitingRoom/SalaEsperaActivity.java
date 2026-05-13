@@ -35,7 +35,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -77,6 +79,9 @@ public class SalaEsperaActivity extends AppCompatActivity {
     private List<JSONObject> misBordes = new ArrayList<>();
     private List<JSONObject> misFondos = new ArrayList<>();
     private PersonalizacionSalaAdapter personalizacionAdapter;
+    private Map<String, Integer> temasConfig = new HashMap<>();
+    private String temaElegidoConfig = "";
+    private int tiempoElegidoConfig = 60;
     private boolean mostrandoBordes = true; // Recuerda en qué pestaña estamos
 
     @Override
@@ -104,11 +109,12 @@ public class SalaEsperaActivity extends AppCompatActivity {
         });
 
         btnConfig = findViewById(R.id.btn_config_sala);
+        btnConfig.setVisibility(View.GONE); // Lo ocultamos por defecto
         btnConfig.setOnClickListener(v -> {
-            // Lógica de configuración...
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            mostrarDialogoAjustesSala();
         });
 
-        // 🔥 BOTÓN DE PERSONALIZACIÓN 🔥
         btnPersonalizarSala = findViewById(R.id.btn_personalizar_sala);
         btnPersonalizarSala.setOnClickListener(v -> {
             EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
@@ -189,8 +195,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                 ((View) tvCodigo.getParent()).setVisibility(esPub ? View.GONE : View.VISIBLE);
                                 if (!esPub) tvCodigo.setText(json.optString("codigo_partida", ""));
                             }
-                        } else {
-                            btnConfig.setVisibility(View.VISIBLE);
+                            if (esLider && !esPub) {
+                                btnConfig.setVisibility(View.VISIBLE);
+                            } else {
+                                btnConfig.setVisibility(View.GONE);
+                            }
                         }
 
                         int nuevoTiempo = json.optInt("tiempo_espera", -1);
@@ -277,6 +286,12 @@ public class SalaEsperaActivity extends AppCompatActivity {
                                     layoutCodigoEntero.setVisibility(View.VISIBLE);
                                     tvCodigoPartida.setText(codigo);
                                 }
+                            }
+
+                            if (esLider && !esPublica) {
+                                btnConfig.setVisibility(View.VISIBLE);
+                            } else {
+                                btnConfig.setVisibility(View.GONE);
                             }
 
                             if (tiempo != -1 && tvTiempoSala != null) tvTiempoSala.setText(tiempo + "s");
@@ -737,6 +752,113 @@ public class SalaEsperaActivity extends AppCompatActivity {
                 fondoItem = itemView.findViewById(R.id.fondo_item_personalizacion);
                 vistaCartas = itemView.findViewById(R.id.vista_cartas);
                 vistaImagen = itemView.findViewById(R.id.vista_imagen);
+            }
+        }
+    }
+
+    private void mostrarDialogoAjustesSala() {
+        Dialog d = new Dialog(this);
+        d.setContentView(R.layout.dialog_ajustes_sala);
+        if (d.getWindow() != null) d.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        TextView txtTemaActual = d.findViewById(R.id.txt_tematica_elegida_crear2);
+
+        // 1. Lógica de selección de tiempo (Botones 30, 60, 90, 120)
+        int[] IDs = {R.id.btn_tiempo_30, R.id.btn_tiempo_60, R.id.btn_tiempo_90, R.id.btn_tiempo_120};
+        int[] valores = {30, 60, 90, 120};
+
+        for (int i = 0; i < IDs.length; i++) {
+            final int val = valores[i];
+            TextView btn = d.findViewById(IDs[i]);
+            if (btn != null) {
+                // Marcamos el actual (fondo_verde_seleccion_personalizacion es tu selector activo)
+                if (val == tiempoElegidoConfig) btn.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
+
+                btn.setOnClickListener(v -> {
+                    EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+                    tiempoElegidoConfig = val;
+                    for (int id : IDs) d.findViewById(id).setBackgroundResource(R.drawable.fondo_btn_unirse_pequeno);
+                    btn.setBackgroundResource(R.drawable.fondo_verde_seleccion_personalizacion);
+                });
+            }
+        }
+
+        // 2. Lógica de selección de temática con tu ID correcto
+        d.findViewById(R.id.btn_desplegable_tematica_crear2).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            com.example.secretpanda.ui.game.join.TematicasDialogFragment dialogTema = new com.example.secretpanda.ui.game.join.TematicasDialogFragment();
+            dialogTema.setMisTematicas(new ArrayList<>(temasConfig.keySet()));
+
+            // Configuramos para que no salga la opción de "Todas" en este popup de creación
+            dialogTema.setConfiguracionFiltros(true, false);
+
+            dialogTema.setTematicaListener(tema -> {
+                temaElegidoConfig = tema;
+                txtTemaActual.setText(tema);
+            });
+            dialogTema.show(getSupportFragmentManager(), "TematicasDialog");
+        });
+
+        // 3. Botón Guardar
+        d.findViewById(R.id.btn_guardar_ajustes).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            enviarNuevaConfiguracion();
+            d.dismiss();
+        });
+
+        d.findViewById(R.id.btn_cerrar_ajustes).setOnClickListener(v -> {
+            EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
+            d.dismiss();
+        });
+
+        // Cargamos los temas del servidor antes de mostrar
+        cargarTemasParaAjustes(txtTemaActual);
+        d.show();
+    }
+
+    private void cargarTemasParaAjustes(TextView txtLabel) {
+        OkHttpClient client = new OkHttpClient();
+        String token = new TokenManager(this).getToken();
+        Request req = new Request.Builder()
+                .url(NetworkConfig.BASE_URL + "/jugadores/temas")
+                .addHeader("Authorization", "Bearer " + token).build();
+
+        client.newCall(req).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {}
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JSONArray array = new JSONArray(response.body().string());
+                        temasConfig.clear();
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject o = array.getJSONObject(i);
+                            temasConfig.put(o.getString("nombre"), o.getInt("id_tema"));
+                        }
+                        runOnUiThread(() -> {
+                            if (temaElegidoConfig.isEmpty() && !temasConfig.isEmpty()) {
+                                temaElegidoConfig = temasConfig.keySet().iterator().next();
+                                txtLabel.setText(temaElegidoConfig);
+                            }
+                        });
+                    } catch (Exception e) {}
+                }
+            }
+        });
+    }
+
+    private void enviarNuevaConfiguracion() {
+        if (stompClient != null && stompClient.isConnected()) {
+            try {
+                JSONObject payload = new JSONObject();
+                payload.put("tiempo_espera", tiempoElegidoConfig);
+                payload.put("id_tema", temasConfig.get(temaElegidoConfig));
+
+                // Enviamos al destino de configuración de la partida
+                stompClient.send("/app/partida/" + idPartida + "/configuracion", payload.toString()).subscribe();
+
+                Toast.makeText(this, "Configuración actualizada", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Log.e("WS_CONFIG", "Error al enviar config", e);
             }
         }
     }

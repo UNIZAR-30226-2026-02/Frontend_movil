@@ -44,25 +44,18 @@ public class EfectosManager {
      * MÉTODO UNIVERSAL: Puedes llamarlo desde CUALQUIER hilo (incluso onResponse)
      */
     public static void reproducir(Context context, int resourceId) {
-        // Usamos el mainHandler para que, se llame desde donde se llame,
-        // el sonido se dispare en el hilo principal de la UI.
         mainHandler.post(() -> {
             if (!cargado || soundPool == null) return;
 
             Integer soundId = sonidosMap.get(resourceId);
-            if (soundId == null) return; // El sonido no estaba precargado
+            if (soundId == null) return;
 
-            // 1. Bajamos volumen música (opcional, como prefieras)
             MusicaService.bajarVolumenParaEfecto();
 
-            // 2. Leemos volumen de ajustes
-            float vol = context.getSharedPreferences("Ajustes_Audio", Context.MODE_PRIVATE)
-                    .getInt("volumen_efectos", 80) / 100f;
+            float vol = MusicaService.volumenEfectosActual / 100f;
 
-            // 3. Play
             soundPool.play(soundId, vol, vol, 1, 0, 1f);
 
-            // 4. Subir música tras 300ms
             mainHandler.postDelayed(MusicaService::subirVolumenNormal, 300);
         });
     }

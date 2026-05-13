@@ -238,29 +238,23 @@ public class HomeActivity extends AppCompatActivity {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_musica, null);
         AlertDialog dialog = crearDialogoBase(dialogView);
 
-        // 1. Referenciar las SeekBars del XML
         SeekBar seekBarMusica = dialogView.findViewById(R.id.seekbar_musica_fondo);
         SeekBar seekBarEfectos = dialogView.findViewById(R.id.seekbar_efectos_sonido);
 
-        // Usamos un archivo de preferencias llamado "Ajustes_Audio"
-        android.content.SharedPreferences prefs = getSharedPreferences("Ajustes_Audio", MODE_PRIVATE);
+        int volMusicaGuardado = MusicaService.volumenMusicaActual;
+        int volEfectosGuardado = MusicaService.volumenEfectosActual;
 
-        // Recuperamos el valor (por defecto 50 para música y 80 para efectos si no hay nada guardado)
-        int volMusicaGuardado = prefs.getInt("volumen_fondo", 50);
-        int volEfectosGuardado = prefs.getInt("volumen_efectos", 80);
-
-        // Aplicamos los valores cargados a las barras visualmente
         seekBarMusica.setProgress(volMusicaGuardado);
         seekBarEfectos.setProgress(volEfectosGuardado);
 
-        // 3. Configurar Listener para Música de Fondo
         seekBarMusica.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
                     float volumen = progress / 100f;
-                    // Cambiamos el volumen en el servicio en tiempo real
                     MusicaService.setVolumen(volumen);
+                    // Actualizamos memoria temporal
+                    MusicaService.volumenMusicaActual = progress;
                 }
             }
 
@@ -268,19 +262,16 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // Guardamos el valor final en las preferencias al soltar la barra
-                prefs.edit().putInt("volumen_fondo", seekBar.getProgress()).apply();
+                MusicaService.volumenMusicaActual = seekBar.getProgress();
             }
         });
 
-        // 4. Configurar Listener para Efectos de Sonido
         seekBarEfectos.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    // Guardamos el volumen en tiempo real para que si suena algún efecto
-                    // mientras el diálogo está abierto, ya coja el valor nuevo.
-                    prefs.edit().putInt("volumen_efectos", progress).apply();
+                    // Actualizamos memoria temporal
+                    MusicaService.volumenEfectosActual = progress;
                 }
             }
 
@@ -288,18 +279,13 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // Guardamos el valor por seguridad al soltar
-                prefs.edit().putInt("volumen_efectos", seekBar.getProgress()).apply();
+                MusicaService.volumenEfectosActual = seekBar.getProgress();
 
-                // ¡EL TOQUE ESTRELLA!
                 // Hacemos sonar el click de prueba justo al soltar la barra
-                // para que el usuario escuche cómo ha quedado el volumen.
-                // *Usa el método rápido sin pausas que decidimos antes*
                 EfectosManager.reproducir(getApplicationContext(), R.raw.sonido_click);
             }
         });
 
-        // Botón cerrar
         ImageView btnCerrar = dialogView.findViewById(R.id.btn_cerrar_popup);
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
@@ -374,7 +360,7 @@ public class HomeActivity extends AppCompatActivity {
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject(response.body().string());
 
-                        // Extraemos los datos normales
+                        // 1. Extraemos los datos normales
                         int balas = obj.optInt("balas", 0);
                         String foto = obj.optString("foto_perfil", "");
 

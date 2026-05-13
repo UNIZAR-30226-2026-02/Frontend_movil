@@ -26,6 +26,7 @@ import com.example.secretpanda.ui.audio.EfectosManager;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.example.secretpanda.ui.home.HomeActivity;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -80,6 +81,7 @@ public class PartidaActivity extends AppCompatActivity {
     private int idCartaVotada = -1; // Inicializado a -1 por seguridad
     private int cartas_rojas_restantes_voto;
     private int cartas_azules_restantes_voto;
+    private boolean heAbandonado = false;
 
 
     private List<JSONObject> historialChat = new ArrayList<>();
@@ -119,6 +121,13 @@ public class PartidaActivity extends AppCompatActivity {
 
         obtenerMiRolDelServidor();
         obtenerEstadoCompletoDePartida();
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // En lugar de salir directamente, mostramos el diálogo de confirmación
+                mostrarDialogoAbandonar();
+            }
+        });
     }
 
     private void inicializarVistas() {
@@ -245,6 +254,8 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void navegarAFinPartida() {
+        if (heAbandonado) return;
+
         Intent intent = new Intent(this, com.example.secretpanda.ui.game.endMatch.FinPartidaActivity.class);
         intent.putExtra("ID_PARTIDA", idPartidaActual);
         intent.putExtra("MI_NOMBRE_USUARIO", miTag);
@@ -865,6 +876,8 @@ public class PartidaActivity extends AppCompatActivity {
     }
 
     private void abandonarPartidaBackend() {
+        heAbandonado = true;
+
         OkHttpClient client = new OkHttpClient();
         String jwt = new com.example.secretpanda.data.TokenManager(this).getToken();
         Request request = new Request.Builder()
@@ -876,14 +889,27 @@ public class PartidaActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                heAbandonado = false; // Bajamos el escudo si falla
                 runOnUiThread(() -> Toast.makeText(PartidaActivity.this, "No se pudo abandonar la partida. Inténtalo de nuevo.", Toast.LENGTH_LONG).show());
             }
             @Override
             public void onResponse(Call call, Response response) {
                 if (response.isSuccessful()) {
-                    // Solo salimos de la actividad si el servidor confirmó la salida
-                    finish();
+                    runOnUiThread(() -> {
+                        suscripcionesWS.dispose();
+                        if (stompClient != null) {
+                            stompClient.disconnect();
+                        }
+
+                        // Navegación segura al Home (Evita que el usuario quede en pantallas intermedias)
+                        Intent intent = new Intent(PartidaActivity.this, HomeActivity.class);
+                        intent.putExtra("MI_NOMBRE_USUARIO", miPropioIdGoogle);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        finish();
+                    });
                 } else {
+                    heAbandonado = false; // Bajamos el escudo si el servidor nos deniega la salida
                     runOnUiThread(() -> Toast.makeText(PartidaActivity.this, "No se pudo abandonar la partida. Inténtalo de nuevo.", Toast.LENGTH_LONG).show());
                 }
             }

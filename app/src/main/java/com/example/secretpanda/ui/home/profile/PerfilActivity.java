@@ -20,6 +20,8 @@ import com.example.secretpanda.data.model.Jugador;
 import com.example.secretpanda.ui.home.GestorImagenes;
 
 import com.example.secretpanda.ui.auth.LoginActivity;
+
+import java.util.ArrayList;
 import java.util.List;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,6 +41,9 @@ public class PerfilActivity extends AppCompatActivity {
     private AmigoAdapter adaptador;
 
     private List<Jugador> misAmigos;
+
+    private List<Jugador> listaAmigosCompleta = new ArrayList<>(); // 🔥 NUEVO: Backup para el buscador
+    private android.widget.EditText etBuscarAmigo;
     private String nombreImagen="";
     private ImageView fotoPerfil;
 
@@ -63,6 +68,15 @@ public class PerfilActivity extends AppCompatActivity {
         btnGestionarSolicitudes.setOnClickListener(v -> {
             Intent intent = new Intent(PerfilActivity.this, SolicitudesActivity.class);
             startActivity(intent);
+        });
+
+        etBuscarAmigo = findViewById(R.id.et_buscar_amigo_perfil);
+        etBuscarAmigo.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filtrarAmigos(s.toString());
+            }
+            @Override public void afterTextChanged(android.text.Editable s) {}
         });
 
         btnCerrarDetalleAmigo = findViewById(R.id.btn_cerrar_detalle_amigo);
@@ -232,6 +246,8 @@ public class PerfilActivity extends AppCompatActivity {
                         }
 
                         runOnUiThread(() -> {
+                            listaAmigosCompleta.clear();
+                            listaAmigosCompleta.addAll(listaAmigosReales);
                             misAmigos.clear();
                             misAmigos.addAll(listaAmigosReales);
                             if (adaptador != null) adaptador.notifyDataSetChanged();
@@ -479,6 +495,39 @@ public class PerfilActivity extends AppCompatActivity {
             }
         });
     }
+    private void filtrarAmigos(String textoBuscado) {
+        misAmigos.clear();
+
+        if (textoBuscado.trim().isEmpty()) {
+            misAmigos.addAll(listaAmigosCompleta);
+        } else {
+            String filtro = textoBuscado.toLowerCase().trim();
+            for (Jugador amigo : listaAmigosCompleta) {
+                if (amigo.getTag().toLowerCase().contains(filtro)) {
+                    misAmigos.add(amigo);
+                }
+            }
+        }
+
+        if (adaptador != null) {
+            adaptador.notifyDataSetChanged();
+        }
+
+        // Ajustar el texto de estado vacío
+        TextView mensajeVacio = findViewById(R.id.texto_amigos_vacio);
+        if (misAmigos.isEmpty()) {
+            if (mensajeVacio != null) {
+                mensajeVacio.setText(listaAmigosCompleta.isEmpty() ? "No hay contactos consolidados en tu red." : "No se encontró ningún agente con ese nombre.");
+                mensajeVacio.setVisibility(View.VISIBLE);
+                recyclerAmigos.setVisibility(View.GONE);
+            }
+        } else {
+            if (mensajeVacio != null) {
+                mensajeVacio.setVisibility(View.GONE);
+                recyclerAmigos.setVisibility(View.VISIBLE);
+            }
+        }
+    }
 
     private void desactivarCuentaServidor() {
         OkHttpClient client = new OkHttpClient();
@@ -524,6 +573,8 @@ public class PerfilActivity extends AppCompatActivity {
                     runOnUiThread(() -> android.widget.Toast.makeText(PerfilActivity.this, "Error al desactivar la cuenta en el servidor", android.widget.Toast.LENGTH_SHORT).show());
                 }
             }
+
         });
+
     }
 }
