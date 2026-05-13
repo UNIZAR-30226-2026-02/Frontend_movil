@@ -107,7 +107,21 @@
                     android:textSize="16sp"
                     android:paddingVertical="10dp"
                     android:layout_marginBottom="16dp" />
-
+                <EditText
+                    android:id="@+id/et_buscar_amigo_perfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Buscar agente clave..."
+                    android:textColorHint="@color/ink_muted"
+                    android:textColor="@color/ink_text"
+                    android:background="@drawable/fondo_input_borde_negro"
+                    android:backgroundTint="@color/folder_manila_dark"
+                    android:padding="10dp"
+                    android:layout_marginBottom="12dp"
+                    android:fontFamily="monospace"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:inputType="textPersonName" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
